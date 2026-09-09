@@ -1,8 +1,23 @@
 import { describe, expect, it } from 'vitest'
 
-import { ApiError, createApiClient } from './client'
+import { ApiError, createApiClient, resolveApiBaseUrl } from './client'
 
 describe('ApiClient', () => {
+  it('resolves the first reachable local backend port for a static panel', async () => {
+    const attempts: string[] = []
+    const baseUrl = await resolveApiBaseUrl(async (input) => {
+      attempts.push(String(input))
+      if (String(input).includes(':3003')) throw new TypeError('connection refused')
+      return new Response(JSON.stringify({ data: { status: 'ok' } }), { status: 200 })
+    }, '127.0.0.1', ['3003', '3000'])
+
+    expect(baseUrl).toBe('http://127.0.0.1:3000')
+    expect(attempts).toEqual([
+      'http://127.0.0.1:3003/api/health',
+      'http://127.0.0.1:3000/api/health',
+    ])
+  })
+
   it('turns a network failure into a recoverable Chinese error', async () => {
     const client = createApiClient(async () => {
       throw new TypeError('Failed to fetch')
