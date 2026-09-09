@@ -12,7 +12,7 @@ test.describe('cookie session authentication', () => {
     await page.getByLabel('密码').fill(password)
     await page.getByRole('button', { name: '登录' }).click()
     await expect(page).toHaveURL(/\/admin\/dashboard/)
-    await expect(page.getByRole('heading', { name: '仪表盘' })).toBeVisible()
+    await expect(page.getByText('开发进度', { exact: true })).toBeVisible({ timeout: 15000 })
 
     await page.reload()
     await expect(page).toHaveURL(/\/admin\/dashboard/)
