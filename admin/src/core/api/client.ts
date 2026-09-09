@@ -16,26 +16,35 @@ export class ApiError extends Error {
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
-export const apiClient: ApiClient = {
-  async request<T>(path: string, options: RequestInit = {}) {
-    const response = await fetch(`${apiBaseUrl}${path}`, {
-      ...options,
-      credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-        ...options.headers,
-      },
-    })
+export function createApiClient(fetchImpl: typeof fetch = fetch, baseUrl = apiBaseUrl): ApiClient {
+  return {
+    async request<T>(path: string, options: RequestInit = {}) {
+      let response: Response
+      try {
+        response = await fetchImpl(`${baseUrl}${path}`, {
+          ...options,
+          credentials: 'include',
+          headers: {
+            Accept: 'application/json',
+            ...options.headers,
+          },
+        })
+      } catch {
+        throw new ApiError('无法连接后端服务，请确认 API 端口已启动。', 0, 'NETWORK_ERROR')
+      }
 
-    const payload = await response.json().catch(() => null)
-    if (!response.ok) {
-      throw new ApiError(
-        payload?.error?.message ?? '请求失败，请稍后重试',
-        response.status,
-        payload?.error?.code,
-      )
-    }
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) {
+        throw new ApiError(
+          payload?.error?.message ?? '请求失败，请稍后重试',
+          response.status,
+          payload?.error?.code,
+        )
+      }
 
-    return payload as T
-  },
+      return payload as T
+    },
+  }
 }
+
+export const apiClient = createApiClient()

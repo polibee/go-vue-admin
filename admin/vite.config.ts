@@ -3,9 +3,12 @@ import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig, loadEnv } from 'vite'
 
-export default defineConfig(({ mode }) => {
+import { resolveBackendUrl } from './vite-backend'
+
+export default defineConfig(async ({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const backendUrl = env.VITE_BACKEND_URL || 'http://127.0.0.1:3000'
+  const backendUrl = await resolveBackendUrl(env)
+  console.info(`[vite] API proxy target: ${backendUrl}`)
 
   return {
     plugins: [vue(), tailwindcss()],

@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
-import { Check, Copy } from '@lucide/vue'
+import { Check, Copy, Eye, EyeOff, LoaderCircle } from '@lucide/vue'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -22,15 +21,19 @@ const submitting = ref(false)
 const bootstrapCredentials = ref<BootstrapCredentials | null>(null)
 const credentialsError = ref<string | null>(null)
 const copiedField = ref<'email' | 'password' | null>(null)
+const showPassword = ref(false)
 const authService = new AuthService()
 
-onMounted(async () => {
+async function loadBootstrapCredentials() {
+  credentialsError.value = null
   try {
     bootstrapCredentials.value = await authService.bootstrapCredentials()
   } catch {
     credentialsError.value = '开发环境凭据暂时无法加载，请检查后端服务。'
   }
-})
+}
+
+onMounted(loadBootstrapCredentials)
 
 const formSchema = toTypedSchema(z.object({
   email: z.string().email('请输入有效邮箱'),
@@ -84,9 +87,10 @@ async function copyCredential(field: 'email' | 'password') {
         <CardDescription>使用平台账号进入 Go Vue Admin。</CardDescription>
       </CardHeader>
       <CardContent>
-        <Alert v-if="bootstrapCredentials" class="mb-5">
-          <AlertTitle>开发环境登录凭据</AlertTitle>
-          <AlertDescription>凭据从后端实时读取，修改 AUTH_BOOTSTRAP_* 后刷新页面即可同步。</AlertDescription>
+        <Form v-slot="{ handleSubmit, setValues }" :validation-schema="formSchema" :initial-values="{ email: '', password: '' }" as="div">
+          <Alert v-if="bootstrapCredentials" class="mb-5">
+            <AlertTitle>开发环境登录凭据</AlertTitle>
+            <AlertDescription>凭据从后端实时读取，修改 AUTH_BOOTSTRAP_* 后刷新页面即可同步。</AlertDescription>
           <div class="mt-3 flex flex-col gap-3">
             <div class="flex flex-col gap-2">
               <Label for="bootstrap-email">账号</Label>
@@ -108,10 +112,15 @@ async function copyCredential(field: 'email' | 'password') {
                 </Button>
               </div>
             </div>
+            <Button type="button" variant="secondary" class="w-full" @click="setValues({ email: bootstrapCredentials.email, password: bootstrapCredentials.password })">
+              一键填入登录表单
+            </Button>
           </div>
-        </Alert>
-        <p v-else-if="credentialsError" class="mb-5 text-sm text-muted-foreground" role="status">{{ credentialsError }}</p>
-        <Form v-slot="{ handleSubmit }" :validation-schema="formSchema" as="div">
+          </Alert>
+          <div v-else-if="credentialsError" class="mb-5 flex items-center justify-between gap-3 rounded-lg border border-dashed p-3 text-sm text-muted-foreground" role="status">
+            <span>{{ credentialsError }}</span>
+            <Button type="button" variant="outline" size="sm" @click="loadBootstrapCredentials">重试</Button>
+          </div>
           <form class="grid gap-5" @submit="handleSubmit($event, onSubmit)">
             <FormField v-slot="{ componentField }" name="email">
               <FormItem>
@@ -123,12 +132,19 @@ async function copyCredential(field: 'email' | 'password') {
             <FormField v-slot="{ componentField }" name="password">
               <FormItem>
                 <FormLabel>密码</FormLabel>
-                <FormControl><Input type="password" autocomplete="current-password" placeholder="请输入密码" v-bind="componentField" /></FormControl>
+                <div class="relative">
+                  <FormControl><Input :type="showPassword ? 'text' : 'password'" autocomplete="current-password" placeholder="请输入密码" class="pr-10" v-bind="componentField" /></FormControl>
+                  <Button type="button" variant="ghost" size="icon" class="absolute right-0 top-0 h-full px-3" :aria-label="showPassword ? '隐藏密码' : '显示密码'" @click="showPassword = !showPassword">
+                    <EyeOff v-if="showPassword" data-icon="inline-start" />
+                    <Eye v-else data-icon="inline-start" />
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             </FormField>
             <p v-if="auth.error" class="text-sm text-destructive" role="alert">{{ auth.error }}</p>
             <Button type="submit" class="w-full" :disabled="submitting">
+              <LoaderCircle v-if="submitting" class="animate-spin" data-icon="inline-start" />
               {{ submitting ? '登录中…' : '登录' }}
             </Button>
           </form>
