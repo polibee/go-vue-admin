@@ -60,3 +60,23 @@ test('generic resource list supports filters, sorting, and bulk delete', async (
   await page.getByRole('alertdialog').getByRole('button', { name: '确认删除' }).click()
   await expect(page.getByText('资源引擎示例')).not.toBeVisible()
 })
+
+test('core user, role, and permission resources use the same generic routes', async ({ page }) => {
+  await page.goto('/login')
+  await page.getByLabel('邮箱').fill(email)
+  await page.getByLabel('密码', { exact: true }).fill(password)
+  await page.getByRole('button', { name: '登录' }).click()
+  await expect(page.getByRole('link', { name: '用户' })).toBeVisible()
+
+  await page.goto('/admin/resources/users')
+  await expect(page.getByRole('heading', { name: '用户' })).toBeVisible()
+  await expect(page.getByText('admin@example.com')).toBeVisible()
+
+  await page.goto('/admin/resources/roles')
+  await expect(page.getByRole('heading', { name: '角色' })).toBeVisible()
+  await expect(page.getByText('平台管理员')).toBeVisible()
+
+  await page.goto('/admin/resources/permissions')
+  await expect(page.getByRole('heading', { name: '权限' })).toBeVisible()
+  await expect(page.getByText('dashboard.view')).toBeVisible()
+})

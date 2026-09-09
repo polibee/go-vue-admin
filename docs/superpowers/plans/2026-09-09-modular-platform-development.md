@@ -305,11 +305,11 @@ Expected: `/admin` opens with light/dark/system, Chinese/English, collapsible si
 - Create: `admin/src/core-resources/permissions/resource.ts`
 - Create: `tests/e2e/resources.spec.ts`
 
-- [ ] **Step 1: Define resource schemas and permissions from backend contracts.**
-- [ ] **Step 2: Register Users, Roles, and Permissions through ResourceRegistry.**
-- [ ] **Step 3: Implement relation/custom fields only where generic fields cannot express the relation.**
-- [ ] **Step 4: Verify User CRUD and RBAC behavior through generated routes.**
-- [ ] **Step 5: Commit `feat(core-resources): migrate users and roles to resource engine`.**
+- [x] **Step 1: Define resource schemas and permissions from backend contracts.**
+- [x] **Step 2: Register Users, Roles, and Permissions through ResourceRegistry.**
+- [x] **Step 3: Implement relation/custom fields only where generic fields cannot express the relation.**
+- [x] **Step 4: Verify User CRUD and RBAC behavior through generated routes.**
+- [x] **Step 5: Commit `feat(core-resources): migrate users and roles to resource engine`.**
 
 ---
 

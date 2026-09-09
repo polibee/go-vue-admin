@@ -1,7 +1,11 @@
 import { apiClient } from '@/core/api/client'
+import { coreResourceDefinitions } from '@/core-resources'
+import { permissionResourceSeed } from '@/core-resources/permissions/resource'
+import { roleResourceSeed } from '@/core-resources/roles/resource'
+import { userResourceSeed } from '@/core-resources/users/resource'
 
-import { MemoryResourceDataProvider } from './core/ResourceDataProvider'
 import { defineResource } from './core/ResourceDefinition'
+import { MemoryResourceDataProvider } from './core/ResourceDataProvider'
 import { ResourceRegistry } from './core/ResourceRegistry'
 import { HttpResourceDataProvider } from './providers/HttpResourceDataProvider'
 import { createResourceProvider, resolveResourceProviderMode } from './provider-mode'
@@ -51,13 +55,25 @@ const memoryDemoProvider = new MemoryResourceDataProvider<DemoResourceRecord>([
   { id: 'demo-2', name: '可编辑记录', status: 'draft', owner: 'Platform Admin' },
 ])
 
+const resourceProviderMode = resolveResourceProviderMode()
 const httpDemoProvider = new HttpResourceDataProvider<DemoResourceRecord>(apiClient, '/api/resources/demo')
 
 export const demoProvider = createResourceProvider(
-  resolveResourceProviderMode(),
+	resourceProviderMode,
   memoryDemoProvider,
   httpDemoProvider,
 )
 
 export const resourceRegistry = new ResourceRegistry()
 resourceRegistry.register(demoResource, demoProvider)
+resourceRegistry.register(coreResourceDefinitions[0], createCoreProvider('users', userResourceSeed))
+resourceRegistry.register(coreResourceDefinitions[1], createCoreProvider('roles', roleResourceSeed))
+resourceRegistry.register(coreResourceDefinitions[2], createCoreProvider('permissions', permissionResourceSeed))
+
+function createCoreProvider<T extends object>(name: string, seed: T[]) {
+	return createResourceProvider(
+		resourceProviderMode,
+		new MemoryResourceDataProvider(seed),
+		new HttpResourceDataProvider(apiClient, `/api/resources/${name}`),
+	)
+}

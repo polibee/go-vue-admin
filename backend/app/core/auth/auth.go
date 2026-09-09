@@ -6,6 +6,9 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
+	permissionresources "goravel/app/core/permission/resources"
+	roleresources "goravel/app/core/role/resources"
+	userresources "goravel/app/core/user/resources"
 )
 
 var (
@@ -151,7 +154,22 @@ func NewBootstrapService(email, password, name string) (*Service, error) {
 			Name:         name,
 			PasswordHash: passwordHash,
 			Active:       true,
-			Permissions:  []string{"dashboard.view", "settings.view"},
+			Permissions: []string{
+				"dashboard.view",
+				"settings.view",
+				userresources.PermissionView,
+				userresources.PermissionCreate,
+				userresources.PermissionUpdate,
+				userresources.PermissionDelete,
+				roleresources.PermissionView,
+				roleresources.PermissionCreate,
+				roleresources.PermissionUpdate,
+				roleresources.PermissionDelete,
+				permissionresources.PermissionView,
+				permissionresources.PermissionCreate,
+				permissionresources.PermissionUpdate,
+				permissionresources.PermissionDelete,
+			},
 		}),
 		hasher,
 	), nil
