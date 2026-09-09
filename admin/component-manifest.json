@@ -1,0 +1,14 @@
+{
+  "source": {
+    "repository": "https://github.com/unovue/shadcn-vue",
+    "branch": "dev",
+    "commit": "dd3ff4c",
+    "cli": "shadcn-vue@2.8.2"
+  },
+  "base": "reka",
+  "style": "reka-nova",
+  "tailwind": "v4",
+  "iconLibrary": "lucide",
+  "localeDevelopment": "zh-CN",
+  "supportedLocales": ["zh-CN", "en"]
+}

@@ -13,3 +13,10 @@ An override is exceptional. Before changing an upstream file, verify that compos
 | YYYY-MM-DD | `ui/button` | version/commit | required functional gap | user-visible effect | how it will be reconciled with upstream |
 
 Do not use this document to justify visual redesigns. Colors, typography, radius, shadows, spacing, accessibility behavior, and component states remain upstream unless an explicit product requirement says otherwise.
+# Upstream overrides
+
+Record every intentional deviation from the downloaded official source here.
+
+| File | Upstream revision | Reason | Follow-up |
+| --- | --- | --- | --- |
+| `admin/src/components/ui/chart/ChartLegendContent.vue` | `dd3ff4c` | Remove an unused destructured `value` so the repository's strict TypeScript check passes. Runtime behavior is unchanged. | Recheck on the next registry update. |
