@@ -24,8 +24,8 @@ run_repository_checks() {
   fi
 
   if git rev-parse --verify HEAD >/dev/null 2>&1; then
-    if ! git diff --quiet HEAD -- contracts/openapi contracts/generated admin/src/generated; then
-      fail "generated OpenAPI or SDK files are out of date; run pnpm openapi:generate and commit the result"
+    if ! git diff --quiet HEAD -- contracts/openapi contracts/schemas admin/src/generated; then
+      fail "generated OpenAPI, schemas, or SDK files are out of date; run pnpm openapi:generate and commit the result"
     fi
   else
     echo "module-check: generated drift check skipped (no Git HEAD yet)"

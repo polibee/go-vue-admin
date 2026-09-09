@@ -1,0 +1,16 @@
+{
+  "properties": {
+    "data": {
+      "items": {},
+      "type": "array"
+    },
+    "meta": {
+      "$ref": "#/components/schemas/ResourceMeta"
+    }
+  },
+  "required": [
+    "data",
+    "meta"
+  ],
+  "type": "object"
+}

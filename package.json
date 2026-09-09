@@ -9,7 +9,7 @@
     "test": "pnpm --dir admin run test",
     "test:e2e": "playwright test",
     "build": "pnpm --dir admin run build",
-    "openapi:generate": "node --eval \"console.log('openapi: generator not configured yet')\"",
+    "openapi:generate": "bash scripts/openapi-generate.sh",
     "module:check": "bash scripts/module-check.sh"
   },
   "engines": {

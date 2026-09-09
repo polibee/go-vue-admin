@@ -10,10 +10,11 @@ type CoreEndpoint struct {
 
 var CoreEndpoints = []CoreEndpoint{
 	{Method: "GET", Path: "/api/health", Description: "Returns service health and API contract version."},
-	{Method: "GET", Path: "/csrf", Description: "Issues the session-bound CSRF token."},
-	{Method: "POST", Path: "/login", Description: "Creates an HttpOnly cookie session."},
-	{Method: "POST", Path: "/logout", Description: "Revokes the current cookie session."},
-	{Method: "GET", Path: "/me", Description: "Returns the current authenticated user."},
+	{Method: "GET", Path: "/api/csrf", Description: "Issues the session-bound CSRF token."},
+	{Method: "GET", Path: "/api/auth/bootstrap", Description: "Returns development-only bootstrap credentials when enabled."},
+	{Method: "POST", Path: "/api/login", Description: "Creates an HttpOnly cookie session."},
+	{Method: "POST", Path: "/api/logout", Description: "Revokes the current cookie session."},
+	{Method: "GET", Path: "/api/me", Description: "Returns the current authenticated user."},
 	{Method: "GET", Path: "/api/menu", Description: "Returns navigation items allowed by the current session permissions."},
 	{Method: "GET", Path: "/api/resources/demo", Description: "Lists demo resources with pagination, filters, search, and sorting."},
 	{Method: "GET", Path: "/api/resources/demo/:id", Description: "Returns one demo resource."},

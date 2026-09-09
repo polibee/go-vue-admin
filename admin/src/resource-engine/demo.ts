@@ -3,11 +3,12 @@ import { coreResourceDefinitions } from '@/core-resources'
 import { permissionResourceSeed } from '@/core-resources/permissions/resource'
 import { roleResourceSeed } from '@/core-resources/roles/resource'
 import { userResourceSeed } from '@/core-resources/users/resource'
+import { createGeneratedApiClient } from '@/generated/api'
+import { OpenApiDataProvider } from '@/core/api/OpenApiDataProvider'
 
 import { defineResource } from './core/ResourceDefinition'
 import { MemoryResourceDataProvider } from './core/ResourceDataProvider'
 import { ResourceRegistry } from './core/ResourceRegistry'
-import { HttpResourceDataProvider } from './providers/HttpResourceDataProvider'
 import { createResourceProvider, resolveResourceProviderMode } from './provider-mode'
 
 export interface DemoResourceRecord {
@@ -56,12 +57,13 @@ const memoryDemoProvider = new MemoryResourceDataProvider<DemoResourceRecord>([
 ])
 
 const resourceProviderMode = resolveResourceProviderMode()
-const httpDemoProvider = new HttpResourceDataProvider<DemoResourceRecord>(apiClient, '/api/resources/demo')
+const generatedApiClient = createGeneratedApiClient(apiClient)
+const openApiDemoProvider = new OpenApiDataProvider<DemoResourceRecord>(generatedApiClient, 'demo')
 
 export const demoProvider = createResourceProvider(
 	resourceProviderMode,
-  memoryDemoProvider,
-  httpDemoProvider,
+	memoryDemoProvider,
+	openApiDemoProvider,
 )
 
 export const resourceRegistry = new ResourceRegistry()
@@ -74,6 +76,6 @@ function createCoreProvider<T extends object>(name: string, seed: T[]) {
 	return createResourceProvider(
 		resourceProviderMode,
 		new MemoryResourceDataProvider(seed),
-		new HttpResourceDataProvider(apiClient, `/api/resources/${name}`),
+		new OpenApiDataProvider(generatedApiClient, name as 'users' | 'roles' | 'permissions'),
 	)
 }

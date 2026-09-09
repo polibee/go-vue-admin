@@ -1,0 +1,1283 @@
+{
+  "components": {
+    "schemas": {
+      "BulkDeleteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "type": "object"
+      },
+      "DemoResource": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "active"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status",
+          "owner"
+        ],
+        "type": "object"
+      },
+      "PaginationMeta": {
+        "properties": {
+          "page": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "per_page": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "total_pages": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "page",
+          "per_page",
+          "total",
+          "total_pages"
+        ],
+        "type": "object"
+      },
+      "PermissionResource": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "type": "object"
+      },
+      "ResourceEnvelope": {
+        "properties": {
+          "data": {},
+          "meta": {
+            "$ref": "#/components/schemas/ResourceMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "type": "object"
+      },
+      "ResourceListEnvelope": {
+        "properties": {
+          "data": {
+            "items": {},
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResourceMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "type": "object"
+      },
+      "ResourceMeta": {
+        "properties": {
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ResourceMutation": {
+        "additionalProperties": false,
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "type": "object"
+      },
+      "RoleResource": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "permissions"
+        ],
+        "type": "object"
+      },
+      "UserResource": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "active",
+          "role_ids"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Generated platform contract for the Go Vue Admin modular monolith.",
+    "title": "Go Vue Admin API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/auth/bootstrap": {
+      "get": {
+        "description": "Returns development-only bootstrap credentials when enabled.",
+        "operationId": "getApiAuthBootstrap",
+        "responses": {
+          "200": {
+            "description": "Successful response."
+          }
+        }
+      }
+    },
+    "/api/csrf": {
+      "get": {
+        "description": "Issues the session-bound CSRF token.",
+        "operationId": "getApiCsrf",
+        "responses": {
+          "200": {
+            "description": "Successful response."
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "description": "Returns service health and API contract version.",
+        "operationId": "getApiHealth",
+        "responses": {
+          "200": {
+            "description": "Successful response."
+          }
+        }
+      }
+    },
+    "/api/login": {
+      "post": {
+        "description": "Creates an HttpOnly cookie session.",
+        "operationId": "postApiLogin",
+        "responses": {
+          "200": {
+            "description": "Successful response."
+          }
+        }
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "description": "Revokes the current cookie session.",
+        "operationId": "postApiLogout",
+        "responses": {
+          "200": {
+            "description": "Successful response."
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "description": "Returns the current authenticated user.",
+        "operationId": "getApiMe",
+        "responses": {
+          "200": {
+            "description": "Successful response."
+          }
+        }
+      }
+    },
+    "/api/menu": {
+      "get": {
+        "description": "Returns navigation items allowed by the current session permissions.",
+        "operationId": "getApiMenu",
+        "responses": {
+          "200": {
+            "description": "Successful response."
+          }
+        }
+      }
+    },
+    "/api/resources/demo": {
+      "get": {
+        "description": "Lists demo resources with pagination, filters, search, and sorting.",
+        "operationId": "listDemoResources",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_dir",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "explode": true,
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "style": "deepObject"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "post": {
+        "description": "Creates one demo resource.",
+        "operationId": "createDemoResource",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    },
+    "/api/resources/demo/bulk-delete": {
+      "post": {
+        "description": "Deletes multiple demo resources.",
+        "operationId": "bulkDeleteDemoResources",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    },
+    "/api/resources/demo/{id}": {
+      "delete": {
+        "description": "Deletes one demo resource.",
+        "operationId": "deleteDemoResource",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "get": {
+        "description": "Returns one demo resource.",
+        "operationId": "getDemoResource",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "put": {
+        "description": "Updates one demo resource.",
+        "operationId": "updateDemoResource",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    },
+    "/api/resources/permissions": {
+      "get": {
+        "description": "Lists core permissions through the generic resource contract.",
+        "operationId": "listPermissions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_dir",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "explode": true,
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "style": "deepObject"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "post": {
+        "description": "Creates one core permission.",
+        "operationId": "createPermission",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PermissionResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    },
+    "/api/resources/permissions/bulk-delete": {
+      "post": {
+        "description": "Deletes multiple core permissions.",
+        "operationId": "bulkDeletePermissions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    },
+    "/api/resources/permissions/{id}": {
+      "delete": {
+        "description": "Deletes one core permission.",
+        "operationId": "deletePermission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PermissionResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "get": {
+        "description": "Returns one core permission.",
+        "operationId": "getPermission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "put": {
+        "description": "Updates one core permission.",
+        "operationId": "updatePermission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PermissionResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    },
+    "/api/resources/roles": {
+      "get": {
+        "description": "Lists core roles through the generic resource contract.",
+        "operationId": "listRoles",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_dir",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "explode": true,
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "style": "deepObject"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "post": {
+        "description": "Creates one core role.",
+        "operationId": "createRole",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    },
+    "/api/resources/roles/bulk-delete": {
+      "post": {
+        "description": "Deletes multiple core roles.",
+        "operationId": "bulkDeleteRoles",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    },
+    "/api/resources/roles/{id}": {
+      "delete": {
+        "description": "Deletes one core role.",
+        "operationId": "deleteRole",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "get": {
+        "description": "Returns one core role.",
+        "operationId": "getRole",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "put": {
+        "description": "Updates one core role.",
+        "operationId": "updateRole",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    },
+    "/api/resources/users": {
+      "get": {
+        "description": "Lists core users through the generic resource contract.",
+        "operationId": "listUsers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_dir",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "explode": true,
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "style": "deepObject"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "post": {
+        "description": "Creates one core user.",
+        "operationId": "createUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    },
+    "/api/resources/users/bulk-delete": {
+      "post": {
+        "description": "Deletes multiple core users.",
+        "operationId": "bulkDeleteUsers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    },
+    "/api/resources/users/{id}": {
+      "delete": {
+        "description": "Deletes one core user.",
+        "operationId": "deleteUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "get": {
+        "description": "Returns one core user.",
+        "operationId": "getUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      },
+      "put": {
+        "description": "Updates one core user.",
+        "operationId": "updateUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Resources"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Generic resource CRUD endpoints.",
+      "name": "Resources"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "data": {},
+    "meta": {
+      "$ref": "#/components/schemas/ResourceMeta"
+    }
+  },
+  "required": [
+    "data",
+    "meta"
+  ],
+  "type": "object"
+}

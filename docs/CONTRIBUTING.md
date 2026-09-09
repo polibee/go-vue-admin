@@ -34,7 +34,7 @@ pnpm run typecheck
 pnpm run test
 pnpm run build
 pnpm run openapi:generate
-git diff --exit-code -- contracts/openapi contracts/generated admin/src/generated
+git diff --exit-code -- contracts/openapi contracts/schemas admin/src/generated
 bash scripts/module-check.sh modules/<module>
 ```
 

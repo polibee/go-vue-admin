@@ -40,7 +40,7 @@ jobs:
       - name: Generate contracts and reject drift
         run: |
           pnpm run openapi:generate
-          git diff --exit-code -- contracts/openapi contracts/generated admin/src/generated
+          git diff --exit-code -- contracts/openapi contracts/schemas admin/src/generated
       - name: Repository and changed-module gates
         env:
           MODULE_CHECK_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}

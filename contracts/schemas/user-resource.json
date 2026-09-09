@@ -1,0 +1,32 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "active": {
+      "type": "boolean"
+    },
+    "email": {
+      "format": "email",
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "role_ids": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "email",
+    "name",
+    "active",
+    "role_ids"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,28 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "active"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "status",
+    "owner"
+  ],
+  "type": "object"
+}

@@ -327,12 +327,12 @@ Expected: `/admin` opens with light/dark/system, Chinese/English, collapsible si
 - `OpenApiDataProvider` adapts generated client calls to `ResourceDataProvider`.
 - CI runs generation and `git diff --exit-code`; generated artifacts are committed and reviewable.
 
-- [ ] **Step 1: Write a contract test for the users list/create/update/delete operations.**
-- [ ] **Step 2: Generate `openapi.json` from backend annotations/metadata.**
-- [ ] **Step 3: Generate the TypeScript client into `admin/src/generated/api`.**
-- [ ] **Step 4: Implement OpenApiDataProvider without direct axios/fetch in resources.**
-- [ ] **Step 5: Replace DemoResource and core resources with the generated provider.**
-- [ ] **Step 6: Commit `feat(api): add OpenAPI generated client and provider`.**
+- [x] **Step 1: Write a contract test for the users list/create/update/delete operations.**
+- [x] **Step 2: Generate `openapi.json` from backend annotations/metadata.**
+- [x] **Step 3: Generate the TypeScript client into `admin/src/generated/api`.**
+- [x] **Step 4: Implement OpenApiDataProvider without direct axios/fetch in resources.**
+- [x] **Step 5: Replace DemoResource and core resources with the generated provider.**
+- [x] **Step 6: Commit `feat(api): add OpenAPI generated client and provider`.**
 
 ---
 

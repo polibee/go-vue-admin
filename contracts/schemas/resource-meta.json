@@ -1,0 +1,11 @@
+{
+  "properties": {
+    "pagination": {
+      "$ref": "#/components/schemas/PaginationMeta"
+    },
+    "request_id": {
+      "type": "string"
+    }
+  },
+  "type": "object"
+}

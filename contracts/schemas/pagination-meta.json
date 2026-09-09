@@ -1,0 +1,27 @@
+{
+  "properties": {
+    "page": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "per_page": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "total": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "total_pages": {
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "page",
+    "per_page",
+    "total",
+    "total_pages"
+  ],
+  "type": "object"
+}
