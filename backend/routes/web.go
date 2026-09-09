@@ -22,6 +22,7 @@ func Web() {
 
 	authController := controllers.NewAuthController()
 	menuController := controllers.NewMenuController(authController)
+	resourceController := controllers.NewConfiguredResourceController(authController)
 	for _, prefix := range []string{"", "/api"} {
 		facades.Route().Get(prefix+"/csrf", authController.CSRF)
 		facades.Route().Get(prefix+"/auth/bootstrap", authController.Bootstrap)
@@ -31,4 +32,10 @@ func Web() {
 	}
 	facades.Route().Get("/menu", menuController.Index)
 	facades.Route().Get("/api/menu", menuController.Index)
+	facades.Route().Get("/api/resources/demo", resourceController.Index)
+	facades.Route().Get("/api/resources/demo/:id", resourceController.Show)
+	facades.Route().Post("/api/resources/demo", resourceController.Store)
+	facades.Route().Put("/api/resources/demo/:id", resourceController.Update)
+	facades.Route().Delete("/api/resources/demo/:id", resourceController.Destroy)
+	facades.Route().Post("/api/resources/demo/bulk-delete", resourceController.BulkDestroy)
 }
