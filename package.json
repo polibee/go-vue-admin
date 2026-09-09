@@ -7,6 +7,7 @@
     "lint": "pnpm --dir admin run lint",
     "typecheck": "pnpm --dir admin run typecheck",
     "test": "pnpm --dir admin run test",
+    "test:e2e": "playwright test",
     "build": "pnpm --dir admin run build",
     "openapi:generate": "node --eval \"console.log('openapi: generator not configured yet')\"",
     "module:check": "bash scripts/module-check.sh"
@@ -14,5 +15,8 @@
   "engines": {
     "node": ">=24",
     "pnpm": ">=10"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
   }
 }

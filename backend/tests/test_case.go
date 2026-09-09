@@ -1,12 +1,17 @@
 package tests
 
 import (
+	"os"
+
 	"github.com/goravel/framework/testing"
 
 	"goravel/bootstrap"
 )
 
 func init() {
+	if os.Getenv("AUTH_BOOTSTRAP_PASSWORD") == "" {
+		_ = os.Setenv("AUTH_BOOTSTRAP_PASSWORD", "test-only-password")
+	}
 	bootstrap.Boot()
 }
 

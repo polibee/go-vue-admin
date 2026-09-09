@@ -40,5 +40,10 @@ func init() {
 				"driver": "orm",
 			},
 		},
+		"bootstrap": map[string]any{
+			"email":    config.Env("AUTH_BOOTSTRAP_EMAIL", "admin@example.com"),
+			"password": config.Env("AUTH_BOOTSTRAP_PASSWORD", ""),
+			"name":     config.Env("AUTH_BOOTSTRAP_NAME", "Platform Admin"),
+		},
 	})
 }

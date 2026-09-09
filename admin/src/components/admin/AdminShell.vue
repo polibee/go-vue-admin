@@ -11,9 +11,18 @@ import {
   BreadcrumbPage, BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/core/auth'
 import { navigationItems } from '@/core/navigation'
+import { useRouter } from 'vue-router'
 
 const themeLabel = '主题：系统'
+const auth = useAuth()
+const router = useRouter()
+
+async function handleLogout() {
+  await auth.logout()
+  await router.replace('/login')
+}
 </script>
 
 <template>
@@ -70,7 +79,8 @@ const themeLabel = '主题：系统'
             <BreadcrumbItem><BreadcrumbPage>管理后台</BreadcrumbPage></BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <Button class="ml-auto" size="sm" variant="ghost">退出</Button>
+        <span v-if="auth.user" class="hidden text-sm text-muted-foreground md:inline">{{ auth.user.email }}</span>
+        <Button class="ml-auto" size="sm" variant="ghost" @click="handleLogout">退出</Button>
       </header>
       <main class="flex flex-1 flex-col gap-4 p-4 md:p-6"><RouterView /></main>
     </SidebarInset>
