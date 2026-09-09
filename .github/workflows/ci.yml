@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install workspace dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Backend tests
+        run: |
+          if find backend -name '*.go' -print -quit | grep -q .; then
+            (cd backend && go test ./...)
+          else
+            echo "backend: no Go packages yet"
+          fi
+      - name: Admin checks
+        run: |
+          pnpm run lint
+          pnpm run typecheck
+          pnpm run test
+          pnpm run build
+      - name: Generate contracts and reject drift
+        run: |
+          pnpm run openapi:generate
+          git diff --exit-code -- contracts/openapi contracts/generated admin/src/generated
+      - name: Repository and changed-module gates
+        env:
+          MODULE_CHECK_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: bash scripts/module-check.sh
+      - name: Playwright smoke tests when configured
+        run: |
+          if [[ -f admin/playwright.config.ts || -f admin/playwright.config.js || -f playwright.config.ts || -f playwright.config.js ]]; then
+            pnpm --dir admin exec playwright test
+          else
+            echo "playwright: no application configuration yet"
+          fi

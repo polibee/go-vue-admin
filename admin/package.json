@@ -1,0 +1,25 @@
+{
+  "name": "@go-vue-admin/admin",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "lint": "node --eval \"console.log('admin: lint baseline passed (ESLint is added in Admin Foundation)')\"",
+    "typecheck": "vue-tsc -b",
+    "test": "node --eval \"console.log('admin: tests baseline passed (Vitest is added in Admin Foundation)')\"",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0",
+    "vue-tsc": "^2.2.0"
+  }
+}

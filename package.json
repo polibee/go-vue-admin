@@ -1,0 +1,18 @@
+{
+  "name": "go-vue-admin",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.19.0",
+  "scripts": {
+    "lint": "pnpm --dir admin run lint",
+    "typecheck": "pnpm --dir admin run typecheck",
+    "test": "pnpm --dir admin run test",
+    "build": "pnpm --dir admin run build",
+    "openapi:generate": "node --eval \"console.log('openapi: generator not configured yet')\"",
+    "module:check": "bash scripts/module-check.sh"
+  },
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=10"
+  }
+}

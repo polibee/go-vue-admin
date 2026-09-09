@@ -1,0 +1,6 @@
+packages:
+  - admin
+  - backend
+  - modules/*
+  - plugins/*
+  - contracts/*

@@ -1,0 +1,26 @@
+# Dependencies and build output
+node_modules/
+**/node_modules/
+dist/
+coverage/
+.pnpm-store/
+*.tsbuildinfo
+
+# Go output
+backend/bin/
+backend/tmp/
+*.test
+
+# Local configuration
+.env
+.env.*
+!.env.example
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local upstream reference; it is intentionally not part of this repository.
+docs/shadcn-vue-dev/
