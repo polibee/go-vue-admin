@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 import { AuthService, type AuthUser, type LoginCredentials } from './auth.service'
+import { can as checkPermission } from '@/core/permissions'
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'guest'
 
@@ -13,6 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
   let loadingPromise: Promise<boolean> | null = null
 
   const isAuthenticated = computed(() => status.value === 'authenticated' && user.value !== null)
+  const can = (permission: string) => checkPermission(user.value?.permissions ?? [], permission)
 
   async function loadCurrentUser(): Promise<boolean> {
     if (loadingPromise) return loadingPromise
@@ -63,7 +65,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, status, error, isAuthenticated, loadCurrentUser, login, logout }
+  return { user, status, error, isAuthenticated, can, loadCurrentUser, login, logout }
 })
 
 export type AuthStore = ReturnType<typeof useAuthStore>

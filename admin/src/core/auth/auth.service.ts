@@ -4,6 +4,7 @@ export interface AuthUser {
   id: string
   email: string
   name: string
+  permissions: string[]
 }
 
 export interface LoginCredentials {
@@ -25,7 +26,7 @@ export class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthUser> {
     const csrf = await this.csrf()
     return this.client
-      .request<ApiEnvelope<AuthUser>>('/login', {
+      .request<ApiEnvelope<AuthUser>>('/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,13 +38,13 @@ export class AuthService {
   }
 
   async me(): Promise<AuthUser> {
-    const { data } = await this.client.request<ApiEnvelope<AuthUser>>('/me')
+    const { data } = await this.client.request<ApiEnvelope<AuthUser>>('/api/me')
     return data
   }
 
   async logout(): Promise<void> {
     const csrf = await this.csrf()
-    await this.client.request('/logout', {
+    await this.client.request('/api/logout', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -53,7 +54,7 @@ export class AuthService {
   }
 
   private async csrf(): Promise<string> {
-    const { data } = await this.client.request<ApiEnvelope<CsrfPayload>>('/csrf')
+    const { data } = await this.client.request<ApiEnvelope<CsrfPayload>>('/api/csrf')
     return data.token
   }
 }

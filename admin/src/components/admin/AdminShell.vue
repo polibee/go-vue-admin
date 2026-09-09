@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { ChevronsUpDown } from '@lucide/vue'
 import {
@@ -12,12 +13,21 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/core/auth'
-import { navigationItems } from '@/core/navigation'
+import { navigationRegistry, NavigationService } from '@/core/navigation'
 import { useRouter } from 'vue-router'
 
 const themeLabel = '主题：系统'
 const auth = useAuth()
 const router = useRouter()
+const navigationItems = computed(() => navigationRegistry.visible(auth.user?.permissions ?? []))
+
+onMounted(async () => {
+  try {
+    navigationRegistry.registerMany(await new NavigationService().list())
+  } catch {
+    // The session and backend remain authoritative; static metadata keeps the shell usable during startup.
+  }
+})
 
 async function handleLogout() {
   await auth.logout()

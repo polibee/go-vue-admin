@@ -100,7 +100,7 @@ func (c *AuthController) Login(ctx http.Context) http.Response {
 }
 
 func (c *AuthController) Me(ctx http.Context) http.Response {
-	user, err := c.currentUser(ctx)
+	user, err := c.CurrentUser(ctx)
 	if err != nil {
 		return c.error(ctx, 401, "UNAUTHENTICATED", "请先登录")
 	}
@@ -120,7 +120,7 @@ func (c *AuthController) Logout(ctx http.Context) http.Response {
 	return c.success(ctx, map[string]bool{"logged_out": true})
 }
 
-func (c *AuthController) currentUser(ctx http.Context) (auth.User, error) {
+func (c *AuthController) CurrentUser(ctx http.Context) (auth.User, error) {
 	if c.initError != nil || c.service == nil {
 		return auth.User{}, auth.ErrAuthNotConfigured
 	}

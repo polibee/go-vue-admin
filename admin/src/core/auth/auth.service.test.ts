@@ -8,7 +8,7 @@ describe('AuthService', () => {
     const service = new AuthService({
       request: async <T>(path: string, options?: RequestInit) => {
         calls.push({ method: options?.method ?? 'GET', path, body: options?.body, headers: options?.headers })
-        if (path === '/csrf') return { data: { token: 'csrf-token' } } as T
+        if (path === '/api/csrf') return { data: { token: 'csrf-token' } } as T
         return { data: { id: 'user-1', email: 'admin@example.com', name: 'Platform Admin' } } as T
       },
     })
@@ -17,10 +17,10 @@ describe('AuthService', () => {
 
     expect(user.email).toBe('admin@example.com')
     expect(calls).toEqual([
-      { method: 'GET', path: '/csrf', body: undefined, headers: undefined },
+      { method: 'GET', path: '/api/csrf', body: undefined, headers: undefined },
       {
         method: 'POST',
-        path: '/login',
+        path: '/api/login',
         body: JSON.stringify({ email: 'admin@example.com', password: 'secret' }),
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': 'csrf-token' },
       },
@@ -32,7 +32,7 @@ describe('AuthService', () => {
     const service = new AuthService({
       request: async <T>(path: string) => {
         paths.push(path)
-        if (path === '/csrf') return { data: { token: 'csrf-token' } } as T
+        if (path === '/api/csrf') return { data: { token: 'csrf-token' } } as T
         return { data: { id: 'user-1', email: 'admin@example.com', name: 'Platform Admin' } } as T
       },
     })
@@ -40,6 +40,6 @@ describe('AuthService', () => {
     await service.me()
     await service.logout()
 
-    expect(paths).toEqual(['/me', '/csrf', '/logout'])
+    expect(paths).toEqual(['/api/me', '/api/csrf', '/api/logout'])
   })
 })

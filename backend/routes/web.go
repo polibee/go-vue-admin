@@ -21,10 +21,13 @@ func Web() {
 	facades.Route().Get("/users", userController.Index)
 
 	authController := controllers.NewAuthController()
+	menuController := controllers.NewMenuController(authController)
 	for _, prefix := range []string{"", "/api"} {
 		facades.Route().Get(prefix+"/csrf", authController.CSRF)
 		facades.Route().Post(prefix+"/login", authController.Login)
 		facades.Route().Post(prefix+"/logout", authController.Logout)
 		facades.Route().Get(prefix+"/me", authController.Me)
 	}
+	facades.Route().Get("/menu", menuController.Index)
+	facades.Route().Get("/api/menu", menuController.Index)
 }

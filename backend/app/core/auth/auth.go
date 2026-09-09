@@ -15,21 +15,23 @@ var (
 )
 
 type User struct {
-	ID           string `json:"id"`
-	Email        string `json:"email"`
-	Name         string `json:"name"`
-	PasswordHash string `json:"-"`
-	Active       bool   `json:"active"`
+	ID           string   `json:"id"`
+	Email        string   `json:"email"`
+	Name         string   `json:"name"`
+	PasswordHash string   `json:"-"`
+	Active       bool     `json:"active"`
+	Permissions  []string `json:"permissions,omitempty"`
 }
 
 type PublicUser struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	Name  string `json:"name"`
+	ID          string   `json:"id"`
+	Email       string   `json:"email"`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
 }
 
 func (u User) Public() PublicUser {
-	return PublicUser{ID: u.ID, Email: u.Email, Name: u.Name}
+	return PublicUser{ID: u.ID, Email: u.Email, Name: u.Name, Permissions: append([]string(nil), u.Permissions...)}
 }
 
 type UserRepository interface {
@@ -149,6 +151,7 @@ func NewBootstrapService(email, password, name string) (*Service, error) {
 			Name:         name,
 			PasswordHash: passwordHash,
 			Active:       true,
+			Permissions:  []string{"dashboard.view", "settings.view"},
 		}),
 		hasher,
 	), nil
