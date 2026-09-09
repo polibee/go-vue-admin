@@ -1,6 +1,10 @@
+import { apiClient } from '@/core/api/client'
+
 import { MemoryResourceDataProvider } from './core/ResourceDataProvider'
 import { defineResource } from './core/ResourceDefinition'
 import { ResourceRegistry } from './core/ResourceRegistry'
+import { HttpResourceDataProvider } from './providers/HttpResourceDataProvider'
+import { createResourceProvider, resolveResourceProviderMode } from './provider-mode'
 
 export interface DemoResourceRecord {
   id: string
@@ -35,10 +39,18 @@ export const demoResource = defineResource<DemoResourceRecord>({
   ],
 })
 
-export const demoProvider = new MemoryResourceDataProvider<DemoResourceRecord>([
+const memoryDemoProvider = new MemoryResourceDataProvider<DemoResourceRecord>([
   { id: 'demo-1', name: '资源引擎示例', status: 'active', owner: 'Platform Admin' },
   { id: 'demo-2', name: '可编辑记录', status: 'draft', owner: 'Platform Admin' },
 ])
+
+const httpDemoProvider = new HttpResourceDataProvider<DemoResourceRecord>(apiClient, '/api/resources/demo')
+
+export const demoProvider = createResourceProvider(
+  resolveResourceProviderMode(),
+  memoryDemoProvider,
+  httpDemoProvider,
+)
 
 export const resourceRegistry = new ResourceRegistry()
 resourceRegistry.register(demoResource, demoProvider)
