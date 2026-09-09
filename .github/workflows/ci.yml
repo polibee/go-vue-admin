@@ -23,7 +23,7 @@ jobs:
       - name: Enable pnpm
         run: corepack enable
       - name: Install workspace dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - name: Backend tests
         run: |
           if find backend -name '*.go' -print -quit | grep -q .; then

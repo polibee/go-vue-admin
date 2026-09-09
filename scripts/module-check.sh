@@ -23,20 +23,37 @@ run_repository_checks() {
     echo "module-check: backend tests skipped (no Go packages yet)"
   fi
 
-  if ! git diff --exit-code -- contracts/openapi contracts/generated admin/src/generated; then
-    fail "generated OpenAPI or SDK files are out of date; run pnpm openapi:generate and commit the result"
+  if git rev-parse --verify HEAD >/dev/null 2>&1; then
+    if ! git diff --quiet HEAD -- contracts/openapi contracts/generated admin/src/generated; then
+      fail "generated OpenAPI or SDK files are out of date; run pnpm openapi:generate and commit the result"
+    fi
+  else
+    echo "module-check: generated drift check skipped (no Git HEAD yet)"
   fi
 }
 
 check_ui_boundaries() {
-  local layer
+  local layer file spec resolved
   for layer in admin/src/components/ui admin/src/components/ai-elements; do
     [[ -d "$layer" ]] || continue
     if rg -n --glob '*.{ts,tsx,js,jsx,vue}' \
-      '(@|~)/(app|core|modules|pages|resource-engine|stores|generated|services|components/(admin|ui-extensions))(/|$)' \
+      '(@|~)/(app|core|modules|pages|resource-engine|stores|generated|services|router|navigation|permissions?|auth|components/(admin|ui-extensions))(/|$)' \
       "$layer"; then
       fail "$layer imports application code; upstream UI layers must remain dependency-free"
     fi
+
+    while IFS= read -r file; do
+      while IFS= read -r spec; do
+        resolved="$(realpath -m "$(dirname "$file")/$spec")"
+        case "$resolved" in
+          "$ROOT_DIR/admin/src/components/ui"/*|"$ROOT_DIR/admin/src/components/ai-elements"/*)
+            ;;
+          *)
+            fail "$file imports outside the upstream UI layers through relative path: $spec"
+            ;;
+        esac
+      done < <(rg -o --no-filename '((\.\.?/)[^"'"'"'(),;[:space:]]+)' "$file" | sed -E 's/["'"'"'`].*$//')
+    done < <(rg --files "$layer" -g '*.{ts,tsx,js,jsx,vue}')
   done
 }
 
@@ -95,13 +112,14 @@ run_module_checks() {
 changed_modules() {
   local diff_args=()
   if [[ -n "${MODULE_CHECK_BASE:-}" ]]; then
-    git rev-parse --verify "${MODULE_CHECK_BASE}^{commit}" >/dev/null 2>&1 \
-      || fail "MODULE_CHECK_BASE is not a commit: ${MODULE_CHECK_BASE}"
     diff_args=("${MODULE_CHECK_BASE}" HEAD)
   elif git rev-parse --verify HEAD^ >/dev/null 2>&1; then
     diff_args=(HEAD^ HEAD)
   else
-    diff_args=(HEAD)
+    git ls-files modules
+    git diff --name-only
+    git diff --cached --name-only
+    return
   fi
 
   {
@@ -113,6 +131,15 @@ changed_modules() {
 
 if [[ $# -gt 1 ]]; then
   fail "usage: $0 [modules/<module>]"
+fi
+
+if [[ -n "${MODULE_CHECK_BASE:-}" ]]; then
+  if [[ "$MODULE_CHECK_BASE" =~ ^0+$ ]]; then
+    unset MODULE_CHECK_BASE
+  else
+    git rev-parse --verify "${MODULE_CHECK_BASE}^{commit}" >/dev/null 2>&1 \
+      || fail "MODULE_CHECK_BASE is not a commit: ${MODULE_CHECK_BASE}"
+  fi
 fi
 
 run_repository_checks
