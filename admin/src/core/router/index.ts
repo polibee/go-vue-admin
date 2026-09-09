@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { AuthGuard, GuestGuard } from '@/core/auth'
+import { resourceRouteRecords } from '@/resource-engine/router'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -14,6 +15,7 @@ export const router = createRouter({
       children: [
         { path: 'dashboard', component: () => import('@/pages/DashboardPage.vue') },
         { path: 'settings', component: () => import('@/pages/SettingsPage.vue') },
+        ...resourceRouteRecords(),
       ],
     },
     { path: '/:pathMatch(.*)*', component: () => import('@/pages/errors/NotFoundPage.vue') },

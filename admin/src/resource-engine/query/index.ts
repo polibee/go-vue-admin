@@ -1,0 +1,1 @@
+export { serializeResourceQuery } from './serializeResourceQuery'

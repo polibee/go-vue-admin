@@ -1,5 +1,13 @@
 export { defineResource } from './ResourceDefinition'
-export type { ResourceAction, ResourceDefinition, ResourcePermissions } from './ResourceDefinition'
+export type {
+  ResourceAction,
+  ResourceColumn,
+  ResourceDefinition,
+  ResourceField,
+  ResourceFieldOption,
+  ResourceFieldType,
+  ResourcePermissions,
+} from './ResourceDefinition'
 export { MemoryResourceDataProvider } from './ResourceDataProvider'
 export type {
   ResourceDataProvider,

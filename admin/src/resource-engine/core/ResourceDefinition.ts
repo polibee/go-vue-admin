@@ -2,16 +2,38 @@ export type ResourceAction = 'list' | 'get' | 'create' | 'update' | 'delete' | '
 
 export type ResourcePermissions = Partial<Record<ResourceAction, string>>
 
+export type ResourceFieldType = 'text' | 'textarea' | 'number' | 'select' | 'checkbox' | 'switch' | 'date' | 'datetime'
+
+export interface ResourceFieldOption {
+  label: string
+  value: string
+}
+
+export interface ResourceField<T extends object = object> {
+  name: keyof T & string
+  label: string
+  type?: ResourceFieldType
+  required?: boolean
+  placeholder?: string
+  options?: readonly ResourceFieldOption[]
+}
+
+export interface ResourceColumn<T extends object = object> {
+  key: keyof T & string
+  label: string
+  sortable?: boolean
+}
+
 export interface ResourceDefinition<T extends object = object> {
   name: string
   label?: string
   endpoint?: string
   primaryKey?: keyof T | string
   permissions?: ResourcePermissions
-  columns?: readonly unknown[]
-  fields?: readonly unknown[]
+  columns?: readonly ResourceColumn<T>[]
+  fields?: readonly ResourceField<T>[]
   filters?: readonly unknown[]
-  actions?: readonly unknown[]
+  actions?: readonly ResourceAction[]
 }
 
 export function defineResource<T extends object>(definition: ResourceDefinition<T>): ResourceDefinition<T> {
