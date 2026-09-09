@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
 import { useRoute, useRouter } from 'vue-router'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -30,8 +31,14 @@ onMounted(async () => {
 
 async function update(values: Record<string, unknown>) {
   if (!provider.value || !context.value?.can('update')) return
-  await provider.value.update(id.value, values)
-  await router.replace(`/admin/resources/${name.value}/${id.value}`)
+  error.value = null
+  try {
+    await provider.value.update(id.value, values)
+    toast.success('记录已保存')
+    await router.replace(`/admin/resources/${name.value}/${id.value}`)
+  } catch (cause) {
+    error.value = cause instanceof Error ? cause.message : '保存失败'
+  }
 }
 </script>
 

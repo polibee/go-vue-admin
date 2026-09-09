@@ -286,12 +286,12 @@ Expected: `/admin` opens with light/dark/system, Chinese/English, collapsible si
 - Table uses TanStack Table plus shadcn-vue Table for server pagination, sort, search, filter, selection, and bulk actions.
 - Form uses vee-validate + Zod + shadcn-vue Form and supports text, textarea, number, select, checkbox, switch, date, and datetime fields.
 
-- [ ] **Step 1: Write table/form tests for server state and validation errors.**
-- [ ] **Step 2: Implement table query serialization using the shared backend protocol.**
-- [ ] **Step 3: Implement field registry and Zod validation mapping.**
-- [ ] **Step 4: Implement generic pages and route registration.**
-- [ ] **Step 5: Add a DemoResource proving CRUD without custom CRUD pages.**
-- [ ] **Step 6: Run unit, component, browser, and build checks; commit `feat(resource): add generic CRUD engine`.**
+- [x] **Step 1: Write table/form tests for server state and validation errors.**
+- [x] **Step 2: Implement table query serialization using the shared backend protocol.**
+- [x] **Step 3: Implement field registry and Zod validation mapping.**
+- [x] **Step 4: Implement generic pages and route registration.**
+- [x] **Step 5: Add a DemoResource proving CRUD without custom CRUD pages.**
+- [x] **Step 6: Run unit, component, browser, and build checks; commit `feat(resource): add generic CRUD engine`.**
 
 ---
 
@@ -440,4 +440,3 @@ Each row is a separate delivery boundary. A row is not pushed until its acceptan
 - Placeholder scan: no implementation step is left as TBD; all later interfaces name concrete files, commands, or exported contracts.
 - Type consistency: `ResourceDataProvider`, `defineResource`, `defineAdminModule`, backend `Module`, and `PluginManifest` are defined before their consumers.
 - Scope guard: external runtime plugins, marketplace, sandbox, GraphQL, workflow engine, and schema builder are intentionally excluded from v1 as required by the source docs.
-

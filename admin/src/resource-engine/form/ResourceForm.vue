@@ -4,6 +4,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
@@ -49,6 +50,7 @@ function inputType(field: ResourceField<object>): string {
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <Checkbox v-else-if="field.type === 'checkbox'" v-bind="componentField" />
             <Switch v-else-if="field.type === 'switch'" v-bind="componentField" />
             <Input v-else :type="inputType(field)" :placeholder="field.placeholder" v-bind="componentField" />
           </FormControl>

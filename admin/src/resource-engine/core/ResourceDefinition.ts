@@ -24,6 +24,12 @@ export interface ResourceColumn<T extends object = object> {
   sortable?: boolean
 }
 
+export interface ResourceFilter<T extends object = object> {
+  field: keyof T & string
+  label: string
+  options?: readonly ResourceFieldOption[]
+}
+
 export interface ResourceDefinition<T extends object = object> {
   name: string
   label?: string
@@ -32,7 +38,7 @@ export interface ResourceDefinition<T extends object = object> {
   permissions?: ResourcePermissions
   columns?: readonly ResourceColumn<T>[]
   fields?: readonly ResourceField<T>[]
-  filters?: readonly unknown[]
+  filters?: readonly ResourceFilter<T>[]
   actions?: readonly ResourceAction[]
 }
 

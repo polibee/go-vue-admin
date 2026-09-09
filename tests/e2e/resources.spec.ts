@@ -16,11 +16,47 @@ test('generic resource pages support list, create, edit, and show flows', async 
 
   await page.getByRole('button', { name: '新建' }).click()
   await expect(page).toHaveURL(/\/admin\/resources\/demo\/create/)
-  await page.getByLabel('名称').fill('浏览器创建的记录')
+  const createdName = `浏览器创建的记录-${Date.now()}`
+  await page.getByLabel('名称').fill(createdName)
   await page.getByRole('combobox').click()
   await page.getByRole('option', { name: '启用' }).click()
   await page.getByLabel('负责人').fill('QA')
   await page.getByRole('button', { name: '创建' }).click()
   await expect(page).toHaveURL(/\/admin\/resources\/demo\/demo-/)
-  await expect(page.getByText('浏览器创建的记录', { exact: true }).last()).toBeVisible()
+  await expect(page.getByText(createdName, { exact: true }).last()).toBeVisible()
+
+  await page.getByRole('button', { name: '编辑' }).click()
+  await expect(page).toHaveURL(/\/admin\/resources\/demo\/demo-.*\/edit/)
+  const updatedName = `${createdName}-已更新`
+  await page.getByLabel('名称').fill(updatedName)
+  await page.getByRole('button', { name: '保存' }).click()
+  await expect(page.getByText(updatedName, { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: '删除' }).click()
+  await expect(page.getByRole('alertdialog')).toBeVisible()
+  await page.getByRole('alertdialog').getByRole('button', { name: '确认删除' }).click()
+  await expect(page).toHaveURL(/\/admin\/resources\/demo$/)
+  await expect(page.getByText(updatedName, { exact: true })).not.toBeVisible()
+})
+
+test('generic resource list supports filters, sorting, and bulk delete', async ({ page }) => {
+  await page.goto('/login')
+  await page.getByLabel('邮箱').fill(email)
+  await page.getByLabel('密码', { exact: true }).fill(password)
+  await page.getByRole('button', { name: '登录' }).click()
+  await page.goto('/admin/resources/demo')
+
+  await page.getByLabel('状态筛选').click()
+  await page.getByRole('option', { name: '启用' }).click()
+  await expect(page.getByText('资源引擎示例')).toBeVisible()
+  await expect(page.getByText('可编辑记录')).not.toBeVisible()
+
+  await page.getByRole('button', { name: '按名称排序' }).click()
+  await expect(page.getByText('page=1')).toBeVisible()
+
+  await page.getByLabel('选择 demo-1').check()
+  await page.getByRole('button', { name: '批量删除' }).click()
+  await expect(page.getByRole('alertdialog')).toBeVisible()
+  await page.getByRole('alertdialog').getByRole('button', { name: '确认删除' }).click()
+  await expect(page.getByText('资源引擎示例')).not.toBeVisible()
 })

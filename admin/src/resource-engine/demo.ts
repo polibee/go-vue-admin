@@ -37,6 +37,13 @@ export const demoResource = defineResource<DemoResourceRecord>({
     ] },
     { name: 'owner', label: '负责人', required: true, placeholder: '请输入负责人' },
   ],
+  filters: [
+    { field: 'status', label: '状态', options: [
+      { label: '全部状态', value: '' },
+      { label: '草稿', value: 'draft' },
+      { label: '启用', value: 'active' },
+    ] },
+  ],
 })
 
 const memoryDemoProvider = new MemoryResourceDataProvider<DemoResourceRecord>([
