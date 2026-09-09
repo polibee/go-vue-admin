@@ -24,8 +24,8 @@ import (
 	"github.com/goravel/framework/validation"
 	"github.com/goravel/framework/view"
 	"github.com/goravel/gin"
+	"github.com/goravel/mysql"
 	"github.com/goravel/openai"
-	"github.com/goravel/postgres"
 )
 
 func Providers() []foundation.ServiceProvider {
@@ -43,7 +43,7 @@ func Providers() []foundation.ServiceProvider {
 		&ai.ServiceProvider{},
 		&openai.ServiceProvider{},
 		&database.ServiceProvider{},
-		&postgres.ServiceProvider{},
+		&mysql.ServiceProvider{},
 		&auth.ServiceProvider{},
 		&crypt.ServiceProvider{},
 		&queue.ServiceProvider{},
