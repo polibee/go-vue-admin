@@ -9,6 +9,9 @@ import (
 )
 
 func init() {
+	if os.Getenv("APP_ENV") == "" {
+		_ = os.Setenv("APP_ENV", "local")
+	}
 	if os.Getenv("AUTH_BOOTSTRAP_PASSWORD") == "" {
 		_ = os.Setenv("AUTH_BOOTSTRAP_PASSWORD", "test-only-password")
 	}

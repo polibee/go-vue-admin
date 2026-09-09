@@ -24,8 +24,12 @@ type LoginRequest struct {
 }
 
 type AuthController struct {
-	service   *auth.Service
-	initError error
+	service              *auth.Service
+	initError            error
+	bootstrapEmail       string
+	bootstrapPassword    string
+	bootstrapName        string
+	bootstrapEnvironment string
 }
 
 func NewAuthController() *AuthController {
@@ -48,11 +52,35 @@ func NewAuthController() *AuthController {
 		name,
 	)
 
-	return &AuthController{service: service, initError: err}
+	environment := os.Getenv("APP_ENV")
+	if environment == "" {
+		environment = config.GetString("app.env", "production")
+	}
+
+	return &AuthController{
+		service:              service,
+		initError:            err,
+		bootstrapEmail:       email,
+		bootstrapPassword:    password,
+		bootstrapName:        name,
+		bootstrapEnvironment: environment,
+	}
 }
 
 func NewAuthControllerWithService(service *auth.Service) *AuthController {
 	return &AuthController{service: service}
+}
+
+func (c *AuthController) Bootstrap(ctx http.Context) http.Response {
+	if c.bootstrapEnvironment != "local" || c.initError != nil || c.bootstrapPassword == "" {
+		return c.error(ctx, 404, "NOT_FOUND", "资源不存在")
+	}
+
+	return c.success(ctx, map[string]string{
+		"email":    c.bootstrapEmail,
+		"password": c.bootstrapPassword,
+		"name":     c.bootstrapName,
+	})
 }
 
 func (c *AuthController) CSRF(ctx http.Context) http.Response {

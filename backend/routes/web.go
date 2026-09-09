@@ -24,6 +24,7 @@ func Web() {
 	menuController := controllers.NewMenuController(authController)
 	for _, prefix := range []string{"", "/api"} {
 		facades.Route().Get(prefix+"/csrf", authController.CSRF)
+		facades.Route().Get(prefix+"/auth/bootstrap", authController.Bootstrap)
 		facades.Route().Post(prefix+"/login", authController.Login)
 		facades.Route().Post(prefix+"/logout", authController.Logout)
 		facades.Route().Get(prefix+"/me", authController.Me)

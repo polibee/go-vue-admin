@@ -60,6 +60,28 @@ func TestAuthEndpointsUseRotatingHttpOnlySessionCookie(t *testing.T) {
 	afterLogout.AssertUnauthorized()
 }
 
+func TestBootstrapCredentialsAreAvailableToTheLocalLoginPage(t *testing.T) {
+	testCase := new(tests.TestCase)
+
+	credentials, err := testCase.Http(t).Get("/api/auth/bootstrap")
+	require.NoError(t, err)
+	credentials.AssertOk()
+	require.Equal(t, "admin@example.com", responseDataString(t, credentials, "email"))
+	require.Equal(t, "test-only-password", responseDataString(t, credentials, "password"))
+}
+
+func TestApiResponsesAllowTheLocalAdminPanelOrigin(t *testing.T) {
+	testCase := new(tests.TestCase)
+
+	response, err := testCase.Http(t).
+		WithHeader("Origin", "http://127.0.0.1:5187").
+		Get("/api/auth/bootstrap")
+	require.NoError(t, err)
+	response.AssertOk()
+	require.Equal(t, "http://127.0.0.1:5187", response.Headers().Get("Access-Control-Allow-Origin"))
+	require.Equal(t, "true", response.Headers().Get("Access-Control-Allow-Credentials"))
+}
+
 func TestAuthMutationsRequireCsrfToken(t *testing.T) {
 	testCase := new(tests.TestCase)
 

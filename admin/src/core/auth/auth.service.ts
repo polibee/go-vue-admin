@@ -12,6 +12,12 @@ export interface LoginCredentials {
   password: string
 }
 
+export interface BootstrapCredentials {
+  email: string
+  password: string
+  name: string
+}
+
 interface ApiEnvelope<T> {
   data: T
 }
@@ -39,6 +45,11 @@ export class AuthService {
 
   async me(): Promise<AuthUser> {
     const { data } = await this.client.request<ApiEnvelope<AuthUser>>('/api/me')
+    return data
+  }
+
+  async bootstrapCredentials(): Promise<BootstrapCredentials> {
+    const { data } = await this.client.request<ApiEnvelope<BootstrapCredentials>>('/api/auth/bootstrap')
     return data
   }
 

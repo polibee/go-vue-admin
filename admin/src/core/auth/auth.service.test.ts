@@ -3,6 +3,21 @@ import { describe, expect, it } from 'vitest'
 import { AuthService } from './auth.service'
 
 describe('AuthService', () => {
+  it('loads the current local bootstrap credentials for the login page', async () => {
+    const service = new AuthService({
+      request: async <T>(path: string) => {
+        expect(path).toBe('/api/auth/bootstrap')
+        return { data: { email: 'admin@example.com', password: 'test-only-password', name: 'Platform Admin' } } as T
+      },
+    })
+
+    await expect(service.bootstrapCredentials()).resolves.toEqual({
+      email: 'admin@example.com',
+      password: 'test-only-password',
+      name: 'Platform Admin',
+    })
+  })
+
   it('loads CSRF before login and sends browser credentials', async () => {
     const calls: Array<{ method: string; path: string; body?: unknown; headers?: HeadersInit }> = []
     const service = new AuthService({
