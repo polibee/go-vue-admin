@@ -39,10 +39,16 @@ func TestGenerateResourceRendersManifestAndModuleFiles(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(root, "backend", "routes"), 0o755); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.MkdirAll(filepath.Join(root, "admin", "src", "core", "extensions"), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.WriteFile(filepath.Join(root, "backend", "routes", "web.go"), []byte("package routes\n\nimport (\n)\n\nfunc Web() {\n\tauthController := controllers.NewAuthController()\n}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(root, "backend", "go.mod"), []byte("module goravel\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "admin", "src", "core", "extensions", "runtime.ts"), []byte("export function registerBuiltinExtensions(): void {\n  registerModule(moduleDefinition)\n}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := GenerateModule(ModuleOptions{RootDir: root, Name: "catalog"}); err != nil {
@@ -71,6 +77,33 @@ func TestGenerateResourceRendersManifestAndModuleFiles(t *testing.T) {
 	}
 	if !strings.Contains(string(module), "productsResource") {
 		t.Fatal("generated resource was not registered in module.ts")
+	}
+	if !strings.Contains(string(module), "route: '/admin/resources/products'") {
+		t.Fatal("generated resource navigation was not registered in module.ts")
+	}
+	backendResource, err := os.ReadFile(filepath.Join(root, "modules/catalog/backend/resources/products.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(backendResource), "NewGormResourceRepository") || !strings.Contains(string(backendResource), "database *gorm.DB") {
+		t.Fatal("generated backend resource does not use the GORM repository")
+	}
+	routes, err := os.ReadFile(filepath.Join(root, "backend", "routes", "web.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(routes), "catalogModule.RegisterRoutes(authController, resourceDatabase.DB)") {
+		t.Fatal("generated backend module was not registered in application routes")
+	}
+	if strings.Index(string(routes), "resourceDatabase, databaseErr :=") > strings.Index(string(routes), "catalogModule.RegisterRoutes") {
+		t.Fatal("generated database initialization must precede module route registration")
+	}
+	runtime, err := os.ReadFile(filepath.Join(root, "admin", "src", "core", "extensions", "runtime.ts"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(runtime), "catalogModuleDefinition") || !strings.Contains(string(runtime), "registerModule(catalogModuleDefinition)") {
+		t.Fatal("generated frontend module was not registered in extension runtime")
 	}
 }
 

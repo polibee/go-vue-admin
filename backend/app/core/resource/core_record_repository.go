@@ -10,7 +10,7 @@ import (
 
 type CoreResourceRecord map[string]any
 
-type CoreResourceRepository interface {
+type ResourceRepository interface {
 	List(context.Context, DemoResourceListQuery) ([]CoreResourceRecord, int, error)
 	Get(context.Context, string) (CoreResourceRecord, error)
 	Create(context.Context, CoreResourceRecord) (CoreResourceRecord, error)
@@ -18,6 +18,10 @@ type CoreResourceRepository interface {
 	Delete(context.Context, string) error
 	BulkDelete(context.Context, []string) error
 }
+
+// CoreResourceRepository is retained as a source-compatible alias while
+// generated modules migrate to the database-independent name.
+type CoreResourceRepository = ResourceRepository
 
 type MemoryCoreResourceRepository struct {
 	mu   sync.RWMutex

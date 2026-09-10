@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -42,11 +43,35 @@ func NewConfiguredResourceController(auth *AuthController) *ResourceController {
 			resource.DemoResource{ID: "demo-2", Name: "可编辑记录", Status: "draft", Owner: "Platform Admin"},
 		)
 	case resource.ResourceProviderMySQL:
-		repository = resource.NewMySQLDemoResourceRepository()
+		database, databaseErr := resource.OpenMySQLResourceDatabase(mysqlResourceDSN(), resource.GormDatabaseOptions{
+			MaxIdleConns: 10, MaxOpenConns: 100,
+		})
+		if databaseErr != nil {
+			return &ResourceController{auth: auth, initError: databaseErr}
+		}
+		genericRepository, repositoryErr := resource.NewGormResourceRepository(resource.GormResourceOptions{
+			DB: database.DB,
+			Schema: resource.ResourceSchema{
+				Table: "demo_resources", PrimaryKey: "id",
+				Fields:     []string{"id", "name", "status", "owner", "created_at", "updated_at"},
+				Searchable: []string{"id", "name", "status", "owner"},
+				Sortable:   []string{"id", "name", "status", "owner", "created_at", "updated_at"},
+			},
+		})
+		if repositoryErr != nil {
+			_ = database.Close()
+			return &ResourceController{auth: auth, initError: repositoryErr}
+		}
+		repository = resource.NewGormDemoResourceRepository(genericRepository)
 	default:
 		return &ResourceController{auth: auth, initError: errors.New("resource provider is not configured")}
 	}
 	return NewResourceController(auth, resource.NewDemoResourceService(repository))
+}
+
+func mysqlResourceDSN() string {
+	config := facades.Config()
+	return resource.MySQLResourceDSN(fmt.Sprint(config.Env("DB_USERNAME")), fmt.Sprint(config.Env("DB_PASSWORD")), fmt.Sprint(config.Env("DB_HOST", "127.0.0.1")), fmt.Sprint(config.Env("DB_PORT", "3306")), fmt.Sprint(config.Env("DB_DATABASE")))
 }
 
 type demoResourceCreateRequest struct {

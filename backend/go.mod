@@ -3,15 +3,17 @@ module goravel
 go 1.25.0
 
 require (
-	go-vue-admin-module/example v0.0.0
 	github.com/google/uuid v1.6.0
 	github.com/goravel/framework v1.18.0
 	github.com/goravel/gin v1.18.0
 	github.com/goravel/mysql v1.18.0
 	github.com/goravel/openai v1.18.0
 	github.com/stretchr/testify v1.11.1
+	go-vue-admin-module/example v0.0.0
 	golang.org/x/crypto v0.53.0
 )
+
+require github.com/mattn/go-sqlite3 v1.14.22 // indirect
 
 replace go-vue-admin-module/example => ../modules/example/backend
 
@@ -61,7 +63,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.30.1 // indirect
-	github.com/go-sql-driver/mysql v1.9.3 // indirect
+	github.com/go-sql-driver/mysql v1.9.3
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
@@ -154,8 +156,9 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/grpc v1.81.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/mysql v1.6.0 // indirect
-	gorm.io/gorm v1.31.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1
+	gorm.io/driver/mysql v1.6.0
+	gorm.io/driver/sqlite v1.6.0
+	gorm.io/gorm v1.31.2
 	gorm.io/plugin/dbresolver v1.6.2 // indirect
 )
