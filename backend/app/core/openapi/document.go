@@ -47,6 +47,12 @@ func BuildDocument() map[string]any {
 // The map keys are stable filenames without the .json suffix.
 func SchemaDocuments() map[string]any {
 	return map[string]any{
+		"extension-resource": resourceSchema(map[string]any{
+			"id": map[string]any{"type":"string"}, "name": map[string]any{"type":"string"},
+			"kind": map[string]any{"type":"string", "enum":[]any{"module","plugin"}},
+			"state": map[string]any{"type":"string", "enum":[]any{"enabled","disabled"}},
+			"message": map[string]any{"type":"string"},
+		}, []string{"id","name","kind","state"}),
 		"demo-resource": resourceSchema(map[string]any{
 			"id": map[string]any{"type": "string"}, "name": map[string]any{"type": "string"},
 			"status": map[string]any{"type": "string", "enum": []any{"draft", "active"}},
@@ -202,6 +208,16 @@ func operationFor(endpoint CoreEndpoint, normalizedPath string) map[string]any {
 		} else {
 			operation["parameters"] = []any{pathIDParameter()}
 			operation["responses"] = map[string]any{"200": responseSchema("Audit", false)}
+		}
+	}
+	if strings.HasPrefix(normalizedPath, "/api/extensions") {
+		operation["tags"] = []any{"Extensions"}
+		operation["responses"] = map[string]any{"200": responseSchema("Extension", normalizedPath == "/api/extensions" || endpoint.Method == "PUT")}
+		if normalizedPath != "/api/extensions" { operation["parameters"] = []any{pathIDParameter()} }
+		if endpoint.Method == "PUT" {
+			operation["requestBody"] = jsonRequestBody(resourceSchema(map[string]any{
+				"state": map[string]any{"type":"string", "enum":[]any{"enabled","disabled"}},
+			}, []string{"state"}))
 		}
 	}
 	return operation

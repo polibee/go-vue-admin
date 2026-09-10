@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/table'
 
 import { createResourceContext } from '../core/ResourceContext'
+import { useAuth } from '@/core/auth'
 import type { ResourceListResult, ResourceSort } from '../core/ResourceDataProvider'
 import { resourceRegistry } from '../demo'
 import { serializeResourceQuery } from '../query/serializeResourceQuery'
@@ -33,11 +34,12 @@ import { nextResourceSort } from '../table/state'
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuth()
 const resourceName = computed(() => String(route.params.resource ?? ''))
 const definition = computed(() => resourceRegistry.get(resourceName.value))
 const provider = computed(() => resourceRegistry.provider(resourceName.value))
 const context = computed(() => definition.value && provider.value
-  ? createResourceContext(definition.value, provider.value, ['dashboard.view'])
+  ? createResourceContext(definition.value, provider.value, auth.user?.permissions ?? [])
   : null)
 const rows = ref<Record<string, unknown>[]>([])
 const search = ref('')

@@ -8,15 +8,17 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { createResourceContext } from '../core/ResourceContext'
+import { useAuth } from '@/core/auth'
 import { resourceRegistry } from '../demo'
 import ResourceForm from '../form/ResourceForm.vue'
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuth()
 const name = computed(() => String(route.params.resource ?? ''))
 const definition = computed(() => resourceRegistry.get(name.value))
 const provider = computed(() => resourceRegistry.provider(name.value))
-const context = computed(() => definition.value && provider.value ? createResourceContext(definition.value, provider.value, ['dashboard.view']) : null)
+const context = computed(() => definition.value && provider.value ? createResourceContext(definition.value, provider.value, auth.user?.permissions ?? []) : null)
 const error = ref<string | null>(null)
 
 async function create(values: Record<string, unknown>) {

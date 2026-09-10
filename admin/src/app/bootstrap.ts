@@ -4,10 +4,12 @@ import App from './App.vue'
 import { i18n } from '@/core/i18n'
 import { router } from '@/core/router'
 import { initializeTheme } from '@/core/theme'
+import { registerBuiltinExtensions } from '@/core/extensions/runtime'
 import '../assets/index.css'
 
 export function bootstrap(): void {
   initializeTheme()
+  registerBuiltinExtensions()
   const app = createApp(App)
   app.use(createPinia()).use(i18n).use(router).mount('#app')
 }

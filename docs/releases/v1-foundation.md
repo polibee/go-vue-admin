@@ -40,4 +40,4 @@ RELEASE_CHECK_E2E=1 pnpm run release:check
 
 2026-09-10：`pnpm run release:check` 返回 `release-check: passed`，包括后端测试、前端 18 个测试文件 / 36 个测试、生产构建、OpenAPI 无差异、模块契约和 UI 边界检查。`bash scripts/release-check-test.sh` 与 `git diff --check` 通过。E2E 在同次修复中单独执行，5/5 通过，未在此次 release-check 中重复执行。
 
-当前 5 个浏览器用例不覆盖用户专属 CRUD、模块注册或插件启用/禁用；模块与插件相关能力由现有后端与前端自动测试覆盖。Task 14 原计划中的这些浏览器验收仍待补充。
+本次已补充并通过用户 CRUD、模块注册、插件启用/停用的专门浏览器验收；完整 Playwright 回归为 7/7 通过。

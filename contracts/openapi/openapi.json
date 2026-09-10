@@ -90,6 +90,41 @@
         ],
         "type": "object"
       },
+      "ExtensionResource": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "module",
+              "plugin"
+            ],
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "enabled",
+              "disabled"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "state"
+        ],
+        "type": "object"
+      },
       "MediaResource": {
         "additionalProperties": false,
         "properties": {
@@ -430,6 +465,110 @@
             "description": "Successful response."
           }
         }
+      }
+    },
+    "/api/extensions": {
+      "get": {
+        "description": "Lists compiled modules and builtin plugin states.",
+        "operationId": "getApiExtensions",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Extensions"
+        ]
+      }
+    },
+    "/api/extensions/{id}": {
+      "get": {
+        "description": "Invokes an active compiled extension.",
+        "operationId": "getApiExtensions{Id}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Extensions"
+        ]
+      },
+      "put": {
+        "description": "Enables or disables a builtin plugin. Requires plugins.manage and CSRF.",
+        "operationId": "putApiExtensions{Id}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "enabled",
+                      "disabled"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "state"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Extensions"
+        ]
       }
     },
     "/api/health": {

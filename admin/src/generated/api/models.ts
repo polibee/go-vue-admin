@@ -83,3 +83,11 @@ export interface AuditResource {
   resource_type: string
   user_agent?: string
 }
+
+export interface ExtensionResource {
+  id: string
+  kind: "module" | "plugin"
+  message?: string
+  name: string
+  state: "enabled" | "disabled"
+}

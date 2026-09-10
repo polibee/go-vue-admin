@@ -1,9 +1,15 @@
 import type { ResourceDefinition } from './ResourceDefinition'
+import { shallowReactive } from 'vue'
 import type { ResourceDataProvider } from './ResourceDataProvider'
 
 export class ResourceRegistry {
-  private readonly resources = new Map<string, ResourceDefinition<object>>()
-  private readonly providers = new Map<string, ResourceDataProvider<object>>()
+  private readonly resources = shallowReactive(new Map<string, ResourceDefinition<object>>())
+  private readonly providers = shallowReactive(new Map<string, ResourceDataProvider<object>>())
+
+  remove(name: string): void {
+    this.resources.delete(name)
+    this.providers.delete(name)
+  }
 
   register<T extends object>(definition: ResourceDefinition<T>, provider?: ResourceDataProvider<T>): void {
     if (this.resources.has(definition.name)) {

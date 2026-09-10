@@ -54,13 +54,19 @@ export function createApiClient(fetchImpl: typeof fetch = fetch, baseUrl = apiBa
           runtimeBaseUrl = resolveApiBaseUrl(fetchImpl)
         }
         const requestBaseUrl = baseUrl || await runtimeBaseUrl
+        const headers = new Headers(options.headers)
+        headers.set('Accept', 'application/json')
+        if (!['GET', 'HEAD', 'OPTIONS'].includes((options.method ?? 'GET').toUpperCase()) && !headers.has('X-CSRF-TOKEN')) {
+          const csrfResponse = await fetchImpl(`${requestBaseUrl}/api/csrf`, { credentials: 'include', headers: { Accept: 'application/json' } })
+          if (!csrfResponse.ok) throw new ApiError('无法获取安全令牌，请重新登录', csrfResponse.status)
+          const csrf = await csrfResponse.json()
+          if (!csrf?.data?.token) throw new ApiError('安全令牌无效，请重新登录', 419)
+          headers.set('X-CSRF-TOKEN', csrf.data.token)
+        }
         response = await fetchImpl(`${requestBaseUrl}${path}`, {
           ...options,
           credentials: 'include',
-          headers: {
-            Accept: 'application/json',
-            ...options.headers,
-          },
+          headers,
         })
       } catch {
         throw new ApiError('无法连接后端服务，请确认 API 端口已启动。', 0, 'NETWORK_ERROR')

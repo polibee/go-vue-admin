@@ -1,4 +1,4 @@
-import type { Component } from 'vue'
+import { shallowReactive, type Component } from 'vue'
 
 import { can, type Permission } from '@/core/permissions'
 
@@ -11,7 +11,9 @@ export interface NavigationItem {
 }
 
 export class NavigationRegistry {
-  private readonly entries = new Map<string, NavigationItem>()
+  private readonly entries = shallowReactive(new Map<string, NavigationItem>())
+
+  remove(id: string): void { this.entries.delete(id) }
 
   constructor(items: NavigationItem[] = []) {
     this.registerMany(items)

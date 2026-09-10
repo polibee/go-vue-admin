@@ -12,15 +12,17 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { createResourceContext } from '../core/ResourceContext'
+import { useAuth } from '@/core/auth'
 import { resourceRegistry } from '../demo'
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuth()
 const name = computed(() => String(route.params.resource ?? ''))
 const id = computed(() => String(route.params.id ?? ''))
 const definition = computed(() => resourceRegistry.get(name.value))
 const provider = computed(() => resourceRegistry.provider(name.value))
-const context = computed(() => definition.value && provider.value ? createResourceContext(definition.value, provider.value, ['dashboard.view']) : null)
+const context = computed(() => definition.value && provider.value ? createResourceContext(definition.value, provider.value, auth.user?.permissions ?? []) : null)
 const record = ref<Record<string, unknown> | null>(null)
 const error = ref<string | null>(null)
 const deleteDialogOpen = ref(false)

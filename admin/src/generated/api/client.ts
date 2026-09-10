@@ -3,7 +3,7 @@
 
 import type { ApiClient } from '@/core/api/client'
 
-import type { DemoResource, PermissionResource, RoleResource, UserResource, SettingResource, MediaResource, AuditResource, ResourceEnvelope, ResourceListQuery } from './models'
+import type { DemoResource, PermissionResource, RoleResource, UserResource, SettingResource, MediaResource, AuditResource, ExtensionResource, ResourceEnvelope, ResourceListQuery } from './models'
 
 export interface GeneratedApiClient {
   listDemoResources(query?: ResourceListQuery): Promise<ResourceEnvelope<DemoResource[]>>
@@ -39,6 +39,9 @@ export interface GeneratedApiClient {
   deleteMedia(id: string): Promise<ResourceEnvelope<{ deleted: boolean }>>
   listAudit(): Promise<ResourceEnvelope<AuditResource[]>>
   getAudit(id: string): Promise<ResourceEnvelope<AuditResource>>
+  listExtensions(): Promise<ResourceEnvelope<ExtensionResource[]>>
+  getExtension(id: string): Promise<ResourceEnvelope<ExtensionResource>>
+  setPluginState(id: string, state: 'enabled' | 'disabled'): Promise<ResourceEnvelope<ExtensionResource[]>>
 }
 
 function withQuery(path: string, query?: ResourceListQuery): string {
@@ -102,5 +105,8 @@ export function createGeneratedApiClient(client: ApiClient): GeneratedApiClient 
     deleteMedia: (id) => client.request<ResourceEnvelope<{ deleted: boolean }>>('/api/media/' + encodeURIComponent(id), { method: 'DELETE' }),
     listAudit: () => client.request<ResourceEnvelope<AuditResource[]>>('/api/audit'),
     getAudit: (id) => client.request<ResourceEnvelope<AuditResource>>('/api/audit/' + encodeURIComponent(id)),
+    listExtensions: () => client.request<ResourceEnvelope<ExtensionResource[]>>('/api/extensions'),
+    getExtension: (id) => client.request<ResourceEnvelope<ExtensionResource>>(itemPath('/api/extensions', id)),
+    setPluginState: (id, state) => client.request<ResourceEnvelope<ExtensionResource[]>>(itemPath('/api/extensions', id), jsonOptions('PUT', { state })),
   }
 }

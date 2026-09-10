@@ -13,7 +13,8 @@ const resourcePaths = Object.keys(document.paths)
 const hasSettings = Boolean(document.paths['/api/settings'])
 const hasMedia = Boolean(document.paths['/api/media'])
 const hasAudit = Boolean(document.paths['/api/audit'])
-const modelResources = [...resourcePaths, ...(hasSettings ? ['setting'] : []), ...(hasMedia ? ['media'] : []), ...(hasAudit ? ['audit'] : [])]
+const hasExtensions = Boolean(document.paths['/api/extensions'])
+const modelResources = [...resourcePaths, ...(hasSettings ? ['setting'] : []), ...(hasMedia ? ['media'] : []), ...(hasAudit ? ['audit'] : []), ...(hasExtensions ? ['extension'] : [])]
 
 const pascal = (value) => value.split(/[-_]/).map((part) => part[0].toUpperCase() + part.slice(1)).join('')
 const singular = (value) => value === 'demo' ? 'Demo' : pascal(value.replace(/s$/, ''))
@@ -130,6 +131,9 @@ ${methods}
 ${settingsMethods}
 ${mediaMethods}
 ${auditMethods}
+${hasExtensions ? `  listExtensions(): Promise<ResourceEnvelope<ExtensionResource[]>>
+  getExtension(id: string): Promise<ResourceEnvelope<ExtensionResource>>
+  setPluginState(id: string, state: 'enabled' | 'disabled'): Promise<ResourceEnvelope<ExtensionResource[]>>` : ''}
 }
 
 function withQuery(path: string, query?: ResourceListQuery): string {
@@ -164,6 +168,9 @@ ${implementations}
 ${settingsImplementations}
 ${mediaImplementations}
 ${auditImplementations}
+${hasExtensions ? `    listExtensions: () => client.request<ResourceEnvelope<ExtensionResource[]>>('/api/extensions'),
+    getExtension: (id) => client.request<ResourceEnvelope<ExtensionResource>>(itemPath('/api/extensions', id)),
+    setPluginState: (id, state) => client.request<ResourceEnvelope<ExtensionResource[]>>(itemPath('/api/extensions', id), jsonOptions('PUT', { state })),` : ''}
   }
 }
 `

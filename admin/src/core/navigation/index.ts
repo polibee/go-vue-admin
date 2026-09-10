@@ -1,4 +1,4 @@
-import { FileClock, FileImage, KeyRound, LayoutDashboard, Settings, ShieldCheck, Users } from '@lucide/vue'
+import { Blocks, FileClock, FileImage, KeyRound, LayoutDashboard, Settings, ShieldCheck, Users } from '@lucide/vue'
 
 import { NavigationRegistry } from './NavigationRegistry'
 
@@ -10,6 +10,7 @@ export const navigationRegistry = new NavigationRegistry([
   { id: 'users', label: '用户', route: '/admin/resources/users', icon: Users, permission: 'users.view' },
   { id: 'roles', label: '角色', route: '/admin/resources/roles', icon: ShieldCheck, permission: 'roles.view' },
   { id: 'permissions', label: '权限', route: '/admin/resources/permissions', icon: KeyRound, permission: 'permissions.view' },
+  { id: 'extensions', label: '模块与插件', route: '/admin/extensions', icon: Blocks, permission: 'dashboard.view' },
 ])
 
 export { NavigationRegistry } from './NavigationRegistry'

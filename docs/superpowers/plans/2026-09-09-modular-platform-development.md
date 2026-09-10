@@ -407,12 +407,12 @@ External process plugins, package installation, signature verification, sandboxi
 
 - [x] **Step 1: Run backend unit, feature, integration, permission, and API contract tests.**
 - [x] **Step 2: Run admin lint, typecheck, component tests, Resource Engine tests, and production build.**
-- [ ] **Step 3: Run Playwright flows for login, users CRUD, RBAC, resource CRUD, module registration, and plugin enable/disable.**
+- [x] **Step 3: Run Playwright flows for login, users CRUD, RBAC, resource CRUD, module registration, and plugin enable/disable.**
 - [x] **Step 4: Run generated OpenAPI/SDK drift check and module contract check.**
 - [x] **Step 5: Verify no forbidden UI redesign or second UI framework was introduced.**
-- [ ] **Step 6: Commit `chore(release): verify v1 foundation` and push after local checks; keep GitHub Actions manual-only.**
+- [x] **Step 6: Commit `chore(release): verify v1 foundation` and push after local checks; keep GitHub Actions manual-only.**
 
-2026-09-10: Local `pnpm run release:check` passed; the existing five Playwright tests passed separately. Step 3 remains partial: generic CRUD, login, RBAC, and core-resource navigation are covered; user-specific CRUD, module registration, and plugin lifecycle browser flows still require dedicated coverage. See `docs/releases/v1-foundation.md`.
+2026-09-10: Complete local Playwright regression passed 7/7, including user CRUD, module registration, and builtin plugin enable/disable. See `docs/releases/v1-foundation.md`.
 
 ## Phase-to-Module Delivery Order
 

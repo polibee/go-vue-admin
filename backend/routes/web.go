@@ -25,6 +25,10 @@ func Web() {
 	facades.Route().Get("/users", userController.Index)
 
 	authController := controllers.NewAuthController()
+	extensionController := controllers.NewExtensionController(authController)
+	facades.Route().Get("/api/extensions", extensionController.Index)
+	facades.Route().Get("/api/extensions/:id", extensionController.Show)
+	facades.Route().Put("/api/extensions/:id", extensionController.Update)
 	menuController := controllers.NewMenuController(authController)
 	resourceController := controllers.NewConfiguredResourceController(authController)
 	userResourceController := controllers.NewCoreResourceController(authController, resource.NewCoreResourceService(resource.NewMemoryCoreResourceRepository(userresources.Seed()...)), "users")
