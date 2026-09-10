@@ -56,6 +56,8 @@ modules/catalog/
 └── admin/resources/<resource>.ts
 ```
 
+资源后端文件包含 `RegisterRoutes(auth)`，它使用通用 MySQL Repository 和标准 Core Resource Controller，并由生成器同步写入模块入口、应用路由和 `backend/go.mod` replace。生成器只允许 Manifest 声明的字段进入 SQL 写入和排序白名单。
+
 数据库反向读取、关系推断和真正的 MySQL CRUD Repository 将在单表生成阶段接入；Manifest 是后续枚举、外键、软删除和审计能力的扩展点。
 
 ## 约束

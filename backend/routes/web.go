@@ -72,11 +72,5 @@ func Web() {
 }
 
 func registerCoreResourceRoutes(prefix string, controller *controllers.CoreResourceController) {
-	base := "/api/resources/" + prefix
-	facades.Route().Get(base, controller.Index)
-	facades.Route().Get(base+"/:id", controller.Show)
-	facades.Route().Post(base, controller.Store)
-	facades.Route().Put(base+"/:id", controller.Update)
-	facades.Route().Delete(base+"/:id", controller.Destroy)
-	facades.Route().Post(base+"/bulk-delete", controller.BulkDestroy)
+	controllers.RegisterCoreResourceRoutes(prefix, controller)
 }

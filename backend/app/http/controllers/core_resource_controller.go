@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/goravel/framework/contracts/http"
+	"goravel/app/facades"
 
 	"goravel/app/core/permission"
 	"goravel/app/core/resource"
@@ -19,6 +20,19 @@ type CoreResourceController struct {
 	auth       *AuthController
 	service    *resource.CoreResourceService
 	permission string
+}
+
+// RegisterCoreResourceRoutes attaches the standard CRUD endpoints for a
+// manifest-backed resource. Keeping this in controllers lets generated
+// modules register routes without importing the application's routes package.
+func RegisterCoreResourceRoutes(prefix string, controller *CoreResourceController) {
+	base := "/api/resources/" + strings.Trim(prefix, "/")
+	facades.Route().Get(base, controller.Index)
+	facades.Route().Get(base+"/:id", controller.Show)
+	facades.Route().Post(base, controller.Store)
+	facades.Route().Put(base+"/:id", controller.Update)
+	facades.Route().Delete(base+"/:id", controller.Destroy)
+	facades.Route().Post(base+"/bulk-delete", controller.BulkDestroy)
 }
 
 func NewCoreResourceController(auth *AuthController, service *resource.CoreResourceService, permissionPrefix string) *CoreResourceController {

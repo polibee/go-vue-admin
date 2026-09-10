@@ -36,6 +36,15 @@ func TestManifestFromTableSchemaInfersFieldsAndEnumOptions(t *testing.T) {
 
 func TestGenerateResourceRendersManifestAndModuleFiles(t *testing.T) {
 	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "backend", "routes"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "backend", "routes", "web.go"), []byte("package routes\n\nimport (\n)\n\nfunc Web() {\n\tauthController := controllers.NewAuthController()\n}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "backend", "go.mod"), []byte("module goravel\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	if err := GenerateModule(ModuleOptions{RootDir: root, Name: "catalog"}); err != nil {
 		t.Fatal(err)
 	}
