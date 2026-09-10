@@ -81,6 +81,13 @@ func SchemaDocuments() map[string]any {
 			"mime_type": map[string]any{"type": "string"}, "size": map[string]any{"type": "integer"},
 			"url": map[string]any{"type": "string", "format": "uri"}, "created_at": map[string]any{"type": "string", "format": "date-time"},
 		}, []string{"id", "disk", "path", "original_name", "mime_type", "size", "url"}),
+		"audit-resource": resourceSchema(map[string]any{
+			"id": map[string]any{"type": "string"}, "actor_id": map[string]any{"type": "string"},
+			"actor_email": map[string]any{"type": "string", "format": "email"}, "action": map[string]any{"type": "string"},
+			"resource_type": map[string]any{"type": "string"}, "resource_id": map[string]any{"type": "string"},
+			"before": map[string]any{}, "after": map[string]any{}, "ip": map[string]any{"type": "string"},
+			"user_agent": map[string]any{"type": "string"}, "created_at": map[string]any{"type": "string", "format": "date-time"},
+		}, []string{"id", "action", "resource_type", "resource_id", "before", "after", "created_at"}),
 		"resource-envelope": map[string]any{
 			"type": "object", "required": []any{"data", "meta"},
 			"properties": map[string]any{
@@ -186,6 +193,15 @@ func operationFor(endpoint CoreEndpoint, normalizedPath string) map[string]any {
 		} else {
 			operation["parameters"] = []any{pathIDParameter()}
 			operation["responses"] = map[string]any{"200": responseSchema("ResourceMutation", false)}
+		}
+	}
+	if strings.HasPrefix(normalizedPath, "/api/audit") {
+		operation["tags"] = []any{"Audit"}
+		if normalizedPath == "/api/audit" {
+			operation["responses"] = map[string]any{"200": responseSchema("Audit", true)}
+		} else {
+			operation["parameters"] = []any{pathIDParameter()}
+			operation["responses"] = map[string]any{"200": responseSchema("Audit", false)}
 		}
 	}
 	return operation

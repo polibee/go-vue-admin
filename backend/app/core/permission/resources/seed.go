@@ -10,6 +10,7 @@ func Seed() []resource.CoreResourceRecord {
 		{"id": "media.view", "name": "media.view", "description": "查看媒体"},
 		{"id": "media.upload", "name": "media.upload", "description": "上传媒体"},
 		{"id": "media.delete", "name": "media.delete", "description": "删除媒体"},
+		{"id": "audit.view", "name": "audit.view", "description": "查看审计日志"},
 		{"id": "users.view", "name": "users.view", "description": "查看用户"},
 		{"id": "users.create", "name": "users.create", "description": "创建用户"},
 		{"id": "users.update", "name": "users.update", "description": "编辑用户"},

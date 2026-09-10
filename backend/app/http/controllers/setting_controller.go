@@ -7,6 +7,7 @@ import (
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
 
+	"goravel/app/core/audit"
 	"goravel/app/core/permission"
 	"goravel/app/core/resource"
 	"goravel/app/core/setting"
@@ -19,13 +20,18 @@ const settingsUpdatePermission = "settings.update"
 type SettingController struct {
 	auth      *AuthController
 	service   *setting.Service
+	audit     *audit.Service
 	initError error
 }
 
 func NewConfiguredSettingController(auth *AuthController) *SettingController {
+	return NewConfiguredSettingControllerWithAudit(auth, nil)
+}
+
+func NewConfiguredSettingControllerWithAudit(auth *AuthController, auditService *audit.Service) *SettingController {
 	mode, err := resource.ParseResourceProviderMode(facades.Config().GetString("resource.provider", "memory"))
 	if err != nil {
-		return &SettingController{auth: auth, initError: err}
+		return &SettingController{auth: auth, audit: auditService, initError: err}
 	}
 	var repository setting.Repository
 	switch mode {
@@ -38,9 +44,9 @@ func NewConfiguredSettingController(auth *AuthController) *SettingController {
 	case resource.ResourceProviderMySQL:
 		repository = setting.NewMySQLRepository()
 	default:
-		return &SettingController{auth: auth, initError: errors.New("setting provider is not configured")}
+		return &SettingController{auth: auth, audit: auditService, initError: errors.New("setting provider is not configured")}
 	}
-	return &SettingController{auth: auth, service: setting.NewService(repository)}
+	return &SettingController{auth: auth, service: setting.NewService(repository), audit: auditService}
 }
 
 type settingRequest struct {
@@ -70,12 +76,19 @@ func (c *SettingController) Store(ctx http.Context) http.Response {
 	if err := ctx.Request().Bind(&input); err != nil {
 		return c.error(ctx, 400, "INVALID_REQUEST", "设置请求格式无效", nil)
 	}
+	var before any
+	if existing, getErr := c.service.Get(ctx, input.Namespace, input.Key); getErr == nil {
+		before = existing
+	}
 	item, err := c.service.Upsert(ctx, setting.Setting{
 		Namespace: input.Namespace, Key: input.Key, Value: input.Value,
 		ValueType: input.ValueType, Description: input.Description,
 	})
 	if err != nil {
 		return c.domainError(ctx, err)
+	}
+	if err := recordAudit(ctx, c.auth, c.audit, "settings.upsert", "setting", input.Namespace+"."+input.Key, before, item); err != nil {
+		return c.storageError(ctx, err)
 	}
 	return ctx.Response().Status(201).Json(response.Success(item, response.Meta{RequestID: settingRequestID(ctx)}))
 }
@@ -88,12 +101,20 @@ func (c *SettingController) Update(ctx http.Context) http.Response {
 	if err := ctx.Request().Bind(&input); err != nil {
 		return c.error(ctx, 400, "INVALID_REQUEST", "设置请求格式无效", nil)
 	}
+	namespace, key := ctx.Request().Route("namespace"), ctx.Request().Route("key")
+	var before any
+	if existing, getErr := c.service.Get(ctx, namespace, key); getErr == nil {
+		before = existing
+	}
 	item, err := c.service.Upsert(ctx, setting.Setting{
-		Namespace: ctx.Request().Route("namespace"), Key: ctx.Request().Route("key"), Value: input.Value,
+		Namespace: namespace, Key: key, Value: input.Value,
 		ValueType: input.ValueType, Description: input.Description,
 	})
 	if err != nil {
 		return c.domainError(ctx, err)
+	}
+	if err := recordAudit(ctx, c.auth, c.audit, "settings.update", "setting", namespace+"."+key, before, item); err != nil {
+		return c.storageError(ctx, err)
 	}
 	return c.success(ctx, item)
 }
@@ -102,8 +123,13 @@ func (c *SettingController) Destroy(ctx http.Context) http.Response {
 	if response := c.authorize(ctx, "update"); response != nil {
 		return response
 	}
-	if err := c.service.Delete(ctx, ctx.Request().Route("namespace"), ctx.Request().Route("key")); err != nil {
+	namespace, key := ctx.Request().Route("namespace"), ctx.Request().Route("key")
+	before, _ := c.service.Get(ctx, namespace, key)
+	if err := c.service.Delete(ctx, namespace, key); err != nil {
 		return c.domainError(ctx, err)
+	}
+	if err := recordAudit(ctx, c.auth, c.audit, "settings.delete", "setting", namespace+"."+key, before, nil); err != nil {
+		return c.storageError(ctx, err)
 	}
 	return c.success(ctx, map[string]bool{"deleted": true})
 }

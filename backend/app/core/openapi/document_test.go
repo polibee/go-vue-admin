@@ -19,7 +19,7 @@ func TestDocumentIncludesResourceContract(t *testing.T) {
 			t.Fatalf("openapi document is missing settings path %s", path)
 		}
 	}
-	for _, path := range []string{"/api/media", "/api/media/{id}/preview", "/api/media/{id}"} {
+	for _, path := range []string{"/api/media", "/api/media/{id}/preview", "/api/media/{id}", "/api/audit", "/api/audit/{id}"} {
 		if _, ok := paths[path]; !ok {
 			t.Fatalf("openapi document is missing media path %s", path)
 		}
@@ -50,7 +50,7 @@ func TestDocumentIncludesResourceContract(t *testing.T) {
 
 func TestSchemaDocumentsExposeCoreResourceModels(t *testing.T) {
 	schemas := SchemaDocuments()
-	for _, name := range []string{"demo-resource", "user-resource", "role-resource", "permission-resource", "setting-resource", "media-resource", "resource-envelope"} {
+	for _, name := range []string{"demo-resource", "user-resource", "role-resource", "permission-resource", "setting-resource", "media-resource", "audit-resource", "resource-envelope"} {
 		if _, ok := schemas[name]; !ok {
 			t.Fatalf("schema %q is missing", name)
 		}

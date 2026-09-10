@@ -8,6 +8,7 @@ import (
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
 
+	"goravel/app/core/audit"
 	"goravel/app/core/media"
 	"goravel/app/core/permission"
 	"goravel/app/core/resource"
@@ -19,13 +20,18 @@ type MediaController struct {
 	auth      *AuthController
 	service   *media.Service
 	storage   media.Storage
+	audit     *audit.Service
 	initError error
 }
 
 func NewConfiguredMediaController(auth *AuthController) *MediaController {
+	return NewConfiguredMediaControllerWithAudit(auth, nil)
+}
+
+func NewConfiguredMediaControllerWithAudit(auth *AuthController, auditService *audit.Service) *MediaController {
 	mode, err := resource.ParseResourceProviderMode(facades.Config().GetString("resource.provider", "memory"))
 	if err != nil {
-		return &MediaController{auth: auth, initError: err}
+		return &MediaController{auth: auth, audit: auditService, initError: err}
 	}
 	var repository media.Repository
 	switch mode {
@@ -34,10 +40,10 @@ func NewConfiguredMediaController(auth *AuthController) *MediaController {
 	case resource.ResourceProviderMySQL:
 		repository = media.NewMySQLRepository()
 	default:
-		return &MediaController{auth: auth, initError: errors.New("media provider is not configured")}
+		return &MediaController{auth: auth, audit: auditService, initError: errors.New("media provider is not configured")}
 	}
 	storage := media.NewConfiguredLocalStorage()
-	return &MediaController{auth: auth, service: media.NewService(repository, storage), storage: storage}
+	return &MediaController{auth: auth, service: media.NewService(repository, storage), storage: storage, audit: auditService}
 }
 
 func (c *MediaController) Index(ctx http.Context) http.Response {
@@ -78,6 +84,9 @@ func (c *MediaController) Store(ctx http.Context) http.Response {
 	if err != nil {
 		return c.domainError(ctx, err)
 	}
+	if err := recordAudit(ctx, c.auth, c.audit, "media.upload", "media", item.ID, nil, item); err != nil {
+		return c.storageError(ctx, err)
+	}
 	return ctx.Response().Status(201).Json(response.Success(item, response.Meta{RequestID: mediaRequestID(ctx)}))
 }
 
@@ -85,8 +94,13 @@ func (c *MediaController) Destroy(ctx http.Context) http.Response {
 	if response := c.authorize(ctx, "delete"); response != nil {
 		return response
 	}
-	if err := c.service.Delete(ctx, strings.TrimSpace(ctx.Request().Route("id"))); err != nil {
+	id := strings.TrimSpace(ctx.Request().Route("id"))
+	before, _ := c.service.Get(ctx, id)
+	if err := c.service.Delete(ctx, id); err != nil {
 		return c.domainError(ctx, err)
+	}
+	if err := recordAudit(ctx, c.auth, c.audit, "media.delete", "media", id, before, nil); err != nil {
+		return c.storageError(ctx, err)
 	}
 	return c.success(ctx, map[string]bool{"deleted": true})
 }

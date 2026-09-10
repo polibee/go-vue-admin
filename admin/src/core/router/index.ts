@@ -16,6 +16,7 @@ export const router = createRouter({
         { path: 'dashboard', component: () => import('@/pages/DashboardPage.vue') },
         { path: 'settings', component: () => import('@/pages/SettingsPage.vue') },
         { path: 'media', component: () => import('@/pages/MediaPage.vue') },
+        { path: 'audit', component: () => import('@/pages/AuditPage.vue') },
         ...resourceRouteRecords(),
       ],
     },

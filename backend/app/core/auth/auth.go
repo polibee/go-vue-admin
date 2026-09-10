@@ -161,6 +161,7 @@ func NewBootstrapService(email, password, name string) (*Service, error) {
 				"media.view",
 				"media.upload",
 				"media.delete",
+				"audit.view",
 				userresources.PermissionView,
 				userresources.PermissionCreate,
 				userresources.PermissionUpdate,

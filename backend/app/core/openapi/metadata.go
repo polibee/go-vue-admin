@@ -24,6 +24,8 @@ var CoreEndpoints = []CoreEndpoint{
 	{Method: "POST", Path: "/api/media", Description: "Uploads one media file."},
 	{Method: "GET", Path: "/api/media/:id/preview", Description: "Streams one media file after authorization."},
 	{Method: "DELETE", Path: "/api/media/:id", Description: "Deletes one uploaded media file."},
+	{Method: "GET", Path: "/api/audit", Description: "Lists authorized audit entries."},
+	{Method: "GET", Path: "/api/audit/:id", Description: "Returns one audit entry with before and after snapshots."},
 	{Method: "GET", Path: "/api/resources/demo", Description: "Lists demo resources with pagination, filters, search, and sorting."},
 	{Method: "GET", Path: "/api/resources/demo/:id", Description: "Returns one demo resource."},
 	{Method: "POST", Path: "/api/resources/demo", Description: "Creates one demo resource."},

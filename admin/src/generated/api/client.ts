@@ -3,7 +3,7 @@
 
 import type { ApiClient } from '@/core/api/client'
 
-import type { DemoResource, PermissionResource, RoleResource, UserResource, SettingResource, MediaResource, ResourceEnvelope, ResourceListQuery } from './models'
+import type { DemoResource, PermissionResource, RoleResource, UserResource, SettingResource, MediaResource, AuditResource, ResourceEnvelope, ResourceListQuery } from './models'
 
 export interface GeneratedApiClient {
   listDemoResources(query?: ResourceListQuery): Promise<ResourceEnvelope<DemoResource[]>>
@@ -37,6 +37,8 @@ export interface GeneratedApiClient {
   listMedia(): Promise<ResourceEnvelope<MediaResource[]>>
   uploadMedia(file: File): Promise<ResourceEnvelope<MediaResource>>
   deleteMedia(id: string): Promise<ResourceEnvelope<{ deleted: boolean }>>
+  listAudit(): Promise<ResourceEnvelope<AuditResource[]>>
+  getAudit(id: string): Promise<ResourceEnvelope<AuditResource>>
 }
 
 function withQuery(path: string, query?: ResourceListQuery): string {
@@ -98,5 +100,7 @@ export function createGeneratedApiClient(client: ApiClient): GeneratedApiClient 
     listMedia: () => client.request<ResourceEnvelope<MediaResource[]>>('/api/media'),
     uploadMedia: (file) => { const body = new FormData(); body.append('file', file); return client.request<ResourceEnvelope<MediaResource>>('/api/media', { method: 'POST', body }) },
     deleteMedia: (id) => client.request<ResourceEnvelope<{ deleted: boolean }>>('/api/media/' + encodeURIComponent(id), { method: 'DELETE' }),
+    listAudit: () => client.request<ResourceEnvelope<AuditResource[]>>('/api/audit'),
+    getAudit: (id) => client.request<ResourceEnvelope<AuditResource>>('/api/audit/' + encodeURIComponent(id)),
   }
 }

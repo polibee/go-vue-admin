@@ -30,8 +30,13 @@ func Web() {
 	userResourceController := controllers.NewCoreResourceController(authController, resource.NewCoreResourceService(resource.NewMemoryCoreResourceRepository(userresources.Seed()...)), "users")
 	roleResourceController := controllers.NewCoreResourceController(authController, resource.NewCoreResourceService(resource.NewMemoryCoreResourceRepository(roleresources.Seed()...)), "roles")
 	permissionResourceController := controllers.NewCoreResourceController(authController, resource.NewCoreResourceService(resource.NewMemoryCoreResourceRepository(permissionresources.Seed()...)), "permissions")
-	settingController := controllers.NewConfiguredSettingController(authController)
-	mediaController := controllers.NewConfiguredMediaController(authController)
+	auditService, auditErr := controllers.NewConfiguredAuditService()
+	settingController := controllers.NewConfiguredSettingControllerWithAudit(authController, auditService)
+	mediaController := controllers.NewConfiguredMediaControllerWithAudit(authController, auditService)
+	auditController := controllers.NewAuditController(authController, auditService)
+	if auditErr != nil {
+		auditController = controllers.NewConfiguredAuditController(authController)
+	}
 	for _, prefix := range []string{"", "/api"} {
 		facades.Route().Get(prefix+"/csrf", authController.CSRF)
 		facades.Route().Get(prefix+"/auth/bootstrap", authController.Bootstrap)
@@ -45,6 +50,8 @@ func Web() {
 	facades.Route().Post("/api/settings", settingController.Store)
 	facades.Route().Put("/api/settings/:namespace/:key", settingController.Update)
 	facades.Route().Delete("/api/settings/:namespace/:key", settingController.Destroy)
+	facades.Route().Get("/api/audit", auditController.Index)
+	facades.Route().Get("/api/audit/:id", auditController.Show)
 	facades.Route().Get("/api/media", mediaController.Index)
 	facades.Route().Post("/api/media", mediaController.Store)
 	facades.Route().Get("/api/media/:id/preview", mediaController.Preview)

@@ -28,7 +28,7 @@ func TestCoreResourcesUseGenericCrudRoutesForCurrentAdmin(t *testing.T) {
 	}{
 		{path: "/api/resources/users", id: "bootstrap-admin"},
 		{path: "/api/resources/roles", id: "platform-admin"},
-		{path: "/api/resources/permissions", id: "dashboard.view"},
+		{path: "/api/resources/permissions", id: "audit.view"},
 	} {
 		response, err := testCase.Http(t).WithCookie(cookie).Get(item.path)
 		require.NoError(t, err)

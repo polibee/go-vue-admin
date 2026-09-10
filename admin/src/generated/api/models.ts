@@ -69,3 +69,17 @@ export interface MediaResource {
   size: number
   url: string
 }
+
+export interface AuditResource {
+  action: string
+  actor_email?: string
+  actor_id?: string
+  after: unknown
+  before: unknown
+  created_at: string
+  id: string
+  ip?: string
+  resource_id: string
+  resource_type: string
+  user_agent?: string
+}
