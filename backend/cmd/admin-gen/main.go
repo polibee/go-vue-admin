@@ -16,6 +16,11 @@ func main() {
 	}
 
 	switch os.Args[1] {
+	case "api":
+		if err := runAPI(os.Args[2:]); err != nil {
+			fmt.Fprintf(os.Stderr, "admin-gen api: %v\n", err)
+			os.Exit(1)
+		}
 	case "module":
 		if err := runModule(os.Args[2:]); err != nil {
 			fmt.Fprintf(os.Stderr, "admin-gen module: %v\n", err)
@@ -33,6 +38,26 @@ func main() {
 		usage()
 		os.Exit(2)
 	}
+}
+
+func runAPI(args []string) error {
+	flags := flag.NewFlagSet("api", flag.ContinueOnError)
+	root := flags.String("root", ".", "repository root")
+	output := flags.String("output", "contracts/openapi/openapi.json", "OpenAPI document output path")
+	schemaDir := flags.String("schema-dir", "contracts/schemas", "schema output directory")
+	clientDir := flags.String("client-dir", "admin/src/generated/api", "TypeScript client output directory")
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if flags.NArg() != 0 {
+		return fmt.Errorf("usage: admin-gen api [--root <dir>] [--output <file>] [--schema-dir <dir>] [--client-dir <dir>]")
+	}
+	return generator.GenerateAPI(generator.APIOptions{
+		RootDir:   *root,
+		Output:    *output,
+		SchemaDir: *schemaDir,
+		ClientDir: *clientDir,
+	})
 }
 
 func runModule(args []string) error {
@@ -105,6 +130,7 @@ func usage() {
 	fmt.Println("admin-gen - Go Vue Admin code generator")
 	fmt.Println()
 	fmt.Println("Usage:")
+	fmt.Println("  admin-gen api [--root <dir>] [--output <file>] [--schema-dir <dir>] [--client-dir <dir>]")
 	fmt.Println("  admin-gen module <name>")
 	fmt.Println("  admin-gen resource --module <module> --table <table>")
 }
