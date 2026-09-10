@@ -44,6 +44,8 @@ fi
 
 run_step "module contract" bash scripts/module-check.sh modules/example
 
+run_step "generator contracts" go -C backend test ./app/core/generator ./cmd/admin-gen -count=1
+
 run_step "UI compatibility" bash -c '
   if rg -n --glob "*.{ts,tsx,js,jsx,vue,css}" "element-plus|ant-design-vue|naive-ui|primevue|vuetify" admin/src plugins modules; then
     echo "release-check: a second UI framework was found" >&2

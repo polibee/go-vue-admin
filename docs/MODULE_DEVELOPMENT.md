@@ -18,7 +18,7 @@ modules/<module>/
 1. Define the module boundary, manifest, permissions, and acceptance criteria.
 2. Write module tests before implementation and keep backend/admin tests under the module.
 3. Regenerate OpenAPI and the SDK when a backend API changes; generated output is committed and never edited by hand.
-4. Run `bash scripts/module-check.sh modules/<module>`.
+4. Run `go -C backend run ./cmd/admin-gen module <module>` for new modules, then run the module checks.
 5. Review the staged diff, then use `bash scripts/module-finish.sh modules/<module> "feat(scope): message"`.
 
 The checker always runs repository lint, typecheck, test, build, OpenAPI generation, generated-SDK drift detection, and UI-boundary validation. It then validates the module contract and runs the module backend/admin checks when present. A missing contract, failing command, generated diff, or forbidden import fails the gate.

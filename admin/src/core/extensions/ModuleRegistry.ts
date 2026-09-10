@@ -6,7 +6,7 @@ import type { ResourceDefinition } from '@/resource-engine/core/ResourceDefiniti
 
 export interface AdminModuleDefinition {
   id: string
-  resources?: readonly ResourceDefinition<object>[]
+  resources?: readonly ResourceDefinition<Record<string, unknown>>[]
   routes?: readonly RouteRecordRaw[]
   navigation?: readonly NavigationItem[]
   locales?: Partial<Record<SupportedLocale, Record<string, unknown>>>
