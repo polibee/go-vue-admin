@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"gorm.io/driver/mysql"
@@ -20,6 +21,53 @@ type GormDatabaseOptions struct {
 type GormResourceDatabase struct {
 	DB    *gorm.DB
 	sqlDB *sql.DB
+}
+
+var applicationResourceDatabase struct {
+	sync.RWMutex
+	database *GormResourceDatabase
+	err      error
+}
+
+// ConfigureApplicationResourceDatabase creates the single application-owned
+// pool used by generated resources. It is safe to call once during bootstrap.
+func ConfigureApplicationResourceDatabase(dsn string, options GormDatabaseOptions) error {
+	applicationResourceDatabase.Lock()
+	defer applicationResourceDatabase.Unlock()
+	if applicationResourceDatabase.database != nil || applicationResourceDatabase.err != nil {
+		return applicationResourceDatabase.err
+	}
+	database, err := OpenMySQLResourceDatabase(dsn, options)
+	if err != nil {
+		applicationResourceDatabase.err = err
+		return err
+	}
+	applicationResourceDatabase.database = database
+	return nil
+}
+
+func ApplicationResourceDatabase() *GormResourceDatabase {
+	applicationResourceDatabase.RLock()
+	defer applicationResourceDatabase.RUnlock()
+	return applicationResourceDatabase.database
+}
+
+func ApplicationResourceDatabaseError() error {
+	applicationResourceDatabase.RLock()
+	defer applicationResourceDatabase.RUnlock()
+	return applicationResourceDatabase.err
+}
+
+func CloseApplicationResourceDatabase() error {
+	applicationResourceDatabase.Lock()
+	defer applicationResourceDatabase.Unlock()
+	if applicationResourceDatabase.database == nil {
+		return nil
+	}
+	err := applicationResourceDatabase.database.Close()
+	applicationResourceDatabase.database = nil
+	applicationResourceDatabase.err = nil
+	return err
 }
 
 func OpenGormResourceDatabase(dialector gorm.Dialector, options GormDatabaseOptions) (*GormResourceDatabase, error) {

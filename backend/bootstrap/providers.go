@@ -30,6 +30,7 @@ import (
 
 func Providers() []foundation.ServiceProvider {
 	return []foundation.ServiceProvider{
+		&ResourceServiceProvider{},
 		&log.ServiceProvider{},
 		&cache.ServiceProvider{},
 		&hash.ServiceProvider{},

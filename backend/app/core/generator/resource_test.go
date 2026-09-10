@@ -95,7 +95,7 @@ func TestGenerateResourceRendersManifestAndModuleFiles(t *testing.T) {
 	if !strings.Contains(string(routes), "catalogModule.RegisterRoutes(authController, resourceDatabase.DB)") {
 		t.Fatal("generated backend module was not registered in application routes")
 	}
-	if strings.Index(string(routes), "resourceDatabase, databaseErr :=") > strings.Index(string(routes), "catalogModule.RegisterRoutes") {
+	if strings.Index(string(routes), "resourceDatabase := resource.ApplicationResourceDatabase()") > strings.Index(string(routes), "catalogModule.RegisterRoutes") {
 		t.Fatal("generated database initialization must precede module route registration")
 	}
 	runtime, err := os.ReadFile(filepath.Join(root, "admin", "src", "core", "extensions", "runtime.ts"))

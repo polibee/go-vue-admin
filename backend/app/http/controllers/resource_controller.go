@@ -43,11 +43,9 @@ func NewConfiguredResourceController(auth *AuthController) *ResourceController {
 			resource.DemoResource{ID: "demo-2", Name: "可编辑记录", Status: "draft", Owner: "Platform Admin"},
 		)
 	case resource.ResourceProviderMySQL:
-		database, databaseErr := resource.OpenMySQLResourceDatabase(mysqlResourceDSN(), resource.GormDatabaseOptions{
-			MaxIdleConns: 10, MaxOpenConns: 100,
-		})
-		if databaseErr != nil {
-			return &ResourceController{auth: auth, initError: databaseErr}
+		database := resource.ApplicationResourceDatabase()
+		if database == nil {
+			return &ResourceController{auth: auth, initError: resource.ApplicationResourceDatabaseError()}
 		}
 		genericRepository, repositoryErr := resource.NewGormResourceRepository(resource.GormResourceOptions{
 			DB: database.DB,
@@ -59,7 +57,6 @@ func NewConfiguredResourceController(auth *AuthController) *ResourceController {
 			},
 		})
 		if repositoryErr != nil {
-			_ = database.Close()
 			return &ResourceController{auth: auth, initError: repositoryErr}
 		}
 		repository = resource.NewGormDemoResourceRepository(genericRepository)

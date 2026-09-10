@@ -363,8 +363,8 @@ func registerResourceInApplicationRoutes(rootDir, module string) error {
 	if !strings.Contains(text, importLine) {
 		text = strings.Replace(text, "import (", "import (\n"+importLine, 1)
 	}
-	databaseSetup := "\tresourceDatabase, databaseErr := resource.OpenMySQLResourceDatabase(resource.MySQLResourceDSN(facades.Config().Env(\"DB_USERNAME\"), facades.Config().Env(\"DB_PASSWORD\"), facades.Config().Env(\"DB_HOST\", \"127.0.0.1\"), facades.Config().Env(\"DB_PORT\", \"3306\"), facades.Config().Env(\"DB_DATABASE\")), resource.GormDatabaseOptions{MaxIdleConns: 10, MaxOpenConns: 100})\n\tif databaseErr != nil { panic(databaseErr) }"
-	if !strings.Contains(text, "resourceDatabase, databaseErr :=") {
+	databaseSetup := "\tresourceDatabase := resource.ApplicationResourceDatabase()\n\tif resourceDatabase == nil { panic(resource.ApplicationResourceDatabaseError()) }"
+	if !strings.Contains(text, "resourceDatabase := resource.ApplicationResourceDatabase()") {
 		text = strings.Replace(text, "\tauthController := controllers.NewAuthController()", "\tauthController := controllers.NewAuthController()\n"+databaseSetup, 1)
 	}
 	call := fmt.Sprintf("\tif err := %s.RegisterRoutes(authController, resourceDatabase.DB); err != nil {\n\t\tpanic(err)\n\t}", alias)
