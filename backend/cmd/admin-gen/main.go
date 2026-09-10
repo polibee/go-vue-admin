@@ -21,6 +21,11 @@ func main() {
 			fmt.Fprintf(os.Stderr, "admin-gen api: %v\n", err)
 			os.Exit(1)
 		}
+	case "audit":
+		if err := runAudit(os.Args[2:]); err != nil {
+			fmt.Fprintf(os.Stderr, "admin-gen audit: %v\n", err)
+			os.Exit(1)
+		}
 	case "module":
 		if err := runModule(os.Args[2:]); err != nil {
 			fmt.Fprintf(os.Stderr, "admin-gen module: %v\n", err)
@@ -38,6 +43,30 @@ func main() {
 		usage()
 		os.Exit(2)
 	}
+}
+
+func runAudit(args []string) error {
+	flags := flag.NewFlagSet("audit", flag.ContinueOnError)
+	root := flags.String("root", ".", "repository root")
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if flags.NArg() != 0 {
+		return fmt.Errorf("usage: admin-gen audit [--root <dir>]")
+	}
+	findings, err := generator.AuditAPI(generator.APIAuditOptions{RootDir: *root})
+	if err != nil {
+		return err
+	}
+	for _, finding := range findings {
+		fmt.Printf("%s %s [%s/%s] %s\n", finding.Method, finding.Path, finding.Layer, finding.Severity, finding.Message)
+	}
+	for _, finding := range findings {
+		if finding.Severity == "error" {
+			return fmt.Errorf("API audit failed with %d finding(s)", len(findings))
+		}
+	}
+	return nil
 }
 
 func runAPI(args []string) error {
@@ -131,6 +160,7 @@ func usage() {
 	fmt.Println()
 	fmt.Println("Usage:")
 	fmt.Println("  admin-gen api [--root <dir>] [--output <file>] [--schema-dir <dir>] [--client-dir <dir>]")
+	fmt.Println("  admin-gen audit [--root <dir>]")
 	fmt.Println("  admin-gen module <name>")
 	fmt.Println("  admin-gen resource --module <module> --table <table>")
 }

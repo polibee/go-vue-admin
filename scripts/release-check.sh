@@ -37,10 +37,12 @@ run_step "backend tests" bash -c 'cd backend && go test ./...'
 
 run_step "admin checks" bash -c 'pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build'
 
-run_step "OpenAPI drift" bash scripts/openapi-generate.sh
+run_step "OpenAPI generation" go -C backend run ./cmd/admin-gen api --root ..
 if ! git diff --quiet HEAD -- contracts/openapi contracts/schemas admin/src/generated; then
   fail "generated OpenAPI, schema, or SDK files changed; commit regenerated output before release"
 fi
+
+run_step "API audit" go -C backend run ./cmd/admin-gen audit --root ..
 
 run_step "module contract" bash scripts/module-check.sh modules/example
 
