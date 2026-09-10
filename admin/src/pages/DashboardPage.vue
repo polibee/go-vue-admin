@@ -9,7 +9,7 @@ const milestones = [
   { name: 'Task 3 · API route-to-client audit', status: '已完成', value: 100, variant: 'secondary' as const },
   { name: 'Task 4 · GORM CRUD and route registration', status: '已完成', value: 100, variant: 'secondary' as const },
   { name: 'Task 5 · Generated API consumer migration', status: '已完成', value: 100, variant: 'secondary' as const },
-  { name: 'Task 6 · MySQL integration and browser acceptance', status: '进行中', value: 80, variant: 'outline' as const },
+  { name: 'Task 6 · Configured database and browser acceptance', status: '已完成', value: 100, variant: 'secondary' as const },
 ]
 </script>
 
@@ -22,14 +22,14 @@ const milestones = [
     <div class="grid gap-4 md:grid-cols-3">
       <Card><CardHeader><CardTitle>组件基础</CardTitle></CardHeader><CardContent class="text-sm text-muted-foreground">官方 shadcn-vue</CardContent></Card>
       <Card><CardHeader><CardTitle>后端基础</CardTitle></CardHeader><CardContent class="text-sm text-muted-foreground">Goravel v1.18.x</CardContent></Card>
-      <Card><CardHeader><CardTitle>数据基础</CardTitle></CardHeader><CardContent class="text-sm text-muted-foreground">MySQL 8.x · utf8mb4</CardContent></Card>
+      <Card><CardHeader><CardTitle>数据基础</CardTitle></CardHeader><CardContent class="text-sm text-muted-foreground">GORM · MySQL / PostgreSQL</CardContent></Card>
     </div>
     <Card>
       <CardHeader>
         <div class="flex items-start justify-between gap-4">
           <div>
             <CardTitle>开发进度</CardTitle>
-            <CardDescription>基础模块化计划 Task 1–14 已完成；当前显示 API 与 MySQL 验收专项。</CardDescription>
+            <CardDescription>基础模块化计划 Task 1–14 与数据库兼容验收已完成；业务资源可按配置切换 MySQL / PostgreSQL。</CardDescription>
           </div>
           <Badge variant="outline">Foundation 14 / 14</Badge>
         </div>
@@ -46,7 +46,7 @@ const milestones = [
     </Card>
     <div class="grid gap-4 md:grid-cols-3">
       <Card><CardHeader><CardTitle>开发语言</CardTitle></CardHeader><CardContent class="text-sm text-muted-foreground">zh-CN 优先，可扩展 en</CardContent></Card>
-      <Card><CardHeader><CardTitle>下一步</CardTitle></CardHeader><CardContent class="text-sm text-muted-foreground">启动 Laragon MySQL 后完成 GORM ping、迁移和真实 CRUD 回归。</CardContent></Card>
+      <Card><CardHeader><CardTitle>下一步</CardTitle></CardHeader><CardContent class="text-sm text-muted-foreground">配置 RESOURCE_PROVIDER=database，并通过 DB_CONNECTION 选择 MySQL 或 PostgreSQL 后生成业务资源。</CardContent></Card>
       <Card><CardHeader><CardTitle>代码仓库</CardTitle></CardHeader><CardContent class="text-sm"><a class="text-primary underline underline-offset-4" href="https://github.com/polibee/go-vue-admin" target="_blank" rel="noreferrer">polibee/go-vue-admin</a></CardContent></Card>
     </div>
   </section>

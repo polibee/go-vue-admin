@@ -53,7 +53,21 @@ PostgreSQL 示例：
     DB_USERNAME=postgres
     DB_PASSWORD=
 
-旧配置 `RESOURCE_PROVIDER=mysql` 仍兼容，但会规范化为 `database`。不要在未确认目标数据库和凭据的情况下运行迁移或破坏性 CRUD 验收。
+旧配置 `RESOURCE_PROVIDER=mysql` 仅作为兼容别名保留，新项目请使用 `RESOURCE_PROVIDER=database`。不要在未确认目标数据库和凭据的情况下运行迁移或破坏性 CRUD 验收。
+
+## 后台预览
+
+以下截图来自本地浏览器验收，展示当前后台的主要页面：
+
+![管理后台仪表盘](output/playwright/dashboard.png)
+
+![角色资源管理](output/playwright/roles.png)
+
+![系统设置](output/playwright/settings.png)
+
+![审计日志](output/playwright/audit.png)
+
+登录页的开发账号仅在本地开发环境显示，不放入公开文档截图。
 
 ## 验证命令
 
