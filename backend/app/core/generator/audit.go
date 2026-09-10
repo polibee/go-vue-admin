@@ -147,6 +147,9 @@ func auditDirectCalls(root string) []APIAuditFinding {
 		if !strings.HasSuffix(path, ".ts") && !strings.HasSuffix(path, ".vue") {
 			return nil
 		}
+		if strings.HasSuffix(path, ".test.ts") || strings.HasSuffix(path, ".spec.ts") {
+			return nil
+		}
 		data, readErr := os.ReadFile(path)
 		if readErr != nil {
 			return nil
