@@ -1,0 +1,6 @@
+{
+  "name": "@go-vue-admin/example-admin",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0"
+}

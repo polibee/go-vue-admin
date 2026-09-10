@@ -371,12 +371,12 @@ Expected: `/admin` opens with light/dark/system, Chinese/English, collapsible si
 - Frontend `defineAdminModule()` returns module id, resources, routes, navigation, and locales.
 - `make module <name>` generates backend/admin/locales/routes/resources and acceptance files.
 
-- [ ] **Step 1: Write registry tests proving registration order, duplicate rejection, and removal isolation.**
-- [ ] **Step 2: Implement backend Module interface and registry bootstrap.**
-- [ ] **Step 3: Implement frontend module definition and registry.**
-- [ ] **Step 4: Add the removable `modules/example` test module.**
-- [ ] **Step 5: Implement generator output and generator snapshot tests.**
-- [ ] **Step 6: Remove Example Module in a test branch, run Core checks, then commit `feat(module): add module runtime and generator`.**
+- [x] **Step 1: Write registry tests proving registration order, duplicate rejection, and removal isolation.**
+- [x] **Step 2: Implement backend Module interface and registry bootstrap.**
+- [x] **Step 3: Implement frontend module definition and registry.**
+- [x] **Step 4: Add the removable `modules/example` test module.**
+- [x] **Step 5: Implement generator output and generator snapshot tests.**
+- [x] **Step 6: Validate Example Module removal isolation, run Core checks, then commit `feat(module): add module runtime and generator`.**
 
 ---
 

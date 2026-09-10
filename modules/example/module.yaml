@@ -1,0 +1,7 @@
+id: example
+name: Example Module
+version: 0.1.0
+runtime: compiled
+dependencies: []
+backend: backend
+admin: admin
