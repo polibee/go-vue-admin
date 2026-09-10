@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace platform-specific API generation with one deterministic Go CLI, add Swagger UI documentation, and audit the complete backend/frontend API contract while preserving generated GORM CRUD and automatic route registration.
+**Goal:** Replace platform-specific API generation with one deterministic Go CLI, add Scalar API documentation, and audit the complete backend/frontend API contract while preserving generated GORM CRUD and automatic route registration.
 
-**Architecture:** `admin-gen api` calls the existing Go OpenAPI builder and a Go TypeScript renderer. OpenAPI JSON is the single contract artifact consumed by Swagger UI, generated schemas, TypeScript client code, and audit checks. Resource generation continues to use Manifest as its intermediate structure and injects an explicit GORM database handle into generated modules.
+**Architecture:** `admin-gen api` calls the existing Go OpenAPI builder and a Go TypeScript renderer. OpenAPI JSON is the single contract artifact consumed by Scalar API Reference, generated schemas, TypeScript client code, and audit checks. Resource generation continues to use Manifest as its intermediate structure and injects an explicit GORM database handle into generated modules.
 
-**Tech Stack:** Go 1.25, Goravel, GORM, OpenAPI JSON, Vue 3, TypeScript, pnpm, Swagger UI assets.
+**Tech Stack:** Go 1.25, Goravel, GORM, OpenAPI JSON, Vue 3, TypeScript, pnpm, Scalar API Reference.
 
 **Spec:** `docs/superpowers/specs/2026-09-10-go-api-generator-audit-design.md`
 
@@ -15,7 +15,7 @@
 - `admin-gen` is the only generator implementation.
 - No new Bash, PowerShell, or Node API generation implementation.
 - `spec-forge` is not added; the Go OpenAPI model remains the source of truth.
-- Swagger UI is disabled by default outside local development and never generates contracts.
+- Scalar API Reference is disabled or protected by default outside local development and never generates contracts.
 - Resource SQL identifiers and writable fields remain Manifest-whitelisted.
 - Generated outputs must be deterministic and checked for drift.
 - GitHub Actions remain manual-only.
@@ -46,27 +46,26 @@
 - [ ] Run generator tests and verify generated output is byte-stable.
 - [ ] Commit `feat(generator): unify api generation in go cli`.
 
-### Task 2: Add Swagger UI as a read-only backend documentation surface
+### Task 2: Add Scalar API Reference as a read-only admin documentation page
 
 **Files:**
-- Create: `backend/app/http/controllers/api_docs_controller.go`
-- Create: `backend/app/http/controllers/api_docs_controller_test.go`
-- Create: `backend/resources/views/api-docs.tmpl`
+- Create: `admin/src/pages/ApiDocsPage.vue`
+- Create: `admin/src/pages/ApiDocsPage.test.ts`
+- Modify: `admin/src/router/index.ts`
+- Modify: `admin/package.json`
 - Modify: `backend/routes/web.go`
 - Modify: `backend/config/app.go` or the project API docs configuration file
-- Modify: `backend/app/core/openapi/metadata.go`
 
 **Interfaces:**
-- `NewAPIDocsController(documentPath string, enabled bool) *APIDocsController`
-- `Index(ctx http.Context) http.Response`
-- `Document(ctx http.Context) http.Response`
+- `GET /api/docs/openapi.json` returns the generated document.
+- `/admin/api-docs` renders `ApiReference` from `@scalar/api-reference`.
 
-- [ ] Test disabled docs return 404 and enabled docs return the Swagger HTML shell.
 - [ ] Test the document endpoint returns the generated JSON with the documented media type.
-- [ ] Add local bundled Swagger UI assets or a pinned project-local package; do not use a runtime CDN.
-- [ ] Register `/api/docs` and `/api/docs/openapi.json` only when enabled.
-- [ ] Run controller tests and verify production defaults remain disabled.
-- [ ] Commit `feat(docs): add opt-in swagger ui`.
+- [ ] Add the pinned `@scalar/api-reference` Vue dependency and local stylesheet import.
+- [ ] Register the admin route and configure Scalar with `/api/docs/openapi.json`.
+- [ ] Protect or disable the document endpoint outside local development.
+- [ ] Run frontend tests and verify production defaults remain disabled.
+- [ ] Commit `feat(docs): add scalar api reference`.
 
 ### Task 3: Implement API route-to-client audit checks
 
@@ -134,7 +133,7 @@
 - [ ] Run GORM ping and migration checks when the database is reachable.
 - [ ] Run one generated resource CRUD round trip against MySQL.
 - [ ] Start backend and Vite in the background with logs and PID files.
-- [ ] Verify `/api/health`, `/api/auth/bootstrap`, `/login`, Swagger UI, and one resource page.
+- [ ] Verify `/api/health`, `/api/auth/bootstrap`, `/login`, Scalar API Reference, and one resource page.
 - [ ] Use Playwright snapshots for login and resource CRUD acceptance.
 - [ ] Run local release-check with E2E enabled, without invoking GitHub CI.
 - [ ] Commit `test(resource): verify mysql and browser contracts`.
