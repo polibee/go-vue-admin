@@ -107,6 +107,46 @@ func TestGenerateResourceRendersManifestAndModuleFiles(t *testing.T) {
 	}
 }
 
+func TestGenerateResourceRegistersMultipleResourcesInOneBackendModule(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "backend", "routes"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "admin", "src", "core", "extensions"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "backend", "routes", "web.go"), []byte("package routes\n\nimport (\n)\n\nfunc Web() {\n\tauthController := controllers.NewAuthController()\n}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "backend", "go.mod"), []byte("module goravel\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "admin", "src", "core", "extensions", "runtime.ts"), []byte("export function registerBuiltinExtensions(): void {\n  registerModule(moduleDefinition)\n}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := GenerateModule(ModuleOptions{RootDir: root, Name: "catalog"}); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"products", "categories"} {
+		if err := GenerateResource(ResourceOptions{RootDir: root, Module: "catalog", Manifest: ResourceManifest{ID: name, Table: name, Label: name, PrimaryKey: "id", Fields: []ManifestField{{Name: "id", Type: "text", Label: "ID"}}}}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	module, err := os.ReadFile(filepath.Join(root, "modules", "catalog", "backend", "module.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(module)
+	for _, marker := range []string{"products \"go-vue-admin-module/catalog/resources/products\"", "categories \"go-vue-admin-module/catalog/resources/categories\"", "products.RegisterRoutes(auth, database)", "categories.RegisterRoutes(auth, database)"} {
+		if !strings.Contains(text, marker) {
+			t.Errorf("backend module missing %q: %s", marker, text)
+		}
+	}
+	if strings.Count(text, "func RegisterRoutes(") != 1 {
+		t.Fatalf("expected one module route registrar, got %d", strings.Count(text, "func RegisterRoutes("))
+	}
+}
+
 func TestMySQLIntrospectorRequiresSafeTableName(t *testing.T) {
 	if _, err := NewMySQLIntrospector(context.Background(), "root", "root", "127.0.0.1:3306", "db").Inspect(context.Background(), "products;drop"); err == nil {
 		t.Fatal("expected unsafe table name to be rejected")

@@ -325,14 +325,28 @@ func registerResourceInBackendModule(path, module, resourceID string) error {
 	packageName := strings.ReplaceAll(resourceID, "-", "_")
 	resourceImport := fmt.Sprintf("\t%s \"go-vue-admin-module/%s/resources/%s\"", packageName, module, resourceID)
 	if !strings.Contains(text, resourceImport) {
-		text = strings.Replace(text, "import platformmodule \"goravel/app/core/module\"", "import (\n\tplatformmodule \"goravel/app/core/module\"\n\t\"goravel/app/http/controllers\"\n"+resourceImport+"\n)", 1)
+		if strings.Contains(text, "import platformmodule \"goravel/app/core/module\"") {
+			text = strings.Replace(text, "import platformmodule \"goravel/app/core/module\"", "import (\n\tplatformmodule \"goravel/app/core/module\"\n\t\"goravel/app/http/controllers\"\n"+resourceImport+"\n)", 1)
+		} else if index := strings.Index(text, "\n)"); index >= 0 {
+			text = text[:index] + "\n" + resourceImport + text[index:]
+		}
 	}
 	if !strings.Contains(text, "\"gorm.io/gorm\"") {
 		text = strings.Replace(text, "\t\"goravel/app/http/controllers\"\n", "\t\"goravel/app/http/controllers\"\n\t\"gorm.io/gorm\"\n", 1)
 	}
 	function := "func RegisterRoutes(auth *controllers.AuthController, database *gorm.DB) error {"
 	if !strings.Contains(text, function) {
-		text += fmt.Sprintf("\n\n%s\n\treturn %s.RegisterRoutes(auth, database)\n}\n", function, packageName)
+		text += fmt.Sprintf("\n\n%s\n\tif err := %s.RegisterRoutes(auth, database); err != nil { return err }\n\treturn nil\n}\n", function, packageName)
+	} else {
+		call := fmt.Sprintf("\tif err := %s.RegisterRoutes(auth, database); err != nil { return err }", packageName)
+		if !strings.Contains(text, call) {
+			if strings.Contains(text, "\treturn nil\n}") {
+				text = strings.Replace(text, "\treturn nil\n}", call+"\n\treturn nil\n}", 1)
+			} else {
+				oldCall := fmt.Sprintf("\treturn %s.RegisterRoutes(auth, database)", packageName)
+				text = strings.Replace(text, oldCall, call+"\n\treturn nil", 1)
+			}
+		}
 	}
 	return os.WriteFile(path, []byte(text), 0o644)
 }
