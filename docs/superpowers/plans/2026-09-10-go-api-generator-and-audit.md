@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace platform-specific API generation with one deterministic Go CLI, add Scalar API documentation, and audit the complete backend/frontend API contract while preserving generated GORM CRUD and automatic route registration.
+**Goal:** Replace platform-specific API generation with one deterministic Go CLI, add Scalar API documentation, and audit the complete backend/frontend API contract for the generic admin panel while preserving generated GORM CRUD and automatic route registration.
 
-**Architecture:** `admin-gen api` calls the existing Go OpenAPI builder and a Go TypeScript renderer. OpenAPI JSON is the single contract artifact consumed by Scalar API Reference, generated schemas, TypeScript client code, and audit checks. Resource generation continues to use Manifest as its intermediate structure and injects an explicit GORM database handle into generated modules.
+**Architecture:** `admin-gen api` calls the existing Go OpenAPI builder and a Go renderer for the admin panel's TypeScript client. OpenAPI JSON is the single contract artifact consumed by Scalar API Reference, generated schemas, TypeScript client code, and audit checks. Resource generation continues to use Manifest as its intermediate structure and injects an explicit GORM database handle into generated modules. Other-language SDK generation is reserved for future business products and is not implemented here.
 
 **Tech Stack:** Go 1.25, Goravel, GORM, OpenAPI JSON, Vue 3, TypeScript, pnpm, Scalar API Reference.
 
@@ -15,12 +15,13 @@
 - `admin-gen` is the only generator implementation.
 - No new Bash, PowerShell, or Node API generation implementation.
 - `spec-forge` is not added; the Go OpenAPI model remains the source of truth.
+- The current phase generates no Go/PHP/Python/Java SDK packages.
 - Scalar API Reference is disabled or protected by default outside local development and never generates contracts.
 - Resource SQL identifiers and writable fields remain Manifest-whitelisted.
 - Generated outputs must be deterministic and checked for drift.
 - GitHub Actions remain manual-only.
 
-### Task 1: Consolidate API generation under `admin-gen api`
+### Task 1: Consolidate admin-panel API generation under `admin-gen api`
 
 **Files:**
 - Create: `backend/app/core/generator/api.go`
@@ -40,11 +41,13 @@
 - [ ] Write a failing test for deterministic OpenAPI and TypeScript output in a temporary root.
 - [ ] Run `go test ./app/core/generator -run TestGenerateAPI -count=1` and confirm the command is absent.
 - [ ] Implement the Go renderer using the existing OpenAPI document and stable JSON encoding.
-- [ ] Add generated client rendering for models, request methods, query serialization, and JSON/FormData bodies.
+- [ ] Add admin-panel TypeScript client rendering for models, request methods, query serialization, and JSON/FormData bodies.
 - [ ] Wire the CLI and replace package scripts with `go -C backend run ./cmd/admin-gen api`.
 - [ ] Delete the old shell, Node, and duplicate OpenAPI command entry points.
 - [ ] Run generator tests and verify generated output is byte-stable.
 - [ ] Commit `feat(generator): unify api generation in go cli`.
+
+The output of this task is an OpenAPI contract plus the admin panel's TypeScript client, not a multi-language SDK distribution.
 
 ### Task 2: Add Scalar API Reference as a read-only admin documentation page
 
@@ -120,6 +123,8 @@
 - [ ] Update consumers to use generated methods instead of handwritten API paths.
 - [ ] Run frontend unit tests, typecheck, and build.
 - [ ] Commit `refactor(admin): consume unified generated api client`.
+
+Do not add Go, PHP, Python, Java, WordPress, payment, webhook, or signature SDKs in this task. Those will consume the versioned OpenAPI contract in a future business integration project.
 
 ### Task 6: MySQL integration and browser acceptance
 
