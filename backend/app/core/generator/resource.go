@@ -1,0 +1,385 @@
+package generator
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+
+	_ "github.com/go-sql-driver/mysql"
+	"gopkg.in/yaml.v3"
+)
+
+type ResourceOptions struct {
+	RootDir  string
+	Module   string
+	Manifest ResourceManifest
+}
+
+type ResourceManifest struct {
+	ID          string            `yaml:"id" json:"id"`
+	Table       string            `yaml:"table" json:"table"`
+	Label       string            `yaml:"label" json:"label"`
+	PrimaryKey  string            `yaml:"primary_key" json:"primary_key"`
+	SoftDelete  bool              `yaml:"soft_delete,omitempty" json:"soft_delete,omitempty"`
+	Audit       bool              `yaml:"audit,omitempty" json:"audit,omitempty"`
+	Permissions map[string]string `yaml:"permissions,omitempty" json:"permissions,omitempty"`
+	Fields      []ManifestField   `yaml:"fields" json:"fields"`
+}
+
+type ManifestField struct {
+	Name       string            `yaml:"name" json:"name"`
+	Type       string            `yaml:"type" json:"type"`
+	Label      string            `yaml:"label" json:"label"`
+	Required   bool              `yaml:"required,omitempty" json:"required,omitempty"`
+	Searchable bool              `yaml:"searchable,omitempty" json:"searchable,omitempty"`
+	Sortable   bool              `yaml:"sortable,omitempty" json:"sortable,omitempty"`
+	Options    []ManifestOption  `yaml:"options,omitempty" json:"options,omitempty"`
+	Relation   *ManifestRelation `yaml:"relation,omitempty" json:"relation,omitempty"`
+}
+
+type ManifestOption struct {
+	Value string `yaml:"value" json:"value"`
+	Label string `yaml:"label" json:"label"`
+}
+
+type ManifestRelation struct {
+	Resource     string `yaml:"resource" json:"resource"`
+	ForeignKey   string `yaml:"foreign_key" json:"foreign_key"`
+	DisplayField string `yaml:"display_field" json:"display_field"`
+}
+
+type TableSchema struct {
+	Name      string
+	Columns   []ColumnSchema
+	Relations []RelationSchema
+}
+
+type ColumnSchema struct {
+	Name       string
+	DataType   string
+	ColumnType string
+	Nullable   bool
+	Key        string
+	Extra      string
+	Comment    string
+}
+
+type RelationSchema struct {
+	Column           string
+	ReferencedTable  string
+	ReferencedColumn string
+}
+
+var sqlIdentifierPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+func ManifestFromTableSchema(schema TableSchema) ResourceManifest {
+	manifest := ResourceManifest{
+		ID:         schema.Name,
+		Table:      schema.Name,
+		Label:      titleWords(schema.Name),
+		PrimaryKey: "id",
+		Permissions: map[string]string{
+			"list":   schema.Name + ".view",
+			"get":    schema.Name + ".view",
+			"create": schema.Name + ".create",
+			"update": schema.Name + ".update",
+			"delete": schema.Name + ".delete",
+		},
+	}
+	relations := make(map[string]RelationSchema, len(schema.Relations))
+	for _, relation := range schema.Relations {
+		relations[relation.Column] = relation
+	}
+	for _, column := range schema.Columns {
+		if column.Name == "deleted_at" {
+			manifest.SoftDelete = true
+			continue
+		}
+		if column.Name == "created_at" || column.Name == "updated_at" {
+			continue
+		}
+		if column.Key == "PRI" {
+			manifest.PrimaryKey = column.Name
+		}
+		field := ManifestField{
+			Name:       column.Name,
+			Type:       manifestFieldType(column),
+			Label:      column.Comment,
+			Required:   !column.Nullable && column.Extra != "auto_increment",
+			Searchable: column.DataType == "char" || column.DataType == "varchar" || column.DataType == "text",
+			Sortable:   true,
+		}
+		if field.Label == "" {
+			field.Label = titleWords(column.Name)
+		}
+		if field.Type == "select" {
+			field.Options = enumOptions(column.ColumnType)
+		}
+		if relation, ok := relations[column.Name]; ok {
+			field.Relation = &ManifestRelation{
+				Resource:     relation.ReferencedTable,
+				ForeignKey:   relation.ReferencedColumn,
+				DisplayField: "name",
+			}
+		}
+		manifest.Fields = append(manifest.Fields, field)
+	}
+	return manifest
+}
+
+func GenerateResource(options ResourceOptions) error {
+	if !moduleNamePattern.MatchString(options.Module) {
+		return fmt.Errorf("module name must match %s: %q", moduleNamePattern.String(), options.Module)
+	}
+	if !moduleNamePattern.MatchString(options.Manifest.ID) {
+		return fmt.Errorf("resource id must match %s: %q", moduleNamePattern.String(), options.Manifest.ID)
+	}
+	if !sqlIdentifierPattern.MatchString(options.Manifest.Table) {
+		return fmt.Errorf("table must be a safe SQL identifier: %q", options.Manifest.Table)
+	}
+	rootDir := options.RootDir
+	if rootDir == "" {
+		rootDir = "."
+	}
+	moduleDir := filepath.Join(rootDir, "modules", options.Module)
+	if _, err := os.Stat(filepath.Join(moduleDir, "admin", "module.ts")); err != nil {
+		return fmt.Errorf("module admin entry is missing: %w", err)
+	}
+	resourceDir := filepath.Join(moduleDir, "resources")
+	adminDir := filepath.Join(moduleDir, "admin", "resources")
+	backendDir := filepath.Join(moduleDir, "backend", "resources")
+	manifestPath := filepath.Join(resourceDir, options.Manifest.ID+".yaml")
+	adminPath := filepath.Join(adminDir, options.Manifest.ID+".ts")
+	backendPath := filepath.Join(backendDir, options.Manifest.ID+".go")
+	for _, path := range []string{manifestPath, adminPath, backendPath} {
+		if _, err := os.Stat(path); err == nil {
+			return fmt.Errorf("resource already exists: %s", options.Manifest.ID)
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("inspect %s: %w", path, err)
+		}
+	}
+	manifestBytes, err := yaml.Marshal(options.Manifest)
+	if err != nil {
+		return fmt.Errorf("marshal resource manifest: %w", err)
+	}
+	files := map[string][]byte{
+		manifestPath: manifestBytes,
+		adminPath:    []byte(renderAdminResource(options.Manifest)),
+		backendPath:  []byte(renderBackendResource(options.Manifest)),
+	}
+	for path, content := range files {
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			return fmt.Errorf("create %s: %w", filepath.Dir(path), err)
+		}
+		if err := os.WriteFile(path, content, 0o644); err != nil {
+			return fmt.Errorf("write %s: %w", path, err)
+		}
+	}
+	return registerResourceInModule(filepath.Join(moduleDir, "admin", "module.ts"), options.Manifest.ID)
+}
+
+func renderAdminResource(manifest ResourceManifest) string {
+	typeName := pascalName(manifest.ID)
+	var b strings.Builder
+	fmt.Fprintln(&b, "import { defineResource } from '@/resource-engine/core/ResourceDefinition'")
+	fmt.Fprintln(&b)
+	fmt.Fprintf(&b, "export interface %sResourceRecord {\n", typeName)
+	for _, field := range manifest.Fields {
+		fmt.Fprintf(&b, "  %s: %s\n", field.Name, tsType(field.Type))
+	}
+	fmt.Fprintln(&b, "}")
+	fmt.Fprintln(&b)
+	fmt.Fprintf(&b, "export const %sResource = defineResource<%sResourceRecord>({\n", manifest.ID, typeName)
+	fmt.Fprintf(&b, "  name: '%s',\n  label: '%s',\n  endpoint: '/api/resources/%s',\n", manifest.ID, manifest.Label, manifest.ID)
+	fmt.Fprintln(&b, "  permissions: {")
+	for _, action := range []string{"list", "get", "create", "update", "delete"} {
+		if permission := manifest.Permissions[action]; permission != "" {
+			fmt.Fprintf(&b, "    %s: '%s',\n", action, permission)
+		}
+	}
+	if permission := manifest.Permissions["delete"]; permission != "" {
+		fmt.Fprintf(&b, "    bulkDelete: '%s',\n", permission)
+	}
+	fmt.Fprintln(&b, "  },\n  columns: [")
+	for _, field := range manifest.Fields {
+		fmt.Fprintf(&b, "    { key: '%s', label: '%s', sortable: %t },\n", field.Name, field.Label, field.Sortable)
+	}
+	fmt.Fprintln(&b, "  ],\n  fields: [")
+	for _, field := range manifest.Fields {
+		fmt.Fprintf(&b, "    { name: '%s', label: '%s'", field.Name, field.Label)
+		if field.Type != "text" {
+			fmt.Fprintf(&b, ", type: '%s'", field.Type)
+		}
+		if field.Required {
+			b.WriteString(", required: true")
+		}
+		if len(field.Options) > 0 {
+			b.WriteString(", options: [")
+			for _, option := range field.Options {
+				fmt.Fprintf(&b, "{ label: '%s', value: '%s' }, ", option.Label, option.Value)
+			}
+			b.WriteString("]")
+		}
+		b.WriteString(" },\n")
+	}
+	fmt.Fprintln(&b, "  ],\n})")
+	return b.String()
+}
+
+func renderBackendResource(manifest ResourceManifest) string {
+	packageName := strings.ReplaceAll(manifest.ID, "-", "_")
+	var b strings.Builder
+	fmt.Fprintf(&b, "package %s\n\n", packageName)
+	fmt.Fprintln(&b, "// Code generated by admin-gen from Resource Manifest.")
+	fmt.Fprintf(&b, "const (\n\tID = \"%s\"\n\tTable = \"%s\"\n)\n\n", manifest.ID, manifest.Table)
+	fmt.Fprint(&b, "type Field struct { Name string; Type string; Label string; Required bool }\n\n")
+	fmt.Fprintln(&b, "var Fields = []Field{")
+	for _, field := range manifest.Fields {
+		fmt.Fprintf(&b, "\t{Name: \"%s\", Type: \"%s\", Label: \"%s\", Required: %t},\n", field.Name, field.Type, field.Label, field.Required)
+	}
+	fmt.Fprintln(&b, "}")
+	return b.String()
+}
+
+func registerResourceInModule(path, resourceID string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	text := string(content)
+	importLine := fmt.Sprintf("import { %sResource } from './resources/%s'", resourceID, resourceID)
+	if !strings.Contains(text, importLine) {
+		text = importLine + "\n" + text
+	}
+	if strings.Contains(text, "resources: []") {
+		text = strings.Replace(text, "resources: []", "resources: ["+resourceID+"Resource]", 1)
+	} else if !strings.Contains(text, resourceID+"Resource") {
+		text = strings.Replace(text, "resources: [", "resources: ["+resourceID+"Resource, ", 1)
+	} else if !strings.Contains(text, "resources:") {
+		text = strings.Replace(text, "defineAdminModule({", "defineAdminModule({\n  resources: ["+resourceID+"Resource],", 1)
+	}
+	return os.WriteFile(path, []byte(text), 0o644)
+}
+
+func manifestFieldType(column ColumnSchema) string {
+	dataType := strings.ToLower(column.DataType)
+	switch dataType {
+	case "enum", "set":
+		return "select"
+	case "bool", "boolean":
+		return "checkbox"
+	case "tinyint":
+		if strings.EqualFold(column.ColumnType, "tinyint(1)") {
+			return "checkbox"
+		}
+	case "int", "integer", "bigint", "smallint", "mediumint", "decimal", "numeric", "float", "double":
+		return "number"
+	case "date":
+		return "date"
+	case "datetime", "timestamp", "time":
+		return "datetime"
+	case "text", "mediumtext", "longtext", "blob", "mediumblob", "longblob":
+		return "textarea"
+	}
+	return "text"
+}
+
+func enumOptions(columnType string) []ManifestOption {
+	start := strings.Index(strings.ToLower(columnType), "enum(")
+	if start < 0 || !strings.HasSuffix(columnType, ")") {
+		return nil
+	}
+	valueText := columnType[start+5 : len(columnType)-1]
+	parts := strings.Split(valueText, "','")
+	options := make([]ManifestOption, 0, len(parts))
+	for _, part := range parts {
+		value := strings.Trim(part, " '")
+		if value != "" {
+			options = append(options, ManifestOption{Value: value, Label: titleWords(strings.ReplaceAll(value, "_", "-"))})
+		}
+	}
+	return options
+}
+
+func tsType(fieldType string) string {
+	switch fieldType {
+	case "number":
+		return "number"
+	case "checkbox", "switch":
+		return "boolean"
+	default:
+		return "string"
+	}
+}
+
+func pascalName(value string) string {
+	return strings.ReplaceAll(titleWords(strings.ReplaceAll(value, "_", "-")), " ", "")
+}
+
+type MySQLIntrospector struct {
+	db *sql.DB
+}
+
+func NewMySQLIntrospector(_ context.Context, user, password, address, database string) *MySQLIntrospector {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true&charset=utf8mb4", user, password, address, database)
+	db, _ := sql.Open("mysql", dsn)
+	return &MySQLIntrospector{db: db}
+}
+
+func (i *MySQLIntrospector) Close() error {
+	if i == nil || i.db == nil {
+		return nil
+	}
+	return i.db.Close()
+}
+
+func (i *MySQLIntrospector) Inspect(ctx context.Context, table string) (TableSchema, error) {
+	if !sqlIdentifierPattern.MatchString(table) {
+		return TableSchema{}, fmt.Errorf("unsafe table name %q", table)
+	}
+	if i == nil || i.db == nil {
+		return TableSchema{}, errors.New("mysql database is not configured")
+	}
+	rows, err := i.db.QueryContext(ctx, `SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE, IS_NULLABLE, COLUMN_KEY, EXTRA, COLUMN_COMMENT FROM information_schema.columns WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION`, table)
+	if err != nil {
+		return TableSchema{}, err
+	}
+	defer rows.Close()
+	schema := TableSchema{Name: table}
+	for rows.Next() {
+		var column ColumnSchema
+		var nullable, comment string
+		if err := rows.Scan(&column.Name, &column.DataType, &column.ColumnType, &nullable, &column.Key, &column.Extra, &comment); err != nil {
+			return TableSchema{}, err
+		}
+		column.Nullable = nullable == "YES"
+		column.Comment = comment
+		schema.Columns = append(schema.Columns, column)
+	}
+	if err := rows.Err(); err != nil {
+		return TableSchema{}, err
+	}
+	relations, err := i.db.QueryContext(ctx, `SELECT COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL`, table)
+	if err != nil {
+		return TableSchema{}, err
+	}
+	defer relations.Close()
+	for relations.Next() {
+		var relation RelationSchema
+		if err := relations.Scan(&relation.Column, &relation.ReferencedTable, &relation.ReferencedColumn); err != nil {
+			return TableSchema{}, err
+		}
+		schema.Relations = append(schema.Relations, relation)
+	}
+	return schema, relations.Err()
+}
+
+func sortFields(fields []ManifestField) {
+	sort.SliceStable(fields, func(i, j int) bool { return fields[i].Name < fields[j].Name })
+}

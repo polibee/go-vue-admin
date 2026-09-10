@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -21,8 +22,10 @@ func main() {
 			os.Exit(1)
 		}
 	case "resource":
-		fmt.Fprintln(os.Stderr, "admin-gen resource: not implemented yet; use the Resource Manifest design in docs/RESOURCE_GENERATION.md")
-		os.Exit(2)
+		if err := runResource(os.Args[2:]); err != nil {
+			fmt.Fprintf(os.Stderr, "admin-gen resource: %v\n", err)
+			os.Exit(1)
+		}
 	case "help", "-h", "--help":
 		usage()
 	default:
@@ -47,6 +50,55 @@ func runModule(args []string) error {
 		ModuleRoot: *moduleRoot,
 		Name:       flags.Arg(0),
 	})
+}
+
+func runResource(args []string) error {
+	flags := flag.NewFlagSet("resource", flag.ContinueOnError)
+	root := flags.String("root", ".", "repository root")
+	module := flags.String("module", "", "target module")
+	table := flags.String("table", "", "MySQL table")
+	name := flags.String("name", "", "resource id; defaults to table")
+	label := flags.String("label", "", "resource label; defaults to inferred table label")
+	user := flags.String("user", envOr("DB_USERNAME", "root"), "MySQL username")
+	password := flags.String("password", envOr("DB_PASSWORD", ""), "MySQL password")
+	address := flags.String("address", envOr("DB_HOST", "127.0.0.1")+":"+envOr("DB_PORT", "3306"), "MySQL host:port")
+	database := flags.String("database", envOr("DB_DATABASE", ""), "MySQL database")
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if *module == "" || *table == "" {
+		return fmt.Errorf("usage: admin-gen resource --module <module> --table <table> [--name <id>] [--label <label>]")
+	}
+	if *database == "" {
+		return fmt.Errorf("MySQL database is required; set DB_DATABASE or --database")
+	}
+	resourceID := *name
+	if resourceID == "" {
+		resourceID = *table
+	}
+	introspector := generator.NewMySQLIntrospector(context.Background(), *user, *password, *address, *database)
+	defer introspector.Close()
+	schema, err := introspector.Inspect(context.Background(), *table)
+	if err != nil {
+		return err
+	}
+	manifest := generator.ManifestFromTableSchema(schema)
+	manifest.ID = resourceID
+	if *label != "" {
+		manifest.Label = *label
+	}
+	return generator.GenerateResource(generator.ResourceOptions{
+		RootDir:  *root,
+		Module:   *module,
+		Manifest: manifest,
+	})
+}
+
+func envOr(name, fallback string) string {
+	if value := os.Getenv(name); value != "" {
+		return value
+	}
+	return fallback
 }
 
 func usage() {

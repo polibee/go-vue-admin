@@ -40,19 +40,20 @@ fields:
 
 ```bash
 go -C backend run ./cmd/admin-gen module catalog
-`admin-gen module` is implemented first. The `resource` subcommand is reserved for the next stage and will consume the Manifest as its only intermediate representation:
+`admin-gen module` and the initial MySQL-backed `resource` discovery stage are implemented. The resource command consumes the Manifest as its only intermediate representation:
 
 ```bash
 go -C backend run ./cmd/admin-gen resource --module catalog --table products
 ```
 ```
 
-模块生成结果位于：
+生成结果位于：
 
 ```text
 modules/catalog/
-├── backend/
-└── admin/
+├── resources/<resource>.yaml
+├── backend/resources/<resource>.go
+└── admin/resources/<resource>.ts
 ```
 
 数据库反向读取、关系推断和真正的 MySQL CRUD Repository 将在单表生成阶段接入；Manifest 是后续枚举、外键、软删除和审计能力的扩展点。
