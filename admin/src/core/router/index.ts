@@ -17,6 +17,7 @@ export const router = createRouter({
         { path: 'settings', component: () => import('@/pages/SettingsPage.vue') },
         { path: 'media', component: () => import('@/pages/MediaPage.vue') },
         { path: 'audit', component: () => import('@/pages/AuditPage.vue') },
+        { path: 'api-docs', component: () => import('@/pages/ApiDocsPage.vue') },
         { path: 'extensions', component: () => import('@/core/extensions/ExtensionsPage.vue') },
         { path: 'extensions/:id', component: () => import('@/core/extensions/ExtensionDetailPage.vue') },
         ...resourceRouteRecords(),

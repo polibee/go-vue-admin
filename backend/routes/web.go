@@ -4,6 +4,7 @@ import (
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/support"
 
+	"goravel/app/core/openapi"
 	permissionresources "goravel/app/core/permission/resources"
 	"goravel/app/core/resource"
 	roleresources "goravel/app/core/role/resources"
@@ -13,6 +14,11 @@ import (
 )
 
 func Web() {
+	if environment := facades.Config().Env("APP_ENV", "production"); environment == "local" || environment == "development" || environment == "testing" {
+		facades.Route().Get("/api/docs/openapi.json", func(ctx http.Context) http.Response {
+			return ctx.Response().Json(200, openapi.BuildDocument())
+		})
+	}
 	facades.Route().Get("/", func(ctx http.Context) http.Response {
 		return ctx.Response().View().Make("welcome.tmpl", map[string]any{
 			"version": support.Version,
