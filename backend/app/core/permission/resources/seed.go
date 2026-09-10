@@ -6,6 +6,7 @@ func Seed() []resource.CoreResourceRecord {
 	return []resource.CoreResourceRecord{
 		{"id": "dashboard.view", "name": "dashboard.view", "description": "查看仪表盘"},
 		{"id": "settings.view", "name": "settings.view", "description": "查看设置"},
+		{"id": "settings.update", "name": "settings.update", "description": "修改设置"},
 		{"id": "users.view", "name": "users.view", "description": "查看用户"},
 		{"id": "users.create", "name": "users.create", "description": "创建用户"},
 		{"id": "users.update", "name": "users.update", "description": "编辑用户"},

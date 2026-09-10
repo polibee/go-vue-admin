@@ -15,6 +15,8 @@ func BuildDocument() map[string]any {
 	paths := make(map[string]any)
 	for _, endpoint := range CoreEndpoints {
 		path := strings.ReplaceAll(endpoint.Path, ":id", "{id}")
+		path = strings.ReplaceAll(path, ":namespace", "{namespace}")
+		path = strings.ReplaceAll(path, ":key", "{key}")
 		item, ok := paths[path].(map[string]any)
 		if !ok {
 			item = make(map[string]any)
@@ -64,6 +66,15 @@ func SchemaDocuments() map[string]any {
 			"id": map[string]any{"type": "string"}, "name": map[string]any{"type": "string"},
 			"description": map[string]any{"type": "string"},
 		}, []string{"id", "name", "description"}),
+		"setting-resource": resourceSchema(map[string]any{
+			"namespace": map[string]any{"type": "string"}, "key": map[string]any{"type": "string"},
+			"value": map[string]any{}, "value_type": map[string]any{"type": "string", "enum": []any{"string", "boolean", "integer", "number", "json"}},
+			"description": map[string]any{"type": "string"}, "updated_at": map[string]any{"type": "string", "format": "date-time"},
+		}, []string{"namespace", "key", "value", "value_type"}),
+		"setting-input": resourceSchema(map[string]any{
+			"value": map[string]any{}, "value_type": map[string]any{"type": "string", "enum": []any{"string", "boolean", "integer", "number", "json"}},
+			"description": map[string]any{"type": "string"},
+		}, []string{"value", "value_type"}),
 		"resource-envelope": map[string]any{
 			"type": "object", "required": []any{"data", "meta"},
 			"properties": map[string]any{
@@ -132,6 +143,27 @@ func operationFor(endpoint CoreEndpoint, normalizedPath string) map[string]any {
 				operation["responses"] = map[string]any{"200": responseSchema("ResourceMutation", false)}
 			} else {
 				operation["responses"] = map[string]any{"200": responseSchema(resourceName, false)}
+			}
+		}
+	}
+	if strings.HasPrefix(normalizedPath, "/api/settings") {
+		operation["tags"] = []any{"Settings"}
+		if normalizedPath == "/api/settings" && endpoint.Method == "GET" {
+			operation["parameters"] = []any{map[string]any{"name": "namespace", "in": "query", "schema": map[string]any{"type": "string"}}}
+			operation["responses"] = map[string]any{"200": responseSchema("Setting", true)}
+		} else if endpoint.Method == "POST" {
+			operation["requestBody"] = jsonRequestBody(map[string]any{"$ref": "#/components/schemas/SettingResource"})
+			operation["responses"] = map[string]any{"201": responseSchema("Setting", false)}
+		} else {
+			operation["parameters"] = []any{
+				map[string]any{"name": "namespace", "in": "path", "required": true, "schema": map[string]any{"type": "string"}},
+				map[string]any{"name": "key", "in": "path", "required": true, "schema": map[string]any{"type": "string"}},
+			}
+			if endpoint.Method == "PUT" {
+				operation["requestBody"] = jsonRequestBody(map[string]any{"$ref": "#/components/schemas/SettingInput"})
+				operation["responses"] = map[string]any{"200": responseSchema("Setting", false)}
+			} else {
+				operation["responses"] = map[string]any{"200": responseSchema("ResourceMutation", false)}
 			}
 		}
 	}

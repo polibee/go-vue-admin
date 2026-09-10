@@ -5,6 +5,7 @@ export interface ResourceListQuery {
   page?: number
   perPage?: number
   search?: string
+  namespace?: string
   filters?: Record<string, string>
   sort?: { field: string; direction: 'asc' | 'desc' }
 }
@@ -25,7 +26,7 @@ export interface DemoResource {
   id: string
   name: string
   owner: string
-  status: string
+  status: "draft" | "active"
 }
 
 export interface PermissionResource {
@@ -47,4 +48,13 @@ export interface UserResource {
   id: string
   name: string
   role_ids: string[]
+}
+
+export interface SettingResource {
+  description?: string
+  key: string
+  namespace: string
+  updated_at?: string
+  value: unknown
+  value_type: "string" | "boolean" | "integer" | "number" | "json"
 }

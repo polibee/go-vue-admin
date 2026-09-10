@@ -170,6 +170,66 @@
         ],
         "type": "object"
       },
+      "SettingInput": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "value": {},
+          "value_type": {
+            "enum": [
+              "string",
+              "boolean",
+              "integer",
+              "number",
+              "json"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "value_type"
+        ],
+        "type": "object"
+      },
+      "SettingResource": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "namespace": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "value": {},
+          "value_type": {
+            "enum": [
+              "string",
+              "boolean",
+              "integer",
+              "number",
+              "json"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "namespace",
+          "key",
+          "value",
+          "value_type"
+        ],
+        "type": "object"
+      },
       "UserResource": {
         "additionalProperties": false,
         "properties": {
@@ -1265,6 +1325,151 @@
         },
         "tags": [
           "Resources"
+        ]
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "description": "Lists typed settings, optionally filtered by namespace.",
+        "operationId": "getApiSettings",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "namespace",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Settings"
+        ]
+      },
+      "post": {
+        "description": "Creates or replaces one typed setting.",
+        "operationId": "postApiSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingResource"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Settings"
+        ]
+      }
+    },
+    "/api/settings/{namespace}/{key}": {
+      "delete": {
+        "description": "Deletes one typed setting.",
+        "operationId": "deleteApiSettings{Namespace}{Key}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "namespace",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Settings"
+        ]
+      },
+      "put": {
+        "description": "Updates one typed setting.",
+        "operationId": "putApiSettings{Namespace}{Key}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "namespace",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Settings"
         ]
       }
     }

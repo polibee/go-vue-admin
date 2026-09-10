@@ -1,0 +1,36 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "key": {
+      "type": "string"
+    },
+    "namespace": {
+      "type": "string"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "value": {},
+    "value_type": {
+      "enum": [
+        "string",
+        "boolean",
+        "integer",
+        "number",
+        "json"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "namespace",
+    "key",
+    "value",
+    "value_type"
+  ],
+  "type": "object"
+}

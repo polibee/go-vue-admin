@@ -3,7 +3,7 @@
 
 import type { ApiClient } from '@/core/api/client'
 
-import type { DemoResource, PermissionResource, RoleResource, UserResource, ResourceEnvelope, ResourceListQuery } from './models'
+import type { DemoResource, PermissionResource, RoleResource, UserResource, SettingResource, ResourceEnvelope, ResourceListQuery } from './models'
 
 export interface GeneratedApiClient {
   listDemoResources(query?: ResourceListQuery): Promise<ResourceEnvelope<DemoResource[]>>
@@ -30,6 +30,10 @@ export interface GeneratedApiClient {
   updateUser(id: string, input: Partial<UserResource>): Promise<ResourceEnvelope<UserResource>>
   deleteUser(id: string): Promise<ResourceEnvelope<{ deleted: boolean }>>
   bulkDeleteUsers(input: { ids: string[] }): Promise<ResourceEnvelope<{ deleted: boolean }>>
+  listSettings(query?: Pick<ResourceListQuery, 'namespace'>): Promise<ResourceEnvelope<SettingResource[]>>
+  upsertSetting(input: SettingResource): Promise<ResourceEnvelope<SettingResource>>
+  updateSetting(namespace: string, key: string, input: Partial<SettingResource>): Promise<ResourceEnvelope<SettingResource>>
+  deleteSetting(namespace: string, key: string): Promise<ResourceEnvelope<{ deleted: boolean }>>
 }
 
 function withQuery(path: string, query?: ResourceListQuery): string {
@@ -38,6 +42,7 @@ function withQuery(path: string, query?: ResourceListQuery): string {
   if (query.page !== undefined) params.set('page', String(query.page))
   if (query.perPage !== undefined) params.set('per_page', String(query.perPage))
   if (query.search?.trim()) params.set('search', query.search.trim())
+  if (query.namespace?.trim()) params.set('namespace', query.namespace.trim())
   if (query.sort) {
     params.set('sort', query.sort.field)
     params.set('sort_dir', query.sort.direction)
@@ -83,5 +88,9 @@ export function createGeneratedApiClient(client: ApiClient): GeneratedApiClient 
     updateUser: (id, input) => client.request<ResourceEnvelope<UserResource>>(itemPath('/api/resources/users', id), jsonOptions('PUT', input)),
     deleteUser: (id) => client.request<ResourceEnvelope<{ deleted: boolean }>>(itemPath('/api/resources/users', id), { method: 'DELETE' }),
     bulkDeleteUsers: (input) => client.request<ResourceEnvelope<{ deleted: boolean }>>('/api/resources/users/bulk-delete', jsonOptions('POST', input)),
+    listSettings: (query) => client.request<ResourceEnvelope<SettingResource[]>>(withQuery('/api/settings', query)),
+    upsertSetting: (input) => client.request<ResourceEnvelope<SettingResource>>('/api/settings', jsonOptions('POST', input)),
+    updateSetting: (namespace, key, input) => client.request<ResourceEnvelope<SettingResource>>('/api/settings/' + encodeURIComponent(namespace) + '/' + encodeURIComponent(key), jsonOptions('PUT', input)),
+    deleteSetting: (namespace, key) => client.request<ResourceEnvelope<{ deleted: boolean }>>('/api/settings/' + encodeURIComponent(namespace) + '/' + encodeURIComponent(key), { method: 'DELETE' }),
   }
 }

@@ -346,7 +346,7 @@ Expected: `/admin` opens with light/dark/system, Chinese/English, collapsible si
 - Create: `admin/src/modules/media/`
 - Create: `admin/src/modules/audit/`
 
-- [ ] **Step 1: Deliver Settings as a typed namespace/key/value resource without schema changes for new settings.**
+- [x] **Step 1: Deliver Settings as a typed namespace/key/value resource without schema changes for new settings.**
 - [ ] **Step 2: Deliver Media with storage adapters, upload/delete/list/preview, and FileField/ImageField/MediaPicker.**
 - [ ] **Step 3: Deliver Audit with actor/action/resource/before/after/ip/user-agent/timestamp and a Diff Viewer.**
 - [ ] **Step 4: Add isolated tests and OpenAPI endpoints for each capability.**

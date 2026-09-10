@@ -157,6 +157,7 @@ func NewBootstrapService(email, password, name string) (*Service, error) {
 			Permissions: []string{
 				"dashboard.view",
 				"settings.view",
+				"settings.update",
 				userresources.PermissionView,
 				userresources.PermissionCreate,
 				userresources.PermissionUpdate,
