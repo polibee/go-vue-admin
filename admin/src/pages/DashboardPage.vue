@@ -4,14 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 
 const milestones = [
-  { name: 'Task 1 · Repository foundation', status: '已完成', value: 100, variant: 'secondary' as const },
-  { name: 'Task 2 · shadcn-vue UI foundation', status: '已完成', value: 100, variant: 'secondary' as const },
-  { name: 'Task 3 · Admin shell and routing', status: '已完成', value: 100, variant: 'secondary' as const },
-  { name: 'Task 4 · API contracts', status: '已完成', value: 100, variant: 'secondary' as const },
-  { name: 'Task 5 · Cookie session authentication', status: '已完成', value: 100, variant: 'secondary' as const },
-  { name: 'Task 6 · RBAC and dynamic navigation', status: '已完成', value: 100, variant: 'secondary' as const },
-  { name: 'Task 7 · Resource Engine Core', status: '已完成', value: 100, variant: 'secondary' as const },
-  { name: 'Task 8 · Generic CRUD pages', status: '待开始', value: 0, variant: 'outline' as const },
+  { name: 'Task 1 · API generation foundation', status: '已完成', value: 100, variant: 'secondary' as const },
+  { name: 'Task 2 · Scalar API reference', status: '已完成', value: 100, variant: 'secondary' as const },
+  { name: 'Task 3 · API route-to-client audit', status: '已完成', value: 100, variant: 'secondary' as const },
+  { name: 'Task 4 · GORM CRUD and route registration', status: '已完成', value: 100, variant: 'secondary' as const },
+  { name: 'Task 5 · Generated API consumer migration', status: '已完成', value: 100, variant: 'secondary' as const },
+  { name: 'Task 6 · MySQL integration and browser acceptance', status: '进行中', value: 80, variant: 'outline' as const },
 ]
 </script>
 
@@ -31,9 +29,9 @@ const milestones = [
         <div class="flex items-start justify-between gap-4">
           <div>
             <CardTitle>开发进度</CardTitle>
-            <CardDescription>模块按阶段完成后独立提交并推送 GitHub。</CardDescription>
+            <CardDescription>基础模块化计划 Task 1–14 已完成；当前显示 API 与 MySQL 验收专项。</CardDescription>
           </div>
-          <Badge variant="outline">Task 7 / 14</Badge>
+          <Badge variant="outline">Foundation 14 / 14</Badge>
         </div>
       </CardHeader>
       <CardContent class="flex flex-col gap-4">
@@ -48,8 +46,8 @@ const milestones = [
     </Card>
     <div class="grid gap-4 md:grid-cols-3">
       <Card><CardHeader><CardTitle>开发语言</CardTitle></CardHeader><CardContent class="text-sm text-muted-foreground">zh-CN 优先，可扩展 en</CardContent></Card>
-      <Card><CardHeader><CardTitle>下一步</CardTitle></CardHeader><CardContent class="text-sm text-muted-foreground">完成资源引擎并接入通用 CRUD。</CardContent></Card>
-      <Card><CardHeader><CardTitle>代码仓库</CardTitle></CardHeader><CardContent class="text-sm text-muted-foreground">polibee/go-vue-admin</CardContent></Card>
+      <Card><CardHeader><CardTitle>下一步</CardTitle></CardHeader><CardContent class="text-sm text-muted-foreground">启动 Laragon MySQL 后完成 GORM ping、迁移和真实 CRUD 回归。</CardContent></Card>
+      <Card><CardHeader><CardTitle>代码仓库</CardTitle></CardHeader><CardContent class="text-sm"><a class="text-primary underline underline-offset-4" href="https://github.com/polibee/go-vue-admin" target="_blank" rel="noreferrer">polibee/go-vue-admin</a></CardContent></Card>
     </div>
   </section>
 </template>

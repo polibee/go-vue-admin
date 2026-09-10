@@ -42,7 +42,7 @@ func NewConfiguredResourceController(auth *AuthController) *ResourceController {
 			resource.DemoResource{ID: "demo-1", Name: "资源引擎示例", Status: "active", Owner: "Platform Admin"},
 			resource.DemoResource{ID: "demo-2", Name: "可编辑记录", Status: "draft", Owner: "Platform Admin"},
 		)
-	case resource.ResourceProviderMySQL:
+	case resource.ResourceProviderDatabase, resource.ResourceProviderMySQL:
 		database := resource.ApplicationResourceDatabase()
 		if database == nil {
 			return &ResourceController{auth: auth, initError: resource.ApplicationResourceDatabaseError()}

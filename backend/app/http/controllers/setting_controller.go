@@ -41,7 +41,7 @@ func NewConfiguredSettingControllerWithAudit(auth *AuthController, auditService 
 			setting.Setting{Namespace: "general", Key: "timezone", Value: "Asia/Shanghai", ValueType: setting.ValueTypeString, Description: "默认时区"},
 			setting.Setting{Namespace: "auth", Key: "session_ttl", Value: 120, ValueType: setting.ValueTypeInteger, Description: "会话有效期（分钟）"},
 		)
-	case resource.ResourceProviderMySQL:
+	case resource.ResourceProviderDatabase, resource.ResourceProviderMySQL:
 		repository = setting.NewMySQLRepository()
 	default:
 		return &SettingController{auth: auth, audit: auditService, initError: errors.New("setting provider is not configured")}

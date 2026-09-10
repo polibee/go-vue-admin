@@ -80,6 +80,11 @@ test('core user, role, and permission resources use the same generic routes', as
   await page.goto('/admin/resources/roles')
   await expect(page.getByRole('heading', { name: '角色' })).toBeVisible()
   await expect(page.getByText('平台管理员')).toBeVisible()
+  await page.getByRole('button', { name: '查看' }).click()
+  await expect(page).toHaveURL(/\/admin\/resources\/roles\/platform-admin$/)
+  await expect(page.getByRole('heading', { name: '角色详情' })).toBeVisible()
+  await expect(page.getByText('访问平台资源的开发管理员')).toBeVisible()
+  await expect(page.getByText('dashboard.view settings.view users.* roles.* permissions.*')).toBeVisible()
 
   await page.goto('/admin/resources/permissions')
   await expect(page.getByRole('heading', { name: '权限' })).toBeVisible()

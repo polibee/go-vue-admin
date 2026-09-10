@@ -4,7 +4,7 @@
 
 **Goal:** 将示例资源接入可配置的 MySQL 8 持久化 Provider，同时保留内存模式和现有 ResourceDataProvider 前端契约。
 
-**Architecture:** HTTP Controller 负责认证、请求绑定、查询解析和错误映射；`DemoResourceService` 负责领域校验；`DemoResourceRepository` 由内存和 MySQL 两个实现满足。后端读取 `RESOURCE_PROVIDER`，前端读取 `VITE_RESOURCE_PROVIDER`，两者默认保持 memory，显式配置后才使用 HTTP/MySQL。
+**Architecture:** HTTP Controller 负责认证、请求绑定、查询解析和错误映射；`DemoResourceService` 负责领域校验；资源 Repository 由内存和通用 GORM 两个实现满足。后端读取 `RESOURCE_PROVIDER`，前端读取 `VITE_RESOURCE_PROVIDER`，两者默认保持 memory，显式配置后使用 HTTP/数据库。`DB_CONNECTION` 统一选择 MySQL 或 PostgreSQL 方言。
 
 **Tech Stack:** Go 1.25、Goravel 1.18、Goravel MySQL driver、MySQL 8、Vue 3、TypeScript、Vite、Vitest、shadcn-vue。
 

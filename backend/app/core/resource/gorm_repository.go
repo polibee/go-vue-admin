@@ -73,7 +73,7 @@ func (r *GormResourceRepository) List(ctx context.Context, query DemoResourceLis
 		conditions := make([]string, 0, len(r.schema.Searchable))
 		arguments := make([]any, 0, len(r.schema.Searchable))
 		for _, field := range r.schema.Searchable {
-			conditions = append(conditions, field+" LIKE ?")
+			conditions = append(conditions, "LOWER("+field+") LIKE LOWER(?)")
 			arguments = append(arguments, pattern)
 		}
 		databaseQuery = databaseQuery.Where("("+strings.Join(conditions, " OR ")+")", arguments...)

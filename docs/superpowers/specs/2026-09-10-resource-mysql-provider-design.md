@@ -9,7 +9,8 @@
 - 新增 `demo_resources` 数据库迁移。
 - 在现有 `DemoResourceRepository` 契约下实现 MySQL Repository 和后端内存 Repository。
 - 新增受认证保护的资源 CRUD API、分页、搜索、筛选、排序和批量删除。
-- 通过 `RESOURCE_PROVIDER=memory|mysql` 选择后端 Provider；未配置时使用 `memory`，不静默切换。
+- 通过 `RESOURCE_PROVIDER=memory|database` 选择后端 Provider；未配置时使用 `memory`，不静默切换。`mysql` 作为历史配置别名保留。
+- 通过 `DB_CONNECTION=mysql|postgres` 选择 Goravel 与资源层 GORM 的数据库方言，生成资源代码不绑定 MySQL。
 - 前端保留现有 `MemoryResourceDataProvider`，并在配置选择 HTTP 模式时使用已经存在的 `HttpResourceDataProvider`。
 - 统一使用现有响应封装、查询解析、RBAC 权限和 `ResourceDataProvider` 接口。
 

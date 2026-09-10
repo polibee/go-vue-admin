@@ -4,12 +4,32 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+type ResourceDatabaseDriver string
+
+const (
+	ResourceDatabaseDriverMySQL    ResourceDatabaseDriver = "mysql"
+	ResourceDatabaseDriverPostgres ResourceDatabaseDriver = "postgres"
+)
+
+func ParseResourceDatabaseDriver(value string) (ResourceDatabaseDriver, error) {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "", string(ResourceDatabaseDriverMySQL):
+		return ResourceDatabaseDriverMySQL, nil
+	case string(ResourceDatabaseDriverPostgres), "postgresql", "pgsql":
+		return ResourceDatabaseDriverPostgres, nil
+	default:
+		return "", fmt.Errorf("unsupported resource database driver %q", value)
+	}
+}
 
 type GormDatabaseOptions struct {
 	MaxIdleConns    int
@@ -32,12 +52,16 @@ var applicationResourceDatabase struct {
 // ConfigureApplicationResourceDatabase creates the single application-owned
 // pool used by generated resources. It is safe to call once during bootstrap.
 func ConfigureApplicationResourceDatabase(dsn string, options GormDatabaseOptions) error {
+	return ConfigureApplicationResourceDatabaseWithDriver(ResourceDatabaseDriverMySQL, dsn, options)
+}
+
+func ConfigureApplicationResourceDatabaseWithDriver(driver ResourceDatabaseDriver, dsn string, options GormDatabaseOptions) error {
 	applicationResourceDatabase.Lock()
 	defer applicationResourceDatabase.Unlock()
 	if applicationResourceDatabase.database != nil || applicationResourceDatabase.err != nil {
 		return applicationResourceDatabase.err
 	}
-	database, err := OpenMySQLResourceDatabase(dsn, options)
+	database, err := OpenResourceDatabase(driver, dsn, options)
 	if err != nil {
 		applicationResourceDatabase.err = err
 		return err
@@ -101,8 +125,30 @@ func OpenMySQLResourceDatabase(dsn string, options GormDatabaseOptions) (*GormRe
 	return OpenGormResourceDatabase(mysql.Open(dsn), options)
 }
 
+func OpenPostgresResourceDatabase(dsn string, options GormDatabaseOptions) (*GormResourceDatabase, error) {
+	if dsn == "" {
+		return nil, errors.New("postgres resource database dsn cannot be empty")
+	}
+	return OpenGormResourceDatabase(postgres.Open(dsn), options)
+}
+
+func OpenResourceDatabase(driver ResourceDatabaseDriver, dsn string, options GormDatabaseOptions) (*GormResourceDatabase, error) {
+	switch driver {
+	case ResourceDatabaseDriverMySQL:
+		return OpenMySQLResourceDatabase(dsn, options)
+	case ResourceDatabaseDriverPostgres:
+		return OpenPostgresResourceDatabase(dsn, options)
+	default:
+		return nil, fmt.Errorf("unsupported resource database driver %q", driver)
+	}
+}
+
 func MySQLResourceDSN(username, password, host, port, database string) string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=UTC", username, password, host, port, database)
+}
+
+func PostgresResourceDSN(username, password, host, port, database string) string {
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=UTC", host, port, username, password, database)
 }
 
 func (database *GormResourceDatabase) Close() error {

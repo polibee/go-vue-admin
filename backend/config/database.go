@@ -1,16 +1,24 @@
 package config
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/goravel/framework/contracts/database/driver"
 	mysqlfacades "github.com/goravel/mysql/facades"
+	postgresfacades "github.com/goravel/postgres/facades"
 	"goravel/app/facades"
 )
 
 func init() {
 	config := facades.Config()
+	defaultConnection := strings.ToLower(strings.TrimSpace(fmt.Sprint(config.Env("DB_CONNECTION", "mysql"))))
+	if defaultConnection == "postgresql" || defaultConnection == "pgsql" {
+		defaultConnection = "postgres"
+	}
 	config.Add("database", map[string]any{
 		// Default database connection name
-		"default": config.Env("DB_CONNECTION"),
+		"default": defaultConnection,
 		// Database connections
 		"connections": map[string]any{
 			"mysql": map[string]any{
@@ -24,6 +32,20 @@ func init() {
 				"prefix":   "",
 				"via": func() (driver.Driver, error) {
 					return mysqlfacades.Mysql("mysql")
+				},
+			},
+			"postgres": map[string]any{
+				"host":     config.Env("DB_HOST"),
+				"port":     config.Env("DB_PORT", "5432"),
+				"database": config.Env("DB_DATABASE"),
+				"username": config.Env("DB_USERNAME"),
+				"password": config.Env("DB_PASSWORD"),
+				"sslmode":  config.Env("DB_SSLMODE", "disable"),
+				"schema":   config.Env("DB_SCHEMA", "public"),
+				"singular": false,
+				"prefix":   "",
+				"via": func() (driver.Driver, error) {
+					return postgresfacades.Postgres("postgres")
 				},
 			},
 		},

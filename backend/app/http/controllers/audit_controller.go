@@ -28,7 +28,7 @@ func NewConfiguredAuditService() (*audit.Service, error) {
 	switch mode {
 	case resource.ResourceProviderMemory:
 		return audit.NewService(audit.NewMemoryRepository()), nil
-	case resource.ResourceProviderMySQL:
+	case resource.ResourceProviderDatabase, resource.ResourceProviderMySQL:
 		return audit.NewService(audit.NewMySQLRepository()), nil
 	default:
 		return nil, errors.New("audit provider is not configured")

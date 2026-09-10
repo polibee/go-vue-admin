@@ -37,7 +37,7 @@ func NewConfiguredMediaControllerWithAudit(auth *AuthController, auditService *a
 	switch mode {
 	case resource.ResourceProviderMemory:
 		repository = media.NewMemoryRepository()
-	case resource.ResourceProviderMySQL:
+	case resource.ResourceProviderDatabase, resource.ResourceProviderMySQL:
 		repository = media.NewMySQLRepository()
 	default:
 		return &MediaController{auth: auth, audit: auditService, initError: errors.New("media provider is not configured")}
