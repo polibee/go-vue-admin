@@ -44,6 +44,47 @@
         ],
         "type": "object"
       },
+      "MediaResource": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "disk": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string"
+          },
+          "original_name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "url": {
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "disk",
+          "path",
+          "original_name",
+          "mime_type",
+          "size",
+          "url"
+        ],
+        "type": "object"
+      },
       "PaginationMeta": {
         "properties": {
           "page": {
@@ -335,6 +376,121 @@
             "description": "Successful response."
           }
         }
+      }
+    },
+    "/api/media": {
+      "get": {
+        "description": "Lists uploaded media metadata.",
+        "operationId": "getApiMedia",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Media"
+        ]
+      },
+      "post": {
+        "description": "Uploads one media file.",
+        "operationId": "postApiMedia",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/media/{id}": {
+      "delete": {
+        "description": "Deletes one uploaded media file.",
+        "operationId": "deleteApiMedia{Id}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Media"
+        ]
+      }
+    },
+    "/api/media/{id}/preview": {
+      "get": {
+        "description": "Streams one media file after authorization.",
+        "operationId": "getApiMedia{Id}Preview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Media binary stream."
+          }
+        },
+        "tags": [
+          "Media"
+        ]
       }
     },
     "/api/menu": {

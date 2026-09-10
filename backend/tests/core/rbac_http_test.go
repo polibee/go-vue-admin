@@ -41,12 +41,13 @@ func TestMenuEndpointReturnsOnlyPermissionsGrantedToCurrentSession(t *testing.T)
 	require.NoError(t, err)
 	items, ok := payload["data"].([]any)
 	require.True(t, ok)
-	require.Len(t, items, 5)
+	require.Len(t, items, 6)
 	require.Equal(t, "dashboard", items[0].(map[string]any)["id"])
 	require.Equal(t, "settings", items[1].(map[string]any)["id"])
-	require.Equal(t, "users", items[2].(map[string]any)["id"])
-	require.Equal(t, "roles", items[3].(map[string]any)["id"])
-	require.Equal(t, "permissions", items[4].(map[string]any)["id"])
+	require.Equal(t, "media", items[2].(map[string]any)["id"])
+	require.Equal(t, "users", items[3].(map[string]any)["id"])
+	require.Equal(t, "roles", items[4].(map[string]any)["id"])
+	require.Equal(t, "permissions", items[5].(map[string]any)["id"])
 }
 
 func responseHeaderToken(response frameworkhttp.Response) string {

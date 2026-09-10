@@ -75,6 +75,12 @@ func SchemaDocuments() map[string]any {
 			"value": map[string]any{}, "value_type": map[string]any{"type": "string", "enum": []any{"string", "boolean", "integer", "number", "json"}},
 			"description": map[string]any{"type": "string"},
 		}, []string{"value", "value_type"}),
+		"media-resource": resourceSchema(map[string]any{
+			"id": map[string]any{"type": "string"}, "disk": map[string]any{"type": "string"},
+			"path": map[string]any{"type": "string"}, "original_name": map[string]any{"type": "string"},
+			"mime_type": map[string]any{"type": "string"}, "size": map[string]any{"type": "integer"},
+			"url": map[string]any{"type": "string", "format": "uri"}, "created_at": map[string]any{"type": "string", "format": "date-time"},
+		}, []string{"id", "disk", "path", "original_name", "mime_type", "size", "url"}),
 		"resource-envelope": map[string]any{
 			"type": "object", "required": []any{"data", "meta"},
 			"properties": map[string]any{
@@ -165,6 +171,21 @@ func operationFor(endpoint CoreEndpoint, normalizedPath string) map[string]any {
 			} else {
 				operation["responses"] = map[string]any{"200": responseSchema("ResourceMutation", false)}
 			}
+		}
+	}
+	if strings.HasPrefix(normalizedPath, "/api/media") {
+		operation["tags"] = []any{"Media"}
+		if normalizedPath == "/api/media" && endpoint.Method == "GET" {
+			operation["responses"] = map[string]any{"200": responseSchema("Media", true)}
+		} else if normalizedPath == "/api/media" && endpoint.Method == "POST" {
+			operation["requestBody"] = map[string]any{"required": true, "content": map[string]any{"multipart/form-data": map[string]any{"schema": resourceSchema(map[string]any{"file": map[string]any{"type": "string", "format": "binary"}}, []string{"file"})}}}
+			operation["responses"] = map[string]any{"201": responseSchema("Media", false)}
+		} else if strings.HasSuffix(normalizedPath, "/preview") {
+			operation["parameters"] = []any{pathIDParameter()}
+			operation["responses"] = map[string]any{"200": map[string]any{"description": "Media binary stream."}}
+		} else {
+			operation["parameters"] = []any{pathIDParameter()}
+			operation["responses"] = map[string]any{"200": responseSchema("ResourceMutation", false)}
 		}
 	}
 	return operation

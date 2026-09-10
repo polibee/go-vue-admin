@@ -31,6 +31,7 @@ func Web() {
 	roleResourceController := controllers.NewCoreResourceController(authController, resource.NewCoreResourceService(resource.NewMemoryCoreResourceRepository(roleresources.Seed()...)), "roles")
 	permissionResourceController := controllers.NewCoreResourceController(authController, resource.NewCoreResourceService(resource.NewMemoryCoreResourceRepository(permissionresources.Seed()...)), "permissions")
 	settingController := controllers.NewConfiguredSettingController(authController)
+	mediaController := controllers.NewConfiguredMediaController(authController)
 	for _, prefix := range []string{"", "/api"} {
 		facades.Route().Get(prefix+"/csrf", authController.CSRF)
 		facades.Route().Get(prefix+"/auth/bootstrap", authController.Bootstrap)
@@ -44,6 +45,10 @@ func Web() {
 	facades.Route().Post("/api/settings", settingController.Store)
 	facades.Route().Put("/api/settings/:namespace/:key", settingController.Update)
 	facades.Route().Delete("/api/settings/:namespace/:key", settingController.Destroy)
+	facades.Route().Get("/api/media", mediaController.Index)
+	facades.Route().Post("/api/media", mediaController.Store)
+	facades.Route().Get("/api/media/:id/preview", mediaController.Preview)
+	facades.Route().Delete("/api/media/:id", mediaController.Destroy)
 	facades.Route().Get("/api/resources/demo", resourceController.Index)
 	facades.Route().Get("/api/resources/demo/:id", resourceController.Show)
 	facades.Route().Post("/api/resources/demo", resourceController.Store)

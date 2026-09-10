@@ -1,0 +1,41 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "disk": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "mime_type": {
+      "type": "string"
+    },
+    "original_name": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "size": {
+      "type": "integer"
+    },
+    "url": {
+      "format": "uri",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "disk",
+    "path",
+    "original_name",
+    "mime_type",
+    "size",
+    "url"
+  ],
+  "type": "object"
+}

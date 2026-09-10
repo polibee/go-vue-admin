@@ -19,6 +19,7 @@ func NewMenuController(authController *AuthController) *MenuController {
 		registry: menu.NewRegistry(
 			menu.Item{ID: "dashboard", Label: "仪表盘", Route: "/admin/dashboard", Permission: "dashboard.view"},
 			menu.Item{ID: "settings", Label: "设置", Route: "/admin/settings", Permission: "settings.view"},
+			menu.Item{ID: "media", Label: "媒体库", Route: "/admin/media", Permission: "media.view"},
 			menu.Item{ID: "users", Label: "用户", Route: "/admin/resources/users", Permission: "users.view"},
 			menu.Item{ID: "roles", Label: "角色", Route: "/admin/resources/roles", Permission: "roles.view"},
 			menu.Item{ID: "permissions", Label: "权限", Route: "/admin/resources/permissions", Permission: "permissions.view"},

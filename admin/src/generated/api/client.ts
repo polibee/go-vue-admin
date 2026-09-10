@@ -3,7 +3,7 @@
 
 import type { ApiClient } from '@/core/api/client'
 
-import type { DemoResource, PermissionResource, RoleResource, UserResource, SettingResource, ResourceEnvelope, ResourceListQuery } from './models'
+import type { DemoResource, PermissionResource, RoleResource, UserResource, SettingResource, MediaResource, ResourceEnvelope, ResourceListQuery } from './models'
 
 export interface GeneratedApiClient {
   listDemoResources(query?: ResourceListQuery): Promise<ResourceEnvelope<DemoResource[]>>
@@ -34,6 +34,9 @@ export interface GeneratedApiClient {
   upsertSetting(input: SettingResource): Promise<ResourceEnvelope<SettingResource>>
   updateSetting(namespace: string, key: string, input: Partial<SettingResource>): Promise<ResourceEnvelope<SettingResource>>
   deleteSetting(namespace: string, key: string): Promise<ResourceEnvelope<{ deleted: boolean }>>
+  listMedia(): Promise<ResourceEnvelope<MediaResource[]>>
+  uploadMedia(file: File): Promise<ResourceEnvelope<MediaResource>>
+  deleteMedia(id: string): Promise<ResourceEnvelope<{ deleted: boolean }>>
 }
 
 function withQuery(path: string, query?: ResourceListQuery): string {
@@ -92,5 +95,8 @@ export function createGeneratedApiClient(client: ApiClient): GeneratedApiClient 
     upsertSetting: (input) => client.request<ResourceEnvelope<SettingResource>>('/api/settings', jsonOptions('POST', input)),
     updateSetting: (namespace, key, input) => client.request<ResourceEnvelope<SettingResource>>('/api/settings/' + encodeURIComponent(namespace) + '/' + encodeURIComponent(key), jsonOptions('PUT', input)),
     deleteSetting: (namespace, key) => client.request<ResourceEnvelope<{ deleted: boolean }>>('/api/settings/' + encodeURIComponent(namespace) + '/' + encodeURIComponent(key), { method: 'DELETE' }),
+    listMedia: () => client.request<ResourceEnvelope<MediaResource[]>>('/api/media'),
+    uploadMedia: (file) => { const body = new FormData(); body.append('file', file); return client.request<ResourceEnvelope<MediaResource>>('/api/media', { method: 'POST', body }) },
+    deleteMedia: (id) => client.request<ResourceEnvelope<{ deleted: boolean }>>('/api/media/' + encodeURIComponent(id), { method: 'DELETE' }),
   }
 }

@@ -58,3 +58,14 @@ export interface SettingResource {
   value: unknown
   value_type: "string" | "boolean" | "integer" | "number" | "json"
 }
+
+export interface MediaResource {
+  created_at?: string
+  disk: string
+  id: string
+  mime_type: string
+  original_name: string
+  path: string
+  size: number
+  url: string
+}
