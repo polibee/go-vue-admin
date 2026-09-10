@@ -39,3 +39,9 @@ bash scripts/module-check.sh modules/<module>
 ```
 
 Use `bash scripts/module-finish.sh modules/<module> "feat(scope): message"` only after those checks pass. It performs an authentication gate before any mutation, runs the module gate, commits the selected module, then safely creates or reuses the private remote and pushes without force.
+
+## GitHub Actions policy
+
+The repository workflow is manual-only (`workflow_dispatch`). Run the checks
+locally before pushing; normal pushes and pull requests must not start a GitHub
+Actions job.

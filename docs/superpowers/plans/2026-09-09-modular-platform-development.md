@@ -388,11 +388,11 @@ Expected: `/admin` opens with light/dark/system, Chinese/English, collapsible si
 - Create: `plugins/example/manifest.json`
 - Create: `docs/plugins/PLUGIN_SDK.md`
 
-- [ ] **Step 1: Define `PluginManifest`, `PluginState`, runtime values, permissions, menus, and dependencies.**
-- [ ] **Step 2: Implement list/enable/disable for builtin plugins only.**
-- [ ] **Step 3: Implement the frontend SDK registration surface without exposing Pinia/router/layout internals.**
-- [ ] **Step 4: Add plugin enable/disable tests and UI compatibility checks.**
-- [ ] **Step 5: Commit `feat(plugin): add builtin registry and SDK contract`.**
+- [x] **Step 1: Define `PluginManifest`, `PluginState`, runtime values, permissions, menus, and dependencies.**
+- [x] **Step 2: Implement list/enable/disable for builtin plugins only.**
+- [x] **Step 3: Implement the frontend SDK registration surface without exposing Pinia/router/layout internals.**
+- [x] **Step 4: Add plugin enable/disable tests and UI compatibility checks.**
+- [x] **Step 5: Commit `feat(plugin): add builtin registry and SDK contract`; keep GitHub Actions manual-only.**
 
 External process plugins, package installation, signature verification, sandboxing, marketplace, and dynamic JS loading remain v2/v3 work and are not part of v1.
 

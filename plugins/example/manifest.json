@@ -1,0 +1,19 @@
+{
+  "id": "example",
+  "name": "Example Plugin",
+  "version": "0.1.0",
+  "runtime": "builtin",
+  "uiCompatibility": "shadcn-vue",
+  "permissions": [
+    "example.view"
+  ],
+  "menus": [
+    {
+      "id": "example",
+      "label": "Example",
+      "route": "/admin/example",
+      "permission": "example.view"
+    }
+  ],
+  "dependencies": []
+}
