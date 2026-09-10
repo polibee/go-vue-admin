@@ -8,7 +8,7 @@ test.describe('RBAC navigation', () => {
     await page.goto('/login')
     await page.getByLabel('邮箱').fill(email)
     await page.getByLabel('密码', { exact: true }).fill(password)
-    await page.getByRole('button', { name: '登录' }).click()
+    await page.getByRole('button', { name: '登录', exact: true }).click()
 
     await expect(page).toHaveURL(/\/admin\/dashboard/)
     await expect(page.getByRole('link', { name: '仪表盘' })).toBeVisible()

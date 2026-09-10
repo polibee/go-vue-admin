@@ -10,7 +10,8 @@
     "test:e2e": "playwright test",
     "build": "pnpm --dir admin run build",
     "openapi:generate": "bash scripts/openapi-generate.sh",
-    "module:check": "bash scripts/module-check.sh"
+    "module:check": "bash scripts/module-check.sh",
+    "release:check": "bash scripts/release-check.sh"
   },
   "engines": {
     "node": ">=24",

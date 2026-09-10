@@ -214,7 +214,7 @@ onMounted(() => void load())
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead class="w-12"><Checkbox :checked="allVisibleSelected" aria-label="选择当前页" @update:checked="toggleAll(Boolean($event))" /></TableHead>
+                <TableHead class="w-12"><Checkbox :model-value="allVisibleSelected" aria-label="选择当前页" @update:model-value="toggleAll(Boolean($event))" /></TableHead>
                 <TableHead v-for="column in definition.columns ?? []" :key="String(column.key)">
                   <Button v-if="column.sortable" variant="ghost" size="sm" :aria-label="`按${column.label}排序`" @click="toggleSort(String(column.key))">
                     {{ column.label }}
@@ -229,7 +229,7 @@ onMounted(() => void load())
               <TableRow v-if="loading"><TableCell :colspan="(columns.length || 1) + 2">加载中…</TableCell></TableRow>
               <TableRow v-else-if="!table.getRowModel().rows.length"><TableCell :colspan="(columns.length || 1) + 2"><Empty class="border-0"><EmptyHeader><EmptyTitle>暂无数据</EmptyTitle><EmptyDescription>调整搜索或筛选条件后重试。</EmptyDescription></EmptyHeader></Empty></TableCell></TableRow>
               <TableRow v-for="row in table.getRowModel().rows" v-else :key="row.id">
-                <TableCell><Checkbox :checked="isSelected(row.original)" :aria-label="`选择 ${idOf(row.original)}`" @update:checked="toggleSelected(row.original, Boolean($event))" /></TableCell>
+                <TableCell><Checkbox :model-value="isSelected(row.original)" :aria-label="`选择 ${idOf(row.original)}`" @update:model-value="toggleSelected(row.original, Boolean($event))" /></TableCell>
                 <TableCell v-for="cell in row.getAllCells()" :key="cell.id"><FlexRender :cell="cell" /></TableCell>
                 <TableCell class="flex gap-2">
                   <Button variant="ghost" size="sm" @click="router.push(`/admin/resources/${resourceName}/${idOf(row.original)}`)">查看</Button>

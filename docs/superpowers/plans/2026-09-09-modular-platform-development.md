@@ -405,12 +405,14 @@ External process plugins, package installation, signature verification, sandboxi
 - Create: `docs/releases/v1-foundation.md`
 - Create: `scripts/release-check.sh`
 
-- [ ] **Step 1: Run backend unit, feature, integration, permission, and API contract tests.**
-- [ ] **Step 2: Run admin lint, typecheck, component tests, Resource Engine tests, and production build.**
+- [x] **Step 1: Run backend unit, feature, integration, permission, and API contract tests.**
+- [x] **Step 2: Run admin lint, typecheck, component tests, Resource Engine tests, and production build.**
 - [ ] **Step 3: Run Playwright flows for login, users CRUD, RBAC, resource CRUD, module registration, and plugin enable/disable.**
-- [ ] **Step 4: Run generated OpenAPI/SDK drift check and module contract check.**
-- [ ] **Step 5: Verify no forbidden UI redesign or second UI framework was introduced.**
-- [ ] **Step 6: Commit `chore(release): verify v1 foundation` and invoke `scripts/module-finish.sh` only after GitHub authentication is repaired.**
+- [x] **Step 4: Run generated OpenAPI/SDK drift check and module contract check.**
+- [x] **Step 5: Verify no forbidden UI redesign or second UI framework was introduced.**
+- [ ] **Step 6: Commit `chore(release): verify v1 foundation` and push after local checks; keep GitHub Actions manual-only.**
+
+2026-09-10: Local `pnpm run release:check` passed; the existing five Playwright tests passed separately. Step 3 remains partial: generic CRUD, login, RBAC, and core-resource navigation are covered; user-specific CRUD, module registration, and plugin lifecycle browser flows still require dedicated coverage. See `docs/releases/v1-foundation.md`.
 
 ## Phase-to-Module Delivery Order
 
