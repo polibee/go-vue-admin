@@ -42,7 +42,9 @@ export interface GeneratedApiClient {
   listExtensions(): Promise<ResourceEnvelope<ExtensionResource[]>>
   getExtension(id: string): Promise<ResourceEnvelope<ExtensionResource>>
   listModules(): Promise<ResourceEnvelope<ExtensionResource[]>>
+  getModule(id: string): Promise<ResourceEnvelope<ExtensionResource>>
   listPlugins(): Promise<ResourceEnvelope<ExtensionResource[]>>
+  getPlugin(id: string): Promise<ResourceEnvelope<ExtensionResource>>
   setPluginState(id: string, state: 'enabled' | 'disabled'): Promise<ResourceEnvelope<ExtensionResource[]>>
 }
 
@@ -98,7 +100,9 @@ export function createGeneratedApiClient(client: ApiClient): GeneratedApiClient 
     listExtensions: () => client.request<ResourceEnvelope<ExtensionResource[]>>('/api/extensions'),
     getExtension: (id) => client.request<ResourceEnvelope<ExtensionResource>>(itemPath('/api/extensions', id)),
     listModules: () => client.request<ResourceEnvelope<ExtensionResource[]>>('/api/modules'),
+    getModule: (id) => client.request<ResourceEnvelope<ExtensionResource>>(itemPath('/api/modules', id)),
     listPlugins: () => client.request<ResourceEnvelope<ExtensionResource[]>>('/api/plugins'),
+    getPlugin: (id) => client.request<ResourceEnvelope<ExtensionResource>>(itemPath('/api/plugins', id)),
     setPluginState: (id, state) => client.request<ResourceEnvelope<ExtensionResource[]>>(itemPath('/api/plugins', id) + '/state', jsonOptions('PUT', { state })),
   }
 }

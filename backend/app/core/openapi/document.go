@@ -224,9 +224,12 @@ func operationFor(endpoint CoreEndpoint, normalizedPath string) map[string]any {
 	}
 	if strings.HasPrefix(normalizedPath, "/api/modules") || strings.HasPrefix(normalizedPath, "/api/plugins") {
 		operation["tags"] = []any{"Extensions"}
-		operation["responses"] = map[string]any{"200": responseSchema("Extension", normalizedPath == "/api/modules" || normalizedPath == "/api/plugins" || endpoint.Method == "PUT")}
-		if endpoint.Method == "PUT" {
+		isList := normalizedPath == "/api/modules" || normalizedPath == "/api/plugins"
+		operation["responses"] = map[string]any{"200": responseSchema("Extension", isList || endpoint.Method == "PUT")}
+		if !isList {
 			operation["parameters"] = []any{pathIDParameter()}
+		}
+		if endpoint.Method == "PUT" {
 			operation["requestBody"] = jsonRequestBody(resourceSchema(map[string]any{
 				"state": map[string]any{"type": "string", "enum": []any{"enabled", "disabled"}},
 			}, []string{"state"}))

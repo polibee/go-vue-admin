@@ -98,6 +98,14 @@ func (c *ExtensionController) Plugins(ctx http.Context) http.Response {
 	return ctx.Response().Success().Json(response.Success(items, response.Meta{}))
 }
 
+func (c *ExtensionController) ModuleShow(ctx http.Context) http.Response {
+	return c.showCatalogItem(ctx, "module")
+}
+
+func (c *ExtensionController) PluginShow(ctx http.Context) http.Response {
+	return c.showCatalogItem(ctx, "plugin")
+}
+
 func (c *ExtensionController) catalog() []extensionRecord {
 	items := []extensionRecord{}
 	for _, id := range c.modules.Names() {
@@ -145,6 +153,10 @@ func (c *ExtensionController) updatePluginState(ctx http.Context) http.Response 
 }
 
 func (c *ExtensionController) Show(ctx http.Context) http.Response {
+	return c.showCatalogItem(ctx, "")
+}
+
+func (c *ExtensionController) showCatalogItem(ctx http.Context, expectedKind string) http.Response {
 	if denied := c.authorize(ctx, "dashboard.view"); denied != nil {
 		return denied
 	}
@@ -164,6 +176,9 @@ func (c *ExtensionController) Show(ctx http.Context) http.Response {
 	kind, name := "module", "示例模块"
 	if id == "example-plugin" {
 		kind, name = "plugin", "示例插件"
+	}
+	if expectedKind != "" && kind != expectedKind {
+		return ctx.Response().Status(404).Json(apierrors.New("EXTENSION_NOT_FOUND", "模块或插件不存在", nil))
 	}
 	return ctx.Response().Success().Json(response.Success(map[string]string{"id": id, "name": name, "kind": kind, "state": "enabled", "message": message}, response.Meta{}))
 }

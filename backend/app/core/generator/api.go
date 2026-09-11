@@ -251,12 +251,12 @@ func renderAPIClient(document map[string]any) string {
 		implementations = append(implementations, "    listExtensions: () => client.request<ResourceEnvelope<ExtensionResource[]>>('/api/extensions'),", "    getExtension: (id) => client.request<ResourceEnvelope<ExtensionResource>>(itemPath('/api/extensions', id)),")
 	}
 	if hasAPIPath(document, "/api/modules") {
-		methods = append(methods, "  listModules(): Promise<ResourceEnvelope<ExtensionResource[]>>")
-		implementations = append(implementations, "    listModules: () => client.request<ResourceEnvelope<ExtensionResource[]>>('/api/modules'),")
+		methods = append(methods, "  listModules(): Promise<ResourceEnvelope<ExtensionResource[]>>", "  getModule(id: string): Promise<ResourceEnvelope<ExtensionResource>>")
+		implementations = append(implementations, "    listModules: () => client.request<ResourceEnvelope<ExtensionResource[]>>('/api/modules'),", "    getModule: (id) => client.request<ResourceEnvelope<ExtensionResource>>(itemPath('/api/modules', id)),")
 	}
 	if hasAPIPath(document, "/api/plugins") {
-		methods = append(methods, "  listPlugins(): Promise<ResourceEnvelope<ExtensionResource[]>>")
-		implementations = append(implementations, "    listPlugins: () => client.request<ResourceEnvelope<ExtensionResource[]>>('/api/plugins'),")
+		methods = append(methods, "  listPlugins(): Promise<ResourceEnvelope<ExtensionResource[]>>", "  getPlugin(id: string): Promise<ResourceEnvelope<ExtensionResource>>")
+		implementations = append(implementations, "    listPlugins: () => client.request<ResourceEnvelope<ExtensionResource[]>>('/api/plugins'),", "    getPlugin: (id) => client.request<ResourceEnvelope<ExtensionResource>>(itemPath('/api/plugins', id)),")
 	}
 	if hasAPIPath(document, "/api/plugins/{id}/state") {
 		methods = append(methods, "  setPluginState(id: string, state: 'enabled' | 'disabled'): Promise<ResourceEnvelope<ExtensionResource[]>>")

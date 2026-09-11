@@ -16,7 +16,7 @@ defineProps<{ items: ExtensionResource[] }>()
       <CardContent class="flex items-center justify-between gap-4">
         <span>状态：{{ item.state === 'enabled' ? '已启用' : '已停用' }}</span>
         <Button variant="outline" as-child>
-          <RouterLink :to="`/admin/extensions/${item.id}`">查看</RouterLink>
+          <RouterLink :to="`/admin/extensions/${item.id}?kind=module`">查看</RouterLink>
         </Button>
       </CardContent>
     </Card>

@@ -10,7 +10,11 @@ const props = defineProps<{ id: string; title: string; resource: string }>()
 const message = ref('')
 const error = ref('')
 onMounted(async () => {
-  try { message.value = (await createGeneratedApiClient(apiClient).getExtension(props.id)).data.message ?? '' }
+  try {
+    const client = createGeneratedApiClient(apiClient)
+    const result = props.resource === 'plugins' ? await client.getPlugin(props.id) : await client.getModule(props.id)
+    message.value = result.data.message ?? ''
+  }
   catch (cause) { error.value = cause instanceof Error ? cause.message : '扩展加载失败' }
 })
 </script>

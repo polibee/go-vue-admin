@@ -762,6 +762,37 @@
         ]
       }
     },
+    "/api/modules/{id}": {
+      "get": {
+        "description": "Returns one compiled business module.",
+        "operationId": "getApiModules{Id}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Extensions"
+        ]
+      }
+    },
     "/api/plugins": {
       "get": {
         "description": "Lists builtin platform plugins.",
@@ -772,6 +803,37 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Extensions"
+        ]
+      }
+    },
+    "/api/plugins/{id}": {
+      "get": {
+        "description": "Returns one builtin platform plugin.",
+        "operationId": "getApiPlugins{Id}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceEnvelope"
                 }
               }
             },

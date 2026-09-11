@@ -32,7 +32,7 @@ const emit = defineEmits<{ toggle: [item: ExtensionResource, state: 'enabled' | 
           停用
         </Button>
         <Button variant="outline" as-child>
-          <RouterLink :to="`/admin/extensions/${item.id}`">查看</RouterLink>
+          <RouterLink :to="`/admin/extensions/${item.id}?kind=plugin`">查看</RouterLink>
         </Button>
       </CardFooter>
     </Card>
