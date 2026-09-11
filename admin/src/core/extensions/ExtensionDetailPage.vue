@@ -8,7 +8,7 @@ import { createGeneratedApiClient, type ExtensionResource } from '@/generated/ap
 const route = useRoute(); const client = createGeneratedApiClient(apiClient); const extension = ref<ExtensionResource | null>(null); const error = ref('')
 onMounted(async () => { try {
   const id = String(route.params.id)
-  const kind = String(route.query.kind ?? '')
+  const kind = String(route.meta.extensionKind ?? route.query.kind ?? '')
   extension.value = (kind === 'plugin' ? await client.getPlugin(id) : await client.getModule(id)).data
 } catch (cause) { error.value = cause instanceof Error ? cause.message : '扩展加载失败' } })
 </script>

@@ -11,6 +11,7 @@
 - admin-gen api 统一生成 OpenAPI、Schema 和管理端 TypeScript API Client。
 - Scalar API 文档位于 /admin/api-docs。
 - 角色 platform-admin 详情接口和后台页面已纳入回归验收。
+- 业务模块与平台插件已拆分为独立菜单和页面：`/admin/modules`、`/admin/plugins`；旧 `/admin/extensions` 保留兼容重定向。
 - 资源层已统一使用 GORM；通过 `DB_CONNECTION=mysql|postgres` 选择底层数据库，应用迁移和资源连接池使用同一选择。
 
 ## 本地启动
@@ -57,9 +58,13 @@ PostgreSQL 示例：
 
 ## 后台预览
 
-以下截图来自本地浏览器验收，展示当前后台的主要页面：
+以下截图来自本地浏览器验收，使用 `1440×900` 视口和 `deviceScaleFactor=2` 生成，展示当前后台的主要页面：
 
 ![管理后台仪表盘](output/playwright/dashboard.png)
+
+![业务模块](output/playwright/modules.png)
+
+![平台插件](output/playwright/plugins.png)
 
 ![角色资源管理](output/playwright/roles.png)
 
