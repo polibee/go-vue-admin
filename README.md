@@ -41,6 +41,8 @@
 
 首次发布前，请在仓库 Settings → Pages 中将 Source 设置为 GitHub Actions。
 
+在线开发文档：<https://go-vue-admin.github.io/>
+
 ## Provider
 
 默认使用内存资源 Provider，适合单元测试、演示和无数据库开发：
