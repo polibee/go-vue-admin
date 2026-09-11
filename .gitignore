@@ -27,3 +27,6 @@ Thumbs.db
 
 # Local upstream reference; it is intentionally not part of this repository.
 docs/shadcn-vue-dev/
+
+# Standalone developer documentation build output.
+docs-site/dist/

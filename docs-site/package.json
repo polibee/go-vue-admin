@@ -1,0 +1,8 @@
+{
+  "name": "go-vue-admin-developer-docs",
+  "private": true,
+  "description": "Standalone developer documentation site for Go Vue Admin.",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  }
+}

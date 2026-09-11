@@ -4,7 +4,7 @@
 
 ## 当前开发状态
 
-当前处于 API 生成与审计计划的 Task 6：可配置数据库集成和浏览器验收。
+当前 Foundation 基础能力已完成，项目进入业务模块、插件运行时和生产化完善阶段。
 
 - 登录、Cookie/HttpOnly Session、RBAC、动态导航已完成。
 - 通用资源列表、新建、详情、编辑、删除和批量删除已完成。
@@ -30,6 +30,16 @@
     pnpm --dir admin run dev -- --host 0.0.0.0
 
 默认访问地址是 http://127.0.0.1:5173/login。
+
+## 开发者文档
+
+开发者文档站源码位于 docs-site/，与后台管理面板、后端服务和根工作区依赖完全隔离。它使用 Node.js 内置能力生成静态 HTML，不会参与后台构建：
+
+    node docs-site/scripts/build.mjs
+
+生成结果只写入 docs-site/dist/。仓库提供手动触发的 Developer Docs Pages workflow，可将这部分静态文件发布到 GitHub Pages；普通推送不会自动执行该 workflow，也不会改变后台管理面板的部署流程。
+
+首次发布前，请在仓库 Settings → Pages 中将 Source 设置为 GitHub Actions。
 
 ## Provider
 
