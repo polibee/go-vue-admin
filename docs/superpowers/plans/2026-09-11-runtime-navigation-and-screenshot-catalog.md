@@ -30,6 +30,13 @@
 
 The configuration metadata and entry point are implemented before the runtime navigation bridge so later dynamic routes can mount plugin-owned configuration pages consistently.
 
+## Navigation grouping
+
+- Keep the registry flat and apply grouping only when the sidebar renders.
+- Promote one business entry to a first-level menu.
+- Group multiple entries from the same owner into a collapsible submenu.
+- Preserve separate `业务模块` and `平台插件` management entries.
+
 ## File Map
 
 - Create `admin/src/core/extensions/RuntimeRegistrationBridge.ts`: owner-aware dynamic navigation, route, and resource mounting.

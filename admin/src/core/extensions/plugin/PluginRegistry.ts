@@ -16,6 +16,9 @@ export interface PluginMenu {
   label: string
   route: string
   permission?: string
+  group?: string
+  groupLabel?: string
+  order?: number
 }
 
 export interface PluginRoute {

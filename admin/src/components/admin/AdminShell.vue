@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
-import { ChevronsUpDown } from '@lucide/vue'
+import { ChevronsUpDown, ChevronRight } from '@lucide/vue'
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton,
-  SidebarMenuItem, SidebarProvider, SidebarRail, SidebarTrigger,
+  SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem,
+  SidebarProvider, SidebarRail, SidebarTrigger,
 } from '@/components/ui/sidebar'
 import {
   Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList,
@@ -19,7 +20,19 @@ import { useRouter } from 'vue-router'
 const themeLabel = '主题：系统'
 const auth = useAuth()
 const router = useRouter()
-const navigationItems = computed(() => navigationRegistry.visible(auth.user?.permissions ?? []))
+const navigationSections = computed(() => navigationRegistry.sections(auth.user?.permissions ?? []))
+const collapsedGroups = ref(new Set<string>())
+
+function isGroupExpanded(id: string): boolean {
+  return !collapsedGroups.value.has(id)
+}
+
+function toggleGroup(id: string): void {
+  const next = new Set(collapsedGroups.value)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  collapsedGroups.value = next
+}
 
 onMounted(async () => {
   try {
@@ -58,13 +71,28 @@ async function handleLogout() {
           <SidebarGroupLabel>平台</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem v-for="item in navigationItems" :key="item.id">
-                <SidebarMenuButton as-child>
-                  <RouterLink :to="item.route">
-                    <component :is="item.icon" />
-                    <span>{{ item.label }}</span>
+              <SidebarMenuItem v-for="section in navigationSections" :key="section.kind === 'item' ? section.item.id : section.group.id">
+                <SidebarMenuButton v-if="section.kind === 'item'" as-child>
+                  <RouterLink :to="section.item.route">
+                    <component :is="section.item.icon" />
+                    <span>{{ section.item.label }}</span>
                   </RouterLink>
                 </SidebarMenuButton>
+                <SidebarMenuButton v-else type="button" @click="toggleGroup(section.group.id)" :aria-expanded="isGroupExpanded(section.group.id)">
+                    <component :is="section.group.icon" />
+                    <span>{{ section.group.label }}</span>
+                    <ChevronRight class="ml-auto transition-transform" :class="{ 'rotate-90': isGroupExpanded(section.group.id) }" />
+                </SidebarMenuButton>
+                <SidebarMenuSub v-if="section.kind === 'group' && isGroupExpanded(section.group.id)">
+                  <SidebarMenuSubItem v-for="item in section.group.items" :key="item.id">
+                    <SidebarMenuSubButton as-child>
+                      <RouterLink :to="item.route">
+                        <component :is="item.icon" />
+                        <span>{{ item.label }}</span>
+                      </RouterLink>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
