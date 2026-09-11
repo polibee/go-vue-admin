@@ -2,6 +2,8 @@
 
 通用后台管理面板，采用 Go/Goravel 后端、Vue 3 + shadcn-vue 管理端，并以模块、资源定义和 OpenAPI 契约作为开发边界。
 
+English README: [README.en.md](README.en.md)
+
 ## 当前开发状态
 
 当前 Foundation 基础能力已完成，项目进入业务模块、插件运行时和生产化完善阶段。
@@ -42,6 +44,14 @@
 首次发布前，请在仓库 Settings → Pages 中将 Source 设置为 GitHub Actions。
 
 在线开发文档：<https://go-vue-admin.github.io/>
+
+## AI 快速理解项目
+
+推荐 AI 代理先阅读 AGENTS.md、docs-site/src/content/en/architecture.md 和 docs-site/src/content/en/getting-started.md，再阅读对应模块的 Manifest、服务、仓储和测试。新增功能应优先复用 Resource Engine、GORM 连接池、OpenAPI 契约和 Runtime Registration Bridge。
+
+本项目由 OpenAI Codex 全权开发和维护，所有生成代码、架构决策和验收结果均应以仓库中的实现、测试和开发文档为准。
+
+主题支持 shadcn 默认、Semi Design、TDesign 和微信风格；主题只替换语义 CSS 变量，不替换底层 shadcn-vue 组件。
 
 ## Provider
 

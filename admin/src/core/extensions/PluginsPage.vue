@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { apiClient } from '@/core/api/client'
 import { createGeneratedApiClient, type ExtensionResource } from '@/generated/api'
@@ -9,6 +10,7 @@ import { mountPlugin, pluginRuntime, unmountPlugin } from './runtime'
 const client = createGeneratedApiClient(apiClient)
 const plugins = ref<ExtensionResource[]>([])
 const error = ref('')
+const { t } = useI18n()
 const busy = ref('')
 
 async function load() {
@@ -20,7 +22,7 @@ async function load() {
       mountPlugin(item.id)
     }
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : '平台插件加载失败'
+    error.value = cause instanceof Error ? cause.message : t('extensions.loadFailed')
   }
 }
 
@@ -37,7 +39,7 @@ async function setPluginState(item: ExtensionResource, state: 'enabled' | 'disab
       unmountPlugin(item.id)
     }
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : '插件状态更新失败'
+    error.value = cause instanceof Error ? cause.message : t('extensions.actionFailed')
   } finally {
     busy.value = ''
   }
@@ -49,11 +51,11 @@ onMounted(load)
 <template>
   <section class="flex flex-col gap-6">
     <div>
-      <h1 class="text-2xl font-semibold tracking-tight">平台插件</h1>
-      <p class="text-sm text-muted-foreground">平台插件负责可插拔的基础能力和运行时扩展。</p>
+      <h1 class="text-2xl font-semibold tracking-tight">{{ t('extensions.pluginTitle') }}</h1>
+      <p class="text-sm text-muted-foreground">{{ t('extensions.pluginDescription') }}</p>
     </div>
     <Alert v-if="error" variant="destructive">
-      <AlertTitle>操作失败</AlertTitle>
+      <AlertTitle>{{ t('extensions.actionFailed') }}</AlertTitle>
       <AlertDescription>{{ error }}</AlertDescription>
     </Alert>
     <PluginCatalog :items="plugins" :busy="busy" @toggle="setPluginState" />

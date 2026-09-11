@@ -1,5 +1,5 @@
 export type ThemeMode = 'light' | 'dark' | 'system'
-export type ThemePalette = 'shadcn' | 'semi' | 'wechat'
+export type ThemePalette = 'shadcn' | 'semi' | 'tdesign' | 'wechat'
 
 export interface ThemeSettings {
   mode: ThemeMode
@@ -28,7 +28,7 @@ export function initializeTheme(): ThemeSettings {
   const palette = window.localStorage.getItem(paletteStorageKey)
   const settings: ThemeSettings = {
     mode: mode === 'light' || mode === 'dark' || mode === 'system' ? mode : 'system',
-    palette: palette === 'semi' || palette === 'wechat' || palette === 'shadcn' ? palette : 'shadcn',
+    palette: palette === 'semi' || palette === 'tdesign' || palette === 'wechat' || palette === 'shadcn' ? palette : 'shadcn',
   }
   applyTheme(settings)
   return settings

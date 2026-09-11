@@ -53,7 +53,7 @@ function cycleMode(): void {
   applyTheme(theme.value)
 }
 function cyclePalette(): void {
-  const palettes: ThemePalette[] = ['shadcn', 'semi', 'wechat']
+  const palettes: ThemePalette[] = ['shadcn', 'semi', 'tdesign', 'wechat']
   const next = palettes[(palettes.indexOf(theme.value.palette) + 1) % palettes.length]
   theme.value = { ...theme.value, palette: next }
   applyTheme(theme.value)
@@ -62,7 +62,7 @@ function modeLabel(): string {
   return theme.value.mode === 'light' ? t('app.light') : theme.value.mode === 'dark' ? t('app.dark') : t('app.system')
 }
 function paletteLabel(): string {
-  return theme.value.palette === 'semi' ? t('app.semi') : theme.value.palette === 'wechat' ? t('app.wechat') : t('app.shadcn')
+  return theme.value.palette === 'semi' ? t('app.semi') : theme.value.palette === 'tdesign' ? t('app.tdesign') : theme.value.palette === 'wechat' ? t('app.wechat') : t('app.shadcn')
 }
 
 onMounted(async () => {

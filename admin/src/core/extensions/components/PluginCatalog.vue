@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import type { ExtensionResource } from '@/generated/api'
 
 defineProps<{ items: ExtensionResource[]; busy: string }>()
 const emit = defineEmits<{ toggle: [item: ExtensionResource, state: 'enabled' | 'disabled'] }>()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -12,11 +14,11 @@ const emit = defineEmits<{ toggle: [item: ExtensionResource, state: 'enabled' | 
     <Card v-for="item in items" :key="item.id">
       <CardHeader>
         <CardTitle>{{ item.name }}</CardTitle>
-        <CardDescription>平台插件 · {{ item.id }}</CardDescription>
+        <CardDescription>{{ t('extensions.pluginKind') }} · {{ item.id }}</CardDescription>
       </CardHeader>
       <CardContent class="space-y-1">
-        <p>状态：{{ item.state === 'enabled' ? '已启用' : '已停用' }}</p>
-        <p v-if="item.version" class="text-sm text-muted-foreground">版本：{{ item.version }}</p>
+        <p>{{ t('extensions.status') }}: {{ item.state === 'enabled' ? t('extensions.enabled') : t('extensions.disabled') }}</p>
+        <p v-if="item.version" class="text-sm text-muted-foreground">{{ t('extensions.version') }}: {{ item.version }}</p>
       </CardContent>
       <CardFooter class="gap-2">
         <Button
@@ -24,7 +26,7 @@ const emit = defineEmits<{ toggle: [item: ExtensionResource, state: 'enabled' | 
           :disabled="busy === item.id"
           @click="emit('toggle', item, 'enabled')"
         >
-          启用
+          {{ t('extensions.enable') }}
         </Button>
         <Button
           v-else
@@ -32,16 +34,16 @@ const emit = defineEmits<{ toggle: [item: ExtensionResource, state: 'enabled' | 
           :disabled="busy === item.id"
           @click="emit('toggle', item, 'disabled')"
         >
-          停用
+          {{ t('extensions.disable') }}
         </Button>
         <Button variant="outline" as-child>
-          <RouterLink :to="`/admin/plugins/${item.id}`">查看</RouterLink>
+          <RouterLink :to="'/admin/plugins/' + item.id">{{ t('extensions.view') }}</RouterLink>
         </Button>
         <Button v-if="item.config" variant="outline" as-child>
-          <RouterLink :to="item.config.route">配置</RouterLink>
+          <RouterLink :to="item.config.route">{{ t('extensions.configure') }}</RouterLink>
         </Button>
       </CardFooter>
     </Card>
   </div>
-  <p v-else class="text-sm text-muted-foreground">暂无已注册平台插件。</p>
+  <p v-else class="text-sm text-muted-foreground">{{ t('extensions.emptyPlugins') }}</p>
 </template>

@@ -157,6 +157,26 @@
     --sidebar-primary-foreground: oklch(0.18 0.05 150);
 }
 
+:root[data-palette="tdesign"] {
+    --primary: oklch(0.58 0.22 255);
+    --primary-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.67 0.18 255);
+    --accent: oklch(0.95 0.04 255);
+    --accent-foreground: oklch(0.28 0.08 255);
+    --sidebar-primary: oklch(0.58 0.22 255);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --radius: 0.25rem;
+}
+
+.dark[data-palette="tdesign"] {
+    --primary: oklch(0.69 0.18 255);
+    --primary-foreground: oklch(0.18 0.05 255);
+    --accent: oklch(0.25 0.08 255);
+    --accent-foreground: oklch(0.95 0.04 255);
+    --sidebar-primary: oklch(0.69 0.18 255);
+    --sidebar-primary-foreground: oklch(0.18 0.05 255);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
