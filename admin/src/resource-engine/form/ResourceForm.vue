@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { useI18n } from 'vue-i18n'
 
 import type { ResourceDefinition, ResourceField } from '../core/ResourceDefinition'
 import { createResourceSchema } from './fieldSchema'
@@ -18,8 +19,9 @@ const props = withDefaults(defineProps<{
   submitLabel?: string
 }>(), {
   initialValues: () => ({}),
-  submitLabel: '保存',
+  submitLabel: undefined,
 })
+const { t } = useI18n()
 
 const emit = defineEmits<{
   submit: [values: Record<string, unknown>]
@@ -43,7 +45,7 @@ function inputType(field: ResourceField<object>): string {
           <FormControl>
             <Textarea v-if="field.type === 'textarea'" :placeholder="field.placeholder" v-bind="componentField" />
             <Select v-else-if="field.type === 'select'" v-bind="componentField">
-              <SelectTrigger><SelectValue :placeholder="field.placeholder ?? `请选择${field.label}`" /></SelectTrigger>
+              <SelectTrigger><SelectValue :placeholder="field.placeholder ?? t('resources.choose', { label: field.label })" /></SelectTrigger>
               <SelectContent>
                 <SelectGroup>
                   <SelectItem v-for="option in field.options ?? []" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>

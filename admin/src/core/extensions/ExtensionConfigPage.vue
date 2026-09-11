@@ -5,17 +5,19 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { apiClient } from '@/core/api/client'
 import { createGeneratedApiClient, type ExtensionResource } from '@/generated/api'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const client = createGeneratedApiClient(apiClient)
 const extension = ref<ExtensionResource | null>(null)
 const error = ref('')
+const { t } = useI18n()
 
 onMounted(async () => {
   try {
     extension.value = (await client.getPlugin(String(route.params.id))).data
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : '插件配置加载失败'
+    error.value = cause instanceof Error ? cause.message : t('extensions.loadFailed')
   }
 })
 </script>
@@ -23,24 +25,24 @@ onMounted(async () => {
 <template>
   <section class="flex flex-col gap-4">
     <div>
-      <h1 class="text-2xl font-semibold tracking-tight">{{ extension?.config?.label ?? '扩展配置' }}</h1>
-      <p class="text-sm text-muted-foreground">业务配置由插件页面负责，平台管理页只维护生命周期和配置状态。</p>
+      <h1 class="text-2xl font-semibold tracking-tight">{{ extension?.config?.label ?? t('extensions.configTitle') }}</h1>
+      <p class="text-sm text-muted-foreground">{{ t('extensions.configDescription') }}</p>
     </div>
     <Alert v-if="error" variant="destructive">
-      <AlertTitle>加载失败</AlertTitle>
+      <AlertTitle>{{ t('extensions.loadFailed') }}</AlertTitle>
       <AlertDescription>{{ error }}</AlertDescription>
     </Alert>
     <Card v-else-if="extension">
       <CardHeader>
         <CardTitle>{{ extension.name }}</CardTitle>
-        <CardDescription>配置标识：{{ extension.config?.schema ?? '未声明配置模型' }}</CardDescription>
+        <CardDescription>{{ t('extensions.configId') }}: {{ extension.config?.schema ?? t('extensions.noSchema') }}</CardDescription>
       </CardHeader>
       <CardContent class="space-y-3 text-sm">
-        <p>当前状态：{{ extension.config?.status === 'configured' ? '已配置' : '未配置' }}</p>
+        <p>{{ t('extensions.status') }}: {{ extension.config?.status === 'configured' ? t('extensions.configured') : t('extensions.notConfigured') }}</p>
         <p v-if="extension.config?.secret_fields?.length" class="text-muted-foreground">
-          敏感字段：{{ extension.config.secret_fields.join('、') }}（仅提交，不回显明文）
+          {{ t('extensions.secretFields') }}: {{ extension.config.secret_fields.join(', ') }} ({{ t('extensions.secretHint') }})
         </p>
-        <p class="text-muted-foreground">具体配置表单和保存接口由对应业务插件实现。</p>
+        <p class="text-muted-foreground">{{ t('extensions.configFormHint') }}</p>
       </CardContent>
     </Card>
   </section>

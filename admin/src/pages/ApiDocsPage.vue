@@ -4,6 +4,7 @@ import { ApiReference } from '@scalar/api-reference'
 import '@scalar/api-reference/style.css'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useI18n } from 'vue-i18n'
 
 interface OpenApiDocument {
   openapi?: string
@@ -16,19 +17,20 @@ interface OpenApiDocument {
 }
 
 const categories = [
-  { id: 'all', label: '全部 API', match: () => true },
-  { id: 'auth', label: '认证与会话', match: (path: string) => ['/api/login', '/api/logout', '/api/me', '/api/csrf', '/api/auth/'].some((prefix) => path === prefix || path.startsWith(prefix)) },
-  { id: 'resources', label: '业务资源', match: (path: string) => path.startsWith('/api/resources/') },
-  { id: 'extensions', label: '模块与插件', match: (path: string) => ['/api/extensions', '/api/modules', '/api/plugins'].some((prefix) => path === prefix || path.startsWith(prefix + '/')) },
-  { id: 'platform', label: '平台能力', match: (path: string) => ['/api/health', '/api/menu'].includes(path) },
-  { id: 'settings', label: '设置', match: (path: string) => path.startsWith('/api/settings') },
-  { id: 'media', label: '媒体', match: (path: string) => path.startsWith('/api/media') },
-  { id: 'audit', label: '审计', match: (path: string) => path.startsWith('/api/audit') },
+  { id: 'all', label: 'apiDocs.all', match: () => true },
+  { id: 'auth', label: 'apiDocs.auth', match: (path: string) => ['/api/login', '/api/logout', '/api/me', '/api/csrf', '/api/auth/'].some((prefix) => path === prefix || path.startsWith(prefix)) },
+  { id: 'resources', label: 'apiDocs.resources', match: (path: string) => path.startsWith('/api/resources/') },
+  { id: 'extensions', label: 'apiDocs.extensions', match: (path: string) => ['/api/extensions', '/api/modules', '/api/plugins'].some((prefix) => path === prefix || path.startsWith(prefix + '/')) },
+  { id: 'platform', label: 'apiDocs.platform', match: (path: string) => ['/api/health', '/api/menu'].includes(path) },
+  { id: 'settings', label: 'apiDocs.settings', match: (path: string) => path.startsWith('/api/settings') },
+  { id: 'media', label: 'apiDocs.media', match: (path: string) => path.startsWith('/api/media') },
+  { id: 'audit', label: 'apiDocs.audit', match: (path: string) => path.startsWith('/api/audit') },
 ] as const
 
 const document = ref<OpenApiDocument | null>(null)
 const activeCategory = ref('all')
 const error = ref('')
+const { t } = useI18n()
 
 const activeDefinition = computed(() => categories.find((category) => category.id === activeCategory.value) ?? categories[0])
 const filteredDocument = computed(() => {
@@ -52,10 +54,10 @@ const configuration = computed(() => ({
 onMounted(async () => {
   try {
     const response = await fetch('/api/docs/openapi.json', { credentials: 'include' })
-    if (!response.ok) throw new Error(`API 文档加载失败（${response.status}）`)
+    if (!response.ok) throw new Error(`${t('apiDocs.loadFailed')} (${response.status})`)
     document.value = await response.json() as OpenApiDocument
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : 'API 文档加载失败'
+    error.value = cause instanceof Error ? cause.message : t('apiDocs.loadFailed')
   }
 })
 </script>
@@ -63,22 +65,22 @@ onMounted(async () => {
 <template>
   <section class="flex min-h-[calc(100vh-8rem)] flex-col gap-4">
     <div>
-      <h1 class="text-2xl font-semibold tracking-tight">API 文档</h1>
-      <p class="text-sm text-muted-foreground">按功能分页浏览 OpenAPI 契约；“全部 API”保留完整契约视图。</p>
+      <h1 class="text-2xl font-semibold tracking-tight">{{ t('apiDocs.title') }}</h1>
+      <p class="text-sm text-muted-foreground">{{ t('apiDocs.description') }}</p>
     </div>
     <Alert v-if="error" variant="destructive">
-      <AlertTitle>加载失败</AlertTitle>
+      <AlertTitle>{{ t('apiDocs.unavailable') }}</AlertTitle>
       <AlertDescription>{{ error }}</AlertDescription>
     </Alert>
     <Tabs v-else v-model="activeCategory" class="min-h-0" :key="activeCategory">
       <TabsList class="flex h-auto flex-wrap justify-start gap-1">
         <TabsTrigger v-for="category in categories" :key="category.id" :value="category.id">
-          {{ category.label }}（{{ categoryCount(category) }}）
+          {{ t(category.label) }} ({{ categoryCount(category) }})
         </TabsTrigger>
       </TabsList>
       <div class="min-h-[720px] flex-1 overflow-hidden rounded-lg border bg-background">
         <ApiReference v-if="document" :key="activeCategory" :configuration="configuration" />
-        <div v-else class="flex min-h-[720px] items-center justify-center text-sm text-muted-foreground">正在加载 API 契约…</div>
+        <div v-else class="flex min-h-[720px] items-center justify-center text-sm text-muted-foreground">{{ t('apiDocs.loading') }}</div>
       </div>
     </Tabs>
   </section>

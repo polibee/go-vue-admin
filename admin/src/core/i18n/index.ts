@@ -5,11 +5,23 @@ import zhAuth from './locales/zh-CN/auth'
 import zhDashboard from './locales/zh-CN/dashboard'
 import zhAbout from './locales/zh-CN/about'
 import zhExtensions from './locales/zh-CN/extensions'
+import zhSettings from './locales/zh-CN/settings'
+import zhMedia from './locales/zh-CN/media'
+import zhAudit from './locales/zh-CN/audit'
+import zhApi from './locales/zh-CN/api'
+import zhResources from './locales/zh-CN/resources'
+import zhErrors from './locales/zh-CN/errors'
 import enApp from './locales/en/app'
 import enAuth from './locales/en/auth'
 import enDashboard from './locales/en/dashboard'
 import enAbout from './locales/en/about'
 import enExtensions from './locales/en/extensions'
+import enSettings from './locales/en/settings'
+import enMedia from './locales/en/media'
+import enAudit from './locales/en/audit'
+import enApi from './locales/en/api'
+import enResources from './locales/en/resources'
+import enErrors from './locales/en/errors'
 
 export const supportedLocales = ['zh-CN', 'en'] as const
 export type SupportedLocale = (typeof supportedLocales)[number]
@@ -25,8 +37,8 @@ export const i18n = createI18n({
   locale: initialLocale(),
   fallbackLocale: 'en',
   messages: {
-    'zh-CN': { ...zhApp, ...zhAuth, ...zhDashboard, ...zhAbout, ...zhExtensions },
-    en: { ...enApp, ...enAuth, ...enDashboard, ...enAbout, ...enExtensions },
+    'zh-CN': { ...zhApp, ...zhAuth, ...zhDashboard, ...zhAbout, ...zhExtensions, ...zhSettings, ...zhMedia, ...zhAudit, ...zhApi, ...zhResources, ...zhErrors },
+    en: { ...enApp, ...enAuth, ...enDashboard, ...enAbout, ...enExtensions, ...enSettings, ...enMedia, ...enAudit, ...enApi, ...enResources, ...enErrors },
   },
 })
 

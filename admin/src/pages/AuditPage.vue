@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { DiffViewer } from '@/modules/audit/components'
 import { AuditService } from '@/modules/audit/audit.service'
+import { useI18n } from 'vue-i18n'
 
 const service = new AuditService(createGeneratedApiClient(apiClient))
 const entries = ref<AuditResource[]>([])
@@ -20,6 +21,7 @@ const selected = ref<AuditResource | null>(null)
 const loading = ref(true)
 const detailLoading = ref(false)
 const error = ref('')
+const { t } = useI18n()
 
 async function loadAudit() {
   loading.value = true
@@ -28,7 +30,7 @@ async function loadAudit() {
     entries.value = await service.list()
     if (entries.value[0]) await selectEntry(entries.value[0])
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : '审计日志加载失败，请稍后重试。'
+    error.value = cause instanceof Error ? cause.message : t('audit.loadFailed')
   } finally {
     loading.value = false
   }
@@ -39,7 +41,7 @@ async function selectEntry(entry: AuditResource) {
   try {
     selected.value = await service.get(entry.id)
   } catch (cause) {
-    toast.error(cause instanceof Error ? cause.message : '审计详情加载失败，请稍后重试。')
+    toast.error(cause instanceof Error ? cause.message : t('audit.detailFailed'))
   } finally {
     detailLoading.value = false
   }
@@ -55,25 +57,25 @@ onMounted(loadAudit)
 <template>
   <section class="flex flex-col gap-6">
     <div>
-      <h1 class="text-2xl font-semibold tracking-tight">审计日志</h1>
-      <p class="text-sm text-muted-foreground">查看关键设置和媒体操作的操作者、请求来源与前后变更快照。</p>
+      <h1 class="text-2xl font-semibold tracking-tight">{{ t('audit.title') }}</h1>
+      <p class="text-sm text-muted-foreground">{{ t('audit.description') }}</p>
     </div>
 
     <Alert v-if="error" variant="destructive">
-      <AlertTitle>审计服务暂时不可用</AlertTitle>
+      <AlertTitle>{{ t('audit.unavailable') }}</AlertTitle>
       <AlertDescription>{{ error }}</AlertDescription>
     </Alert>
 
-    <div v-if="loading" class="flex items-center gap-2 text-sm text-muted-foreground"><Spinner /> 正在加载审计日志…</div>
+    <div v-if="loading" class="flex items-center gap-2 text-sm text-muted-foreground"><Spinner /> {{ t('audit.loading') }}</div>
     <Empty v-else-if="!entries.length">
-      <EmptyHeader><FileClock class="size-10 text-muted-foreground" /><EmptyTitle>暂无审计记录</EmptyTitle></EmptyHeader>
-      <EmptyDescription>当设置或媒体发生变更后，记录会显示在这里。</EmptyDescription>
+      <EmptyHeader><FileClock class="size-10 text-muted-foreground" /><EmptyTitle>{{ t('audit.empty') }}</EmptyTitle></EmptyHeader>
+      <EmptyDescription>{{ t('audit.emptyDescription') }}</EmptyDescription>
     </Empty>
     <div v-else class="grid gap-6 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,2fr)]">
       <Card class="h-fit">
         <CardHeader>
-          <CardTitle>操作记录</CardTitle>
-          <CardDescription>共 {{ entries.length }} 条，最近的记录在前。</CardDescription>
+          <CardTitle>{{ t('audit.records') }}</CardTitle>
+          <CardDescription>{{ t('audit.count', { count: entries.length }) }}</CardDescription>
         </CardHeader>
         <CardContent class="grid gap-2">
           <button
@@ -106,9 +108,9 @@ onMounted(loadAudit)
         </CardHeader>
         <CardContent class="grid gap-5">
           <div class="grid gap-3 text-sm sm:grid-cols-3">
-            <div><span class="text-muted-foreground">操作者</span><p class="font-medium">{{ selected.actor_email || selected.actor_id || '系统' }}</p></div>
-            <div><span class="text-muted-foreground">来源 IP</span><p class="font-medium">{{ selected.ip || '—' }}</p></div>
-            <div><span class="text-muted-foreground">时间</span><p class="font-medium">{{ formatDate(selected.created_at) }}</p></div>
+            <div><span class="text-muted-foreground">{{ t('audit.actor') }}</span><p class="font-medium">{{ selected.actor_email || selected.actor_id || t('audit.system') }}</p></div>
+            <div><span class="text-muted-foreground">{{ t('audit.ip') }}</span><p class="font-medium">{{ selected.ip || '—' }}</p></div>
+            <div><span class="text-muted-foreground">{{ t('audit.time') }}</span><p class="font-medium">{{ formatDate(selected.created_at) }}</p></div>
           </div>
           <Separator />
           <DiffViewer :before="selected.before" :after="selected.after" />
