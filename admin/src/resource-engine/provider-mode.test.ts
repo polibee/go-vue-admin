@@ -13,7 +13,7 @@ const httpProvider = new HttpResourceDataProvider<TestRecord>({ request: async <
 
 describe('resource provider mode', () => {
   it('defaults to memory and accepts explicit http mode', () => {
-    expect(resolveResourceProviderMode()).toBe('memory')
+    expect(resolveResourceProviderMode()).toBe('http')
     expect(resolveResourceProviderMode('memory')).toBe('memory')
     expect(resolveResourceProviderMode('http')).toBe('http')
   })

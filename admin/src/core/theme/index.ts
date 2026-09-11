@@ -1,28 +1,35 @@
-export type ThemePreference = 'light' | 'dark' | 'system'
+export type ThemeMode = 'light' | 'dark' | 'system'
+export type ThemePalette = 'shadcn' | 'semi' | 'wechat'
 
-const themeStorageKey = 'go-vue-admin.theme'
+export interface ThemeSettings {
+  mode: ThemeMode
+  palette: ThemePalette
+}
 
-function resolvedTheme(preference: ThemePreference): 'light' | 'dark' {
-  if (preference !== 'system') {
-    return preference
-  }
+const modeStorageKey = 'go-vue-admin.theme.mode'
+const paletteStorageKey = 'go-vue-admin.theme.palette'
 
+function resolvedMode(mode: ThemeMode): 'light' | 'dark' {
+  if (mode !== 'system') return mode
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-export function applyTheme(preference: ThemePreference): void {
+export function applyTheme(settings: ThemeSettings): void {
   const root = document.documentElement
-  root.classList.toggle('dark', resolvedTheme(preference) === 'dark')
-  root.dataset.theme = preference
-  window.localStorage.setItem(themeStorageKey, preference)
+  root.classList.toggle('dark', resolvedMode(settings.mode) === 'dark')
+  root.dataset.theme = settings.mode
+  root.dataset.palette = settings.palette
+  window.localStorage.setItem(modeStorageKey, settings.mode)
+  window.localStorage.setItem(paletteStorageKey, settings.palette)
 }
 
-export function initializeTheme(): ThemePreference {
-  const stored = window.localStorage.getItem(themeStorageKey)
-  const preference: ThemePreference = stored === 'light' || stored === 'dark' || stored === 'system'
-    ? stored
-    : 'system'
-
-  applyTheme(preference)
-  return preference
+export function initializeTheme(): ThemeSettings {
+  const mode = window.localStorage.getItem(modeStorageKey)
+  const palette = window.localStorage.getItem(paletteStorageKey)
+  const settings: ThemeSettings = {
+    mode: mode === 'light' || mode === 'dark' || mode === 'system' ? mode : 'system',
+    palette: palette === 'semi' || palette === 'wechat' || palette === 'shadcn' ? palette : 'shadcn',
+  }
+  applyTheme(settings)
+  return settings
 }

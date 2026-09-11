@@ -14,6 +14,6 @@ test.describe('RBAC navigation', () => {
     await expect(page.getByRole('link', { name: '仪表盘' })).toBeVisible()
     await expect(page.getByRole('link', { name: '设置' })).toBeVisible()
     await expect(page.getByText('开发进度', { exact: true })).toBeVisible()
-    await expect(page.getByText('Task 7 · Resource Engine Core')).toBeVisible()
+    await expect(page.getByText('Foundation 14 / 14')).toBeVisible()
   })
 })

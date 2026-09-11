@@ -92,5 +92,8 @@ func TestSeparateModuleAndPluginCatalogs(t *testing.T) {
 	modulesAfterDisable.AssertOk()
 	pluginAfterDisable, err := tc.Http(t).WithCookie(cookie).Get("/api/plugins/example-plugin")
 	require.NoError(t, err)
-	pluginAfterDisable.AssertStatus(404)
+	pluginAfterDisable.AssertOk()
+	pluginAfterDisableBody, err := pluginAfterDisable.Json()
+	require.NoError(t, err)
+	require.Equal(t, "disabled", pluginAfterDisableBody["data"].(map[string]any)["state"])
 }

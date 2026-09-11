@@ -116,6 +116,47 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Palette presets only replace semantic tokens; shadcn-vue components stay unchanged. */
+:root[data-palette="semi"] {
+    --primary: oklch(0.57 0.22 255);
+    --primary-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.65 0.18 255);
+    --accent: oklch(0.96 0.03 255);
+    --accent-foreground: oklch(0.25 0.08 255);
+    --sidebar-primary: oklch(0.57 0.22 255);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --radius: 0.5rem;
+}
+
+.dark[data-palette="semi"] {
+    --primary: oklch(0.67 0.19 255);
+    --primary-foreground: oklch(0.18 0.05 255);
+    --accent: oklch(0.25 0.08 255);
+    --accent-foreground: oklch(0.96 0.03 255);
+    --sidebar-primary: oklch(0.67 0.19 255);
+    --sidebar-primary-foreground: oklch(0.18 0.05 255);
+}
+
+:root[data-palette="wechat"] {
+    --primary: oklch(0.68 0.18 150);
+    --primary-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.73 0.15 150);
+    --accent: oklch(0.95 0.04 150);
+    --accent-foreground: oklch(0.28 0.08 150);
+    --sidebar-primary: oklch(0.68 0.18 150);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --radius: 0.75rem;
+}
+
+.dark[data-palette="wechat"] {
+    --primary: oklch(0.75 0.15 150);
+    --primary-foreground: oklch(0.18 0.05 150);
+    --accent: oklch(0.25 0.08 150);
+    --accent-foreground: oklch(0.95 0.04 150);
+    --sidebar-primary: oklch(0.75 0.15 150);
+    --sidebar-primary-foreground: oklch(0.18 0.05 150);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

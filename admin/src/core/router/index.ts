@@ -19,6 +19,7 @@ export const router = createRouter({
         { path: 'media', component: () => import('@/pages/MediaPage.vue') },
         { path: 'audit', component: () => import('@/pages/AuditPage.vue') },
         { path: 'api-docs', component: () => import('@/pages/ApiDocsPage.vue') },
+        { path: 'about', component: () => import('@/pages/AboutPage.vue') },
         { path: 'modules', component: () => import('@/core/extensions/ModulesPage.vue') },
         { path: 'modules/:id', component: () => import('@/core/extensions/ExtensionDetailPage.vue'), meta: { extensionKind: 'module' } },
         { path: 'plugins', component: () => import('@/core/extensions/PluginsPage.vue') },

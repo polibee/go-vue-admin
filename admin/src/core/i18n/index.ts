@@ -1,26 +1,29 @@
 import { createI18n } from 'vue-i18n'
 
+import en from './locales/en'
+import zhCN from './locales/zh-CN'
+
 export const supportedLocales = ['zh-CN', 'en'] as const
 export type SupportedLocale = (typeof supportedLocales)[number]
 
+const localeStorageKey = 'go-vue-admin.locale'
+
+function initialLocale(): SupportedLocale {
+  const stored = window.localStorage.getItem(localeStorageKey)
+  if (stored === 'zh-CN' || stored === 'en') return stored
+  // Keep the product default stable and let the user opt into English from the shell.
+  return 'zh-CN'
+}
+
 export const i18n = createI18n({
   legacy: false,
-  locale: 'zh-CN',
+  locale: initialLocale(),
   fallbackLocale: 'en',
-  messages: {
-    'zh-CN': {
-      app: {
-        title: 'Go Vue Admin',
-        foundation: '官方 shadcn-vue 基础已就绪',
-        description: '业务模块将在此平台边界内独立交付。',
-      },
-    },
-    en: {
-      app: {
-        title: 'Go Vue Admin',
-        foundation: 'Official shadcn-vue foundation is ready',
-        description: 'Business modules will be delivered independently within this platform boundary.',
-      },
-    },
-  },
+  messages: { 'zh-CN': zhCN, en },
 })
+
+export function setLocale(locale: SupportedLocale): void {
+  i18n.global.locale.value = locale
+  window.localStorage.setItem(localeStorageKey, locale)
+  document.documentElement.lang = locale
+}
