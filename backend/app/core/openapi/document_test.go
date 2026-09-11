@@ -24,6 +24,11 @@ func TestDocumentIncludesResourceContract(t *testing.T) {
 			t.Fatalf("openapi document is missing media path %s", path)
 		}
 	}
+	for _, path := range []string{"/api/modules", "/api/plugins", "/api/plugins/{id}/state"} {
+		if _, ok := paths[path]; !ok {
+			t.Fatalf("openapi document is missing extension path %s", path)
+		}
+	}
 	if _, ok := paths["/api/auth/bootstrap"]; !ok {
 		t.Fatal("openapi document is missing the API bootstrap endpoint")
 	}

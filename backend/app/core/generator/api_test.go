@@ -33,7 +33,7 @@ func TestGenerateAPIWritesDeterministicContractSchemasAndClient(t *testing.T) {
 		t.Fatal(err)
 	}
 	clientText := string(client)
-	for _, marker := range []string{"export interface GeneratedApiClient", "listDemoResources", "bulkDeleteDemoResources"} {
+	for _, marker := range []string{"export interface GeneratedApiClient", "listDemoResources", "bulkDeleteDemoResources", "listModules", "listPlugins", "setPluginState"} {
 		if !strings.Contains(clientText, marker) {
 			t.Errorf("client is missing %q", marker)
 		}

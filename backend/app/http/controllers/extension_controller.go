@@ -72,6 +72,33 @@ func (c *ExtensionController) Index(ctx http.Context) http.Response {
 	if denied := c.authorize(ctx, "dashboard.view"); denied != nil {
 		return denied
 	}
+	items := c.catalog()
+	return ctx.Response().Success().Json(response.Success(items, response.Meta{}))
+}
+
+func (c *ExtensionController) Modules(ctx http.Context) http.Response {
+	if denied := c.authorize(ctx, "dashboard.view"); denied != nil {
+		return denied
+	}
+	items := []extensionRecord{}
+	for _, id := range c.modules.Names() {
+		items = append(items, extensionRecord{ID: id, Name: "示例模块", Kind: "module", State: "enabled"})
+	}
+	return ctx.Response().Success().Json(response.Success(items, response.Meta{}))
+}
+
+func (c *ExtensionController) Plugins(ctx http.Context) http.Response {
+	if denied := c.authorize(ctx, "dashboard.view"); denied != nil {
+		return denied
+	}
+	items := []extensionRecord{}
+	for _, item := range c.plugins.List() {
+		items = append(items, extensionRecord{ID: item.Manifest.ID, Name: item.Manifest.Name, Kind: "plugin", State: string(item.State)})
+	}
+	return ctx.Response().Success().Json(response.Success(items, response.Meta{}))
+}
+
+func (c *ExtensionController) catalog() []extensionRecord {
 	items := []extensionRecord{}
 	for _, id := range c.modules.Names() {
 		items = append(items, extensionRecord{ID: id, Name: "示例模块", Kind: "module", State: "enabled"})
@@ -79,10 +106,18 @@ func (c *ExtensionController) Index(ctx http.Context) http.Response {
 	for _, item := range c.plugins.List() {
 		items = append(items, extensionRecord{ID: item.Manifest.ID, Name: item.Manifest.Name, Kind: "plugin", State: string(item.State)})
 	}
-	return ctx.Response().Success().Json(response.Success(items, response.Meta{}))
+	return items
 }
 
 func (c *ExtensionController) Update(ctx http.Context) http.Response {
+	return c.updatePluginState(ctx)
+}
+
+func (c *ExtensionController) UpdatePlugin(ctx http.Context) http.Response {
+	return c.updatePluginState(ctx)
+}
+
+func (c *ExtensionController) updatePluginState(ctx http.Context) http.Response {
 	if denied := c.authorize(ctx, "plugins.manage"); denied != nil {
 		return denied
 	}
@@ -106,7 +141,7 @@ func (c *ExtensionController) Update(ctx http.Context) http.Response {
 		}
 		return ctx.Response().Status(status).Json(apierrors.New("PLUGIN_TRANSITION_FAILED", "插件状态更新失败", nil))
 	}
-	return c.Index(ctx)
+	return c.Plugins(ctx)
 }
 
 func (c *ExtensionController) Show(ctx http.Context) http.Response {

@@ -741,6 +741,102 @@
         }
       }
     },
+    "/api/modules": {
+      "get": {
+        "description": "Lists compiled business modules.",
+        "operationId": "getApiModules",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Extensions"
+        ]
+      }
+    },
+    "/api/plugins": {
+      "get": {
+        "description": "Lists builtin platform plugins.",
+        "operationId": "getApiPlugins",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Extensions"
+        ]
+      }
+    },
+    "/api/plugins/{id}/state": {
+      "put": {
+        "description": "Enables or disables a builtin plugin. Requires plugins.manage and CSRF.",
+        "operationId": "putApiPlugins{Id}State",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "enabled",
+                      "disabled"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "state"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListEnvelope"
+                }
+              }
+            },
+            "description": "Successful response."
+          }
+        },
+        "tags": [
+          "Extensions"
+        ]
+      }
+    },
     "/api/resources/demo": {
       "get": {
         "description": "Lists demo resources with pagination, filters, search, and sorting.",

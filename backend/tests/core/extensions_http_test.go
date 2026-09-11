@@ -37,3 +37,26 @@ func TestExtensionLifecycle(t *testing.T) {
 	require.NoError(t, err)
 	invalid.AssertStatus(400)
 }
+
+func TestSeparateModuleAndPluginCatalogs(t *testing.T) {
+	tc := new(tests.TestCase)
+	cookie, _ := loginSettingsTestAdmin(t, tc)
+
+	modules, err := tc.Http(t).WithCookie(cookie).Get("/api/modules")
+	require.NoError(t, err)
+	modules.AssertOk()
+	modulePayload, err := modules.Json()
+	require.NoError(t, err)
+	moduleItems := modulePayload["data"].([]any)
+	require.NotEmpty(t, moduleItems)
+	require.Equal(t, "module", moduleItems[0].(map[string]any)["kind"])
+
+	plugins, err := tc.Http(t).WithCookie(cookie).Get("/api/plugins")
+	require.NoError(t, err)
+	plugins.AssertOk()
+	pluginPayload, err := plugins.Json()
+	require.NoError(t, err)
+	pluginItems := pluginPayload["data"].([]any)
+	require.NotEmpty(t, pluginItems)
+	require.Equal(t, "plugin", pluginItems[0].(map[string]any)["kind"])
+}
