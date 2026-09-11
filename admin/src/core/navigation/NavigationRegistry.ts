@@ -8,12 +8,19 @@ export interface NavigationItem {
   route: string
   icon?: Component
   permission?: Permission
+  owner?: string
 }
 
 export class NavigationRegistry {
   private readonly entries = shallowReactive(new Map<string, NavigationItem>())
 
   remove(id: string): void { this.entries.delete(id) }
+
+  removeOwner(owner: string): void {
+    for (const [id, item] of this.entries) {
+      if (item.owner === owner) this.entries.delete(id)
+    }
+  }
 
   constructor(items: NavigationItem[] = []) {
     this.registerMany(items)

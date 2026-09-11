@@ -4,6 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { apiClient } from '@/core/api/client'
 import { createGeneratedApiClient, type ExtensionResource } from '@/generated/api'
 import PluginCatalog from './components/PluginCatalog.vue'
+import { mountPlugin, pluginRuntime, unmountPlugin } from './runtime'
 
 const client = createGeneratedApiClient(apiClient)
 const plugins = ref<ExtensionResource[]>([])
@@ -13,6 +14,11 @@ const busy = ref('')
 async function load() {
   try {
     plugins.value = (await client.listPlugins()).data
+    for (const item of plugins.value) {
+      if (item.state !== 'enabled' || pluginRuntime.state(item.id) === 'enabled') continue
+      pluginRuntime.enable(item.id)
+      mountPlugin(item.id)
+    }
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : '平台插件加载失败'
   }
@@ -23,6 +29,13 @@ async function setPluginState(item: ExtensionResource, state: 'enabled' | 'disab
   error.value = ''
   try {
     plugins.value = (await client.setPluginState(item.id, state)).data
+    if (state === 'enabled') {
+      pluginRuntime.enable(item.id)
+      mountPlugin(item.id)
+    } else {
+      pluginRuntime.disable(item.id)
+      unmountPlugin(item.id)
+    }
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : '插件状态更新失败'
   } finally {

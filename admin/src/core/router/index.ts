@@ -10,6 +10,7 @@ export const router = createRouter({
     { path: '/admin', redirect: '/admin/dashboard' },
     {
       path: '/admin',
+      name: 'admin',
       component: () => import('@/components/admin/AdminShell.vue'),
       beforeEnter: AuthGuard,
       children: [
