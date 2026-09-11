@@ -4,6 +4,7 @@ import { FlexRender, tableFeatures, useTable, type ColumnDef } from '@tanstack/v
 import { ArrowDown, ArrowUp, ArrowUpDown } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -35,6 +36,7 @@ import { nextResourceSort } from '../table/state'
 const route = useRoute()
 const router = useRouter()
 const auth = useAuth()
+const { t } = useI18n()
 const resourceName = computed(() => String(route.params.resource ?? ''))
 const definition = computed(() => resourceRegistry.get(resourceName.value))
 const provider = computed(() => resourceRegistry.provider(resourceName.value))
@@ -92,7 +94,7 @@ async function load() {
     pagination.value = result.meta.pagination
     selectedIds.value = []
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : '资源加载失败'
+    error.value = cause instanceof Error ? cause.message : t('resources.loadFailed')
   } finally {
     loading.value = false
   }
@@ -141,11 +143,11 @@ async function confirmDelete() {
   deleting.value = true
   try {
     await provider.value.delete(deleteTargetId.value)
-    toast.success('记录已删除')
+    toast.success(t('resources.deleted'))
     deleteDialogOpen.value = false
     await load()
   } catch (cause) {
-    toast.error(cause instanceof Error ? cause.message : '删除失败')
+    toast.error(cause instanceof Error ? cause.message : t('resources.deleteFailed'))
   } finally {
     deleting.value = false
   }
@@ -160,11 +162,11 @@ async function confirmBulkDelete() {
   deleting.value = true
   try {
     await provider.value.bulkDelete(selectedIds.value)
-    toast.success('选中记录已删除')
+    toast.success(t('resources.bulkDeleted'))
     bulkDeleteDialogOpen.value = false
     await load()
   } catch (cause) {
-    toast.error(cause instanceof Error ? cause.message : '批量删除失败')
+    toast.error(cause instanceof Error ? cause.message : t('resources.bulkDeleteFailed'))
   } finally {
     deleting.value = false
   }
@@ -183,17 +185,17 @@ onMounted(() => void load())
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
         <h1 class="text-2xl font-semibold tracking-tight">{{ definition.label }}</h1>
-        <p class="text-sm text-muted-foreground">通用资源列表 · {{ serializedQuery || '等待查询' }}</p>
+        <p class="text-sm text-muted-foreground">{{ t('resources.records') }} · {{ serializedQuery || t('resources.waiting') }}</p>
       </div>
-      <Button v-if="context.can('create')" @click="router.push(`/admin/resources/${resourceName}/create`)">新建</Button>
+      <Button v-if="context.can('create')" @click="router.push(`/admin/resources/${resourceName}/create`)">{{ t('resources.create') }}</Button>
     </div>
-    <Alert v-if="error" variant="destructive"><AlertTitle>加载失败</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('resources.loadFailed') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Card>
       <CardHeader>
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <div><CardTitle>记录</CardTitle><CardDescription>支持搜索、筛选、排序、选择、批量操作和分页。</CardDescription></div>
+              <div><CardTitle>{{ t('resources.records') }}</CardTitle><CardDescription>{{ t('resources.features') }}</CardDescription></div>
           <div class="flex flex-wrap items-center gap-2">
-            <Input v-model="search" class="w-56" placeholder="搜索记录" aria-label="搜索资源" />
+            <Input v-model="search" class="w-56" :placeholder="t('resources.search')" :aria-label="t('resources.searchAria')" />
             <Select
               v-for="filter in definition.filters ?? []"
               :key="String(filter.field)"
@@ -207,7 +209,7 @@ onMounted(() => void load())
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <Button v-if="selectedIds.length && context.can('bulkDelete')" variant="destructive" @click="openBulkDelete">批量删除</Button>
+            <Button v-if="selectedIds.length && context.can('bulkDelete')" variant="destructive" @click="openBulkDelete">{{ t('resources.bulkDelete') }}</Button>
           </div>
         </div>
       </CardHeader>
@@ -224,12 +226,12 @@ onMounted(() => void load())
                   </Button>
                   <span v-else>{{ column.label }}</span>
                 </TableHead>
-                <TableHead>操作</TableHead>
+                <TableHead>{{ t('resources.actions') }}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow v-if="loading"><TableCell :colspan="(columns.length || 1) + 2">加载中…</TableCell></TableRow>
-              <TableRow v-else-if="!table.getRowModel().rows.length"><TableCell :colspan="(columns.length || 1) + 2"><Empty class="border-0"><EmptyHeader><EmptyTitle>暂无数据</EmptyTitle><EmptyDescription>调整搜索或筛选条件后重试。</EmptyDescription></EmptyHeader></Empty></TableCell></TableRow>
+              <TableRow v-if="loading"><TableCell :colspan="(columns.length || 1) + 2">{{ t('resources.loading') }}</TableCell></TableRow>
+              <TableRow v-else-if="!table.getRowModel().rows.length"><TableCell :colspan="(columns.length || 1) + 2"><Empty class="border-0"><EmptyHeader><EmptyTitle>{{ t('resources.noData') }}</EmptyTitle><EmptyDescription>{{ t('resources.features') }}</EmptyDescription></EmptyHeader></Empty></TableCell></TableRow>
               <TableRow v-for="row in table.getRowModel().rows" v-else :key="row.id">
                 <TableCell><Checkbox :model-value="isSelected(row.original)" :aria-label="`选择 ${idOf(row.original)}`" @update:model-value="toggleSelected(row.original, Boolean($event))" /></TableCell>
                 <TableCell v-for="cell in row.getAllCells()" :key="cell.id"><FlexRender :cell="cell" /></TableCell>
