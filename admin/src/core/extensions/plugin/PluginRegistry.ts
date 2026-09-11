@@ -1,6 +1,7 @@
 import type { Component } from 'vue'
 
 import type { ResourceDefinition } from '@/resource-engine/core/ResourceDefinition'
+import type { ExtensionConfigDeclaration } from '../ModuleRegistry'
 
 export type PluginRuntime = 'builtin' | 'external'
 export type PluginState = 'disabled' | 'enabled'
@@ -32,6 +33,7 @@ export interface PluginManifest {
   permissions?: readonly string[]
   menus?: readonly PluginMenu[]
   dependencies?: readonly PluginDependency[]
+  config?: ExtensionConfigDeclaration
 }
 
 export interface PluginRegistrationSnapshot {
@@ -77,6 +79,7 @@ export function defineAdminPlugin(definition: AdminPluginDefinition): AdminPlugi
       permissions: [...(definition.manifest.permissions ?? [])],
       menus: [...(definition.manifest.menus ?? [])],
       dependencies: [...(definition.manifest.dependencies ?? [])],
+      config: definition.manifest.config ? { ...definition.manifest.config, secretFields: [...(definition.manifest.config.secretFields ?? [])] } : undefined,
     },
   }
 }
@@ -169,6 +172,7 @@ function cloneManifest(manifest: PluginManifest): PluginManifest {
     permissions: [...(manifest.permissions ?? [])],
     menus: [...(manifest.menus ?? [])],
     dependencies: [...(manifest.dependencies ?? [])],
+    config: manifest.config ? { ...manifest.config, secretFields: [...(manifest.config.secretFields ?? [])] } : undefined,
   }
 }
 

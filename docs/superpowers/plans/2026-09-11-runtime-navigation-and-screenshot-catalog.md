@@ -21,6 +21,15 @@
 - Use TDD: each runtime behavior gets a failing test before production code.
 - Do not enable GitHub Actions or automatic CI.
 
+## Configuration boundary
+
+- Platform management pages expose lifecycle, dependency, permission, health, and configuration status.
+- A module/plugin manifest may declare a dedicated configuration route and schema.
+- Domain-specific forms and secret persistence stay in the registered module/plugin page and backend API.
+- Secret values are never returned by catalog APIs; this phase only exposes masked-field metadata.
+
+The configuration metadata and entry point are implemented before the runtime navigation bridge so later dynamic routes can mount plugin-owned configuration pages consistently.
+
 ## File Map
 
 - Create `admin/src/core/extensions/RuntimeRegistrationBridge.ts`: owner-aware dynamic navigation, route, and resource mounting.

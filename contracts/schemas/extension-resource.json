@@ -1,6 +1,9 @@
 {
   "additionalProperties": false,
   "properties": {
+    "config": {
+      "$ref": "#/components/schemas/ExtensionConfigSummary"
+    },
     "id": {
       "type": "string"
     },
@@ -22,6 +25,9 @@
         "enabled",
         "disabled"
       ],
+      "type": "string"
+    },
+    "version": {
       "type": "string"
     }
   },

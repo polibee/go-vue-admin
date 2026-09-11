@@ -40,6 +40,14 @@ type PluginDependency struct {
 	Version string `json:"version,omitempty"`
 }
 
+type ConfigDeclaration struct {
+	Route        string   `json:"route"`
+	Label        string   `json:"label"`
+	Permission   string   `json:"permission"`
+	Schema       string   `json:"schema,omitempty"`
+	SecretFields []string `json:"secretFields,omitempty"`
+}
+
 type PluginMenu struct {
 	ID         string `json:"id"`
 	Label      string `json:"label"`
@@ -56,6 +64,7 @@ type PluginManifest struct {
 	Permissions     []string           `json:"permissions,omitempty"`
 	Menus           []PluginMenu       `json:"menus,omitempty"`
 	Dependencies    []PluginDependency `json:"dependencies,omitempty"`
+	Config          *ConfigDeclaration `json:"config,omitempty"`
 }
 
 type BuiltinPlugin interface {
@@ -113,5 +122,10 @@ func cloneManifest(manifest PluginManifest) PluginManifest {
 	manifest.Permissions = append([]string(nil), manifest.Permissions...)
 	manifest.Menus = append([]PluginMenu(nil), manifest.Menus...)
 	manifest.Dependencies = append([]PluginDependency(nil), manifest.Dependencies...)
+	if manifest.Config != nil {
+		config := *manifest.Config
+		config.SecretFields = append([]string(nil), config.SecretFields...)
+		manifest.Config = &config
+	}
 	return manifest
 }

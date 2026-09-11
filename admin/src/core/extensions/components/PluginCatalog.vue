@@ -14,7 +14,10 @@ const emit = defineEmits<{ toggle: [item: ExtensionResource, state: 'enabled' | 
         <CardTitle>{{ item.name }}</CardTitle>
         <CardDescription>平台插件 · {{ item.id }}</CardDescription>
       </CardHeader>
-      <CardContent>状态：{{ item.state === 'enabled' ? '已启用' : '已停用' }}</CardContent>
+      <CardContent class="space-y-1">
+        <p>状态：{{ item.state === 'enabled' ? '已启用' : '已停用' }}</p>
+        <p v-if="item.version" class="text-sm text-muted-foreground">版本：{{ item.version }}</p>
+      </CardContent>
       <CardFooter class="gap-2">
         <Button
           v-if="item.state === 'disabled'"
@@ -33,6 +36,9 @@ const emit = defineEmits<{ toggle: [item: ExtensionResource, state: 'enabled' | 
         </Button>
         <Button variant="outline" as-child>
           <RouterLink :to="`/admin/plugins/${item.id}`">查看</RouterLink>
+        </Button>
+        <Button v-if="item.config" variant="outline" as-child>
+          <RouterLink :to="item.config.route">配置</RouterLink>
         </Button>
       </CardFooter>
     </Card>

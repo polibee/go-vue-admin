@@ -4,11 +4,20 @@ import type { SupportedLocale } from '@/core/i18n'
 import type { NavigationItem } from '@/core/navigation/NavigationRegistry'
 import type { ResourceDefinition } from '@/resource-engine/core/ResourceDefinition'
 
+export interface ExtensionConfigDeclaration {
+  route: string
+  label: string
+  permission: string
+  schema?: string
+  secretFields?: readonly string[]
+}
+
 export interface AdminModuleDefinition {
   id: string
   resources?: readonly ResourceDefinition<Record<string, unknown>>[]
   routes?: readonly RouteRecordRaw[]
   navigation?: readonly NavigationItem[]
+  config?: ExtensionConfigDeclaration
   locales?: Partial<Record<SupportedLocale, Record<string, unknown>>>
 }
 
@@ -23,6 +32,7 @@ export function defineAdminModule(definition: AdminModuleDefinition): AdminModul
     resources: [...(definition.resources ?? [])],
     routes: [...(definition.routes ?? [])],
     navigation: [...(definition.navigation ?? [])],
+    config: definition.config ? { ...definition.config, secretFields: [...(definition.config.secretFields ?? [])] } : undefined,
     locales: { ...definition.locales },
   }
 }

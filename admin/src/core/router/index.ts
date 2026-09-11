@@ -22,6 +22,7 @@ export const router = createRouter({
         { path: 'modules/:id', component: () => import('@/core/extensions/ExtensionDetailPage.vue'), meta: { extensionKind: 'module' } },
         { path: 'plugins', component: () => import('@/core/extensions/PluginsPage.vue') },
         { path: 'plugins/:id', component: () => import('@/core/extensions/ExtensionDetailPage.vue'), meta: { extensionKind: 'plugin' } },
+        { path: 'plugins/:id/config', component: () => import('@/core/extensions/ExtensionConfigPage.vue'), meta: { extensionKind: 'plugin' } },
         { path: 'extensions', redirect: '/admin/modules' },
         { path: 'extensions/:id', component: () => import('@/core/extensions/ExtensionDetailPage.vue') },
         ...resourceRouteRecords(),

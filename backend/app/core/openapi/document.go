@@ -47,11 +47,19 @@ func BuildDocument() map[string]any {
 // The map keys are stable filenames without the .json suffix.
 func SchemaDocuments() map[string]any {
 	return map[string]any{
+		"extension-config-summary": resourceSchema(map[string]any{
+			"route": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"},
+			"permission": map[string]any{"type": "string"}, "schema": map[string]any{"type": "string"},
+			"secret_fields": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+			"status":        map[string]any{"type": "string", "enum": []any{"not_configured", "configured", "error"}},
+		}, []string{"route", "label", "permission", "status"}),
 		"extension-resource": resourceSchema(map[string]any{
 			"id": map[string]any{"type": "string"}, "name": map[string]any{"type": "string"},
 			"kind":    map[string]any{"type": "string", "enum": []any{"module", "plugin"}},
 			"state":   map[string]any{"type": "string", "enum": []any{"enabled", "disabled"}},
 			"message": map[string]any{"type": "string"},
+			"version": map[string]any{"type": "string"},
+			"config":  map[string]any{"$ref": "#/components/schemas/ExtensionConfigSummary"},
 		}, []string{"id", "name", "kind", "state"}),
 		"demo-resource": resourceSchema(map[string]any{
 			"id": map[string]any{"type": "string"}, "name": map[string]any{"type": "string"},

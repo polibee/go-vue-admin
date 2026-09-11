@@ -1,0 +1,38 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "label": {
+      "type": "string"
+    },
+    "permission": {
+      "type": "string"
+    },
+    "route": {
+      "type": "string"
+    },
+    "schema": {
+      "type": "string"
+    },
+    "secret_fields": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "not_configured",
+        "configured",
+        "error"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "route",
+    "label",
+    "permission",
+    "status"
+  ],
+  "type": "object"
+}

@@ -44,11 +44,13 @@ export interface DemoResource {
 }
 
 export interface ExtensionResource {
+  config?: ExtensionConfigSummary
   id: string
   kind: "module" | "plugin"
   message?: string
   name: string
   state: "enabled" | "disabled"
+  version?: string
 }
 
 export interface MediaResource {
@@ -90,4 +92,13 @@ export interface UserResource {
   id: string
   name: string
   role_ids: string[]
+}
+
+export interface ExtensionConfigSummary {
+  label: string
+  permission: string
+  route: string
+  schema?: string
+  secret_fields?: string[]
+  status: "not_configured" | "configured" | "error"
 }

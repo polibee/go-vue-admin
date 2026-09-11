@@ -22,16 +22,28 @@ type ExtensionController struct {
 }
 
 type extensionRecord struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Kind  string `json:"kind"`
-	State string `json:"state"`
+	ID      string                  `json:"id"`
+	Name    string                  `json:"name"`
+	Kind    string                  `json:"kind"`
+	State   string                  `json:"state"`
+	Version string                  `json:"version,omitempty"`
+	Config  *extensionConfigSummary `json:"config,omitempty"`
+	Message string                  `json:"message,omitempty"`
+}
+
+type extensionConfigSummary struct {
+	Route        string   `json:"route"`
+	Label        string   `json:"label"`
+	Permission   string   `json:"permission"`
+	Schema       string   `json:"schema,omitempty"`
+	SecretFields []string `json:"secret_fields,omitempty"`
+	Status       string   `json:"status"`
 }
 
 type builtinExamplePlugin struct{}
 
 func (builtinExamplePlugin) Manifest() plugin.PluginManifest {
-	return plugin.PluginManifest{ID: "example-plugin", Name: "示例插件", Version: "1.0.0", Runtime: plugin.RuntimeBuiltin, UICompatibility: plugin.UICompatibilityShadcnVue}
+	return plugin.PluginManifest{ID: "example-plugin", Name: "示例插件", Version: "1.0.0", Runtime: plugin.RuntimeBuiltin, UICompatibility: plugin.UICompatibilityShadcnVue, Config: &plugin.ConfigDeclaration{Route: "/admin/plugins/example-plugin/config", Label: "示例插件配置", Permission: "plugins.configure", Schema: "example-plugin-config", SecretFields: []string{"apiKey"}}}
 }
 func (builtinExamplePlugin) Enable() error  { return nil }
 func (builtinExamplePlugin) Disable() error { return nil }
@@ -93,7 +105,7 @@ func (c *ExtensionController) Plugins(ctx http.Context) http.Response {
 	}
 	items := []extensionRecord{}
 	for _, item := range c.plugins.List() {
-		items = append(items, extensionRecord{ID: item.Manifest.ID, Name: item.Manifest.Name, Kind: "plugin", State: string(item.State)})
+		items = append(items, c.pluginRecord(item))
 	}
 	return ctx.Response().Success().Json(response.Success(items, response.Meta{}))
 }
@@ -103,7 +115,16 @@ func (c *ExtensionController) ModuleShow(ctx http.Context) http.Response {
 }
 
 func (c *ExtensionController) PluginShow(ctx http.Context) http.Response {
-	return c.showCatalogItem(ctx, "plugin")
+	if denied := c.authorize(ctx, "dashboard.view"); denied != nil {
+		return denied
+	}
+	id := ctx.Request().Route("id")
+	for _, item := range c.plugins.List() {
+		if item.Manifest.ID == id {
+			return ctx.Response().Success().Json(response.Success(c.pluginRecord(item), response.Meta{}))
+		}
+	}
+	return ctx.Response().Status(404).Json(apierrors.New("EXTENSION_NOT_FOUND", "插件不存在", nil))
 }
 
 func (c *ExtensionController) catalog() []extensionRecord {
@@ -112,9 +133,18 @@ func (c *ExtensionController) catalog() []extensionRecord {
 		items = append(items, extensionRecord{ID: id, Name: "示例模块", Kind: "module", State: "enabled"})
 	}
 	for _, item := range c.plugins.List() {
-		items = append(items, extensionRecord{ID: item.Manifest.ID, Name: item.Manifest.Name, Kind: "plugin", State: string(item.State)})
+		items = append(items, c.pluginRecord(item))
 	}
 	return items
+}
+
+func (c *ExtensionController) pluginRecord(item plugin.PluginInfo) extensionRecord {
+	var config *extensionConfigSummary
+	if item.Manifest.Config != nil {
+		declaration := item.Manifest.Config
+		config = &extensionConfigSummary{Route: declaration.Route, Label: declaration.Label, Permission: declaration.Permission, Schema: declaration.Schema, SecretFields: append([]string(nil), declaration.SecretFields...), Status: "not_configured"}
+	}
+	return extensionRecord{ID: item.Manifest.ID, Name: item.Manifest.Name, Kind: "plugin", State: string(item.State), Version: item.Manifest.Version, Config: config}
 }
 
 func (c *ExtensionController) Update(ctx http.Context) http.Response {
@@ -179,6 +209,17 @@ func (c *ExtensionController) showCatalogItem(ctx http.Context, expectedKind str
 	}
 	if expectedKind != "" && kind != expectedKind {
 		return ctx.Response().Status(404).Json(apierrors.New("EXTENSION_NOT_FOUND", "模块或插件不存在", nil))
+	}
+	if kind == "plugin" {
+		var item extensionRecord
+		for _, pluginInfo := range c.plugins.List() {
+			if pluginInfo.Manifest.ID == id {
+				item = c.pluginRecord(pluginInfo)
+				break
+			}
+		}
+		item.Message = message
+		return ctx.Response().Success().Json(response.Success(item, response.Meta{}))
 	}
 	return ctx.Response().Success().Json(response.Success(map[string]string{"id": id, "name": name, "kind": kind, "state": "enabled", "message": message}, response.Meta{}))
 }

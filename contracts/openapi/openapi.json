@@ -90,9 +90,50 @@
         ],
         "type": "object"
       },
+      "ExtensionConfigSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "permission": {
+            "type": "string"
+          },
+          "route": {
+            "type": "string"
+          },
+          "schema": {
+            "type": "string"
+          },
+          "secret_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "not_configured",
+              "configured",
+              "error"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "route",
+          "label",
+          "permission",
+          "status"
+        ],
+        "type": "object"
+      },
       "ExtensionResource": {
         "additionalProperties": false,
         "properties": {
+          "config": {
+            "$ref": "#/components/schemas/ExtensionConfigSummary"
+          },
           "id": {
             "type": "string"
           },
@@ -114,6 +155,9 @@
               "enabled",
               "disabled"
             ],
+            "type": "string"
+          },
+          "version": {
             "type": "string"
           }
         },
