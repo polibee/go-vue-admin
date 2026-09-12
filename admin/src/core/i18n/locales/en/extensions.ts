@@ -1,5 +1,6 @@
 export default {
   extensions: {
+    registered: 'Registered extension', loading: 'Loading…', viewResource: 'View extension resource', unableToLoad: 'Unable to load',
     moduleTitle: 'Business modules', moduleDescription: 'Business modules provide product capabilities and resources.',
     pluginTitle: 'Platform plugins', pluginDescription: 'Platform plugins provide pluggable platform capabilities and runtime extensions.',
     status: 'Status', enabled: 'Enabled', disabled: 'Disabled', version: 'Version',

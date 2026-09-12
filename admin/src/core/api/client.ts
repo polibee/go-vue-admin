@@ -2,6 +2,8 @@ export interface ApiClient {
   request<T>(path: string, options?: RequestInit): Promise<T>
 }
 
+import { i18n } from '@/core/i18n'
+
 export class ApiError extends Error {
   readonly status: number
   readonly code?: string
@@ -58,9 +60,9 @@ export function createApiClient(fetchImpl: typeof fetch = fetch, baseUrl = apiBa
         headers.set('Accept', 'application/json')
         if (!['GET', 'HEAD', 'OPTIONS'].includes((options.method ?? 'GET').toUpperCase()) && !headers.has('X-CSRF-TOKEN')) {
           const csrfResponse = await fetchImpl(`${requestBaseUrl}/api/csrf`, { credentials: 'include', headers: { Accept: 'application/json' } })
-          if (!csrfResponse.ok) throw new ApiError('无法获取安全令牌，请重新登录', csrfResponse.status)
+          if (!csrfResponse.ok) throw new ApiError(i18n.global.t('apiErrors.csrfUnavailable'), csrfResponse.status)
           const csrf = await csrfResponse.json()
-          if (!csrf?.data?.token) throw new ApiError('安全令牌无效，请重新登录', 419)
+          if (!csrf?.data?.token) throw new ApiError(i18n.global.t('apiErrors.csrfInvalid'), 419)
           headers.set('X-CSRF-TOKEN', csrf.data.token)
         }
         response = await fetchImpl(`${requestBaseUrl}${path}`, {
@@ -68,14 +70,15 @@ export function createApiClient(fetchImpl: typeof fetch = fetch, baseUrl = apiBa
           credentials: 'include',
           headers,
         })
-      } catch {
-        throw new ApiError('无法连接后端服务，请确认 API 端口已启动。', 0, 'NETWORK_ERROR')
+      } catch (cause) {
+        if (cause instanceof ApiError) throw cause
+        throw new ApiError(i18n.global.t('apiErrors.network'), 0, 'NETWORK_ERROR')
       }
 
       const payload = await response.json().catch(() => null)
       if (!response.ok) {
         throw new ApiError(
-          payload?.error?.message ?? '请求失败，请稍后重试',
+          payload?.error?.message ?? i18n.global.t('apiErrors.requestFailed'),
           response.status,
           payload?.error?.code,
         )

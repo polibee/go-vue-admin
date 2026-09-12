@@ -97,7 +97,7 @@ async function copyCredential(field: 'email' | 'password') {
             <div class="flex flex-col gap-2">
               <Label for="bootstrap-email">{{ t('login.account') }}</Label>
               <div class="flex gap-2">
-                <Input id="bootstrap-email" :model-value="bootstrapCredentials.email" readonly aria-label="开发账号" />
+                <Input id="bootstrap-email" :model-value="bootstrapCredentials.email" readonly :aria-label="t('login.account')" />
                 <Button type="button" variant="outline" size="icon" :aria-label="copiedField === 'email' ? t('login.accountCopied') : t('login.copyAccount')" @click="copyCredential('email')">
                   <Check v-if="copiedField === 'email'" data-icon="inline-start" />
                   <Copy v-else data-icon="inline-start" />
@@ -107,7 +107,7 @@ async function copyCredential(field: 'email' | 'password') {
             <div class="flex flex-col gap-2">
               <Label for="bootstrap-password">{{ t('login.password') }}</Label>
               <div class="flex gap-2">
-                <Input id="bootstrap-password" :model-value="bootstrapCredentials.password" readonly aria-label="开发密码" />
+                <Input id="bootstrap-password" :model-value="bootstrapCredentials.password" readonly :aria-label="t('login.password')" />
                 <Button type="button" variant="outline" size="icon" :aria-label="copiedField === 'password' ? t('login.passwordCopied') : t('login.copyPassword')" @click="copyCredential('password')">
                   <Check v-if="copiedField === 'password'" data-icon="inline-start" />
                   <Copy v-else data-icon="inline-start" />
@@ -135,7 +135,7 @@ async function copyCredential(field: 'email' | 'password') {
               <FormItem>
                 <FormLabel>{{ t('login.password') }}</FormLabel>
                 <div class="relative">
-                  <FormControl><Input :type="showPassword ? 'text' : 'password'" autocomplete="current-password" placeholder="请输入密码" class="pr-10" v-bind="componentField" /></FormControl>
+                  <FormControl><Input :type="showPassword ? 'text' : 'password'" autocomplete="current-password" :placeholder="t('login.passwordPlaceholder')" class="pr-10" v-bind="componentField" /></FormControl>
                   <Button type="button" variant="ghost" size="icon" class="absolute right-0 top-0 h-full px-3" :aria-label="showPassword ? t('login.hidePassword') : t('login.showPassword')" @click="showPassword = !showPassword">
                     <EyeOff v-if="showPassword" data-icon="inline-start" />
                     <Eye v-else data-icon="inline-start" />

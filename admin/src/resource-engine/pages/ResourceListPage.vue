@@ -202,7 +202,7 @@ onMounted(() => void load())
               :model-value="filters[String(filter.field)] ?? 'all'"
               @update:model-value="setFilter(String(filter.field), String($event))"
             >
-              <SelectTrigger :aria-label="`${filter.label}筛选`" class="w-36"><SelectValue :placeholder="filter.label" /></SelectTrigger>
+              <SelectTrigger :aria-label="t('resources.filterAria', { label: filter.label })" class="w-36"><SelectValue :placeholder="filter.label" /></SelectTrigger>
               <SelectContent>
                 <SelectGroup>
                   <SelectItem v-for="option in filter.options ?? []" :key="option.value || 'all'" :value="option.value || 'all'">{{ option.label }}</SelectItem>
@@ -218,9 +218,9 @@ onMounted(() => void load())
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead class="w-12"><Checkbox :model-value="allVisibleSelected" aria-label="选择当前页" @update:model-value="toggleAll(Boolean($event))" /></TableHead>
+                <TableHead class="w-12"><Checkbox :model-value="allVisibleSelected" :aria-label="t('resources.selectPage')" @update:model-value="toggleAll(Boolean($event))" /></TableHead>
                 <TableHead v-for="column in definition.columns ?? []" :key="String(column.key)">
-                  <Button v-if="column.sortable" variant="ghost" size="sm" :aria-label="`按${column.label}排序`" @click="toggleSort(String(column.key))">
+                  <Button v-if="column.sortable" variant="ghost" size="sm" :aria-label="t('resources.sortBy', { label: column.label })" @click="toggleSort(String(column.key))">
                     {{ column.label }}
                     <component :is="sortIcon(String(column.key))" data-icon="inline-end" />
                   </Button>
@@ -233,12 +233,12 @@ onMounted(() => void load())
               <TableRow v-if="loading"><TableCell :colspan="(columns.length || 1) + 2">{{ t('resources.loading') }}</TableCell></TableRow>
               <TableRow v-else-if="!table.getRowModel().rows.length"><TableCell :colspan="(columns.length || 1) + 2"><Empty class="border-0"><EmptyHeader><EmptyTitle>{{ t('resources.noData') }}</EmptyTitle><EmptyDescription>{{ t('resources.features') }}</EmptyDescription></EmptyHeader></Empty></TableCell></TableRow>
               <TableRow v-for="row in table.getRowModel().rows" v-else :key="row.id">
-                <TableCell><Checkbox :model-value="isSelected(row.original)" :aria-label="`选择 ${idOf(row.original)}`" @update:model-value="toggleSelected(row.original, Boolean($event))" /></TableCell>
+                <TableCell><Checkbox :model-value="isSelected(row.original)" :aria-label="t('resources.select', { id: idOf(row.original) })" @update:model-value="toggleSelected(row.original, Boolean($event))" /></TableCell>
                 <TableCell v-for="cell in row.getAllCells()" :key="cell.id"><FlexRender :cell="cell" /></TableCell>
                 <TableCell class="flex gap-2">
-                  <Button variant="ghost" size="sm" @click="router.push(`/admin/resources/${resourceName}/${idOf(row.original)}`)">查看</Button>
-                  <Button v-if="context.can('update')" variant="ghost" size="sm" @click="router.push(`/admin/resources/${resourceName}/${idOf(row.original)}/edit`)">编辑</Button>
-                  <Button v-if="context.can('delete')" variant="ghost" size="sm" @click="openDelete(idOf(row.original))">删除</Button>
+                  <Button variant="ghost" size="sm" @click="router.push(`/admin/resources/${resourceName}/${idOf(row.original)}`)">{{ t('resources.view') }}</Button>
+                  <Button v-if="context.can('update')" variant="ghost" size="sm" @click="router.push(`/admin/resources/${resourceName}/${idOf(row.original)}/edit`)">{{ t('resources.edit') }}</Button>
+                  <Button v-if="context.can('delete')" variant="ghost" size="sm" @click="openDelete(idOf(row.original))">{{ t('resources.delete') }}</Button>
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -247,7 +247,7 @@ onMounted(() => void load())
         <Pagination v-if="pagination.totalPages > 1" v-model:page="page" :items-per-page="pagination.perPage" :total="pagination.total">
           <PaginationContent>
             <PaginationItem :value="Math.max(1, pagination.page - 1)"><PaginationPrevious /></PaginationItem>
-            <PaginationItem :value="pagination.page"><span class="px-3 text-sm">第 {{ pagination.page }} / {{ pagination.totalPages }} 页</span></PaginationItem>
+            <PaginationItem :value="pagination.page"><span class="px-3 text-sm">{{ t('resources.page', { page: pagination.page, total: pagination.totalPages }) }}</span></PaginationItem>
             <PaginationItem :value="Math.min(pagination.totalPages, pagination.page + 1)"><PaginationNext /></PaginationItem>
           </PaginationContent>
         </Pagination>
@@ -256,16 +256,16 @@ onMounted(() => void load())
 
     <AlertDialog v-model:open="deleteDialogOpen">
       <AlertDialogContent>
-        <AlertDialogHeader><AlertDialogTitle>确认删除记录？</AlertDialogTitle><AlertDialogDescription>删除后无法恢复，请确认你要删除当前记录。</AlertDialogDescription></AlertDialogHeader>
-        <AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction :disabled="deleting" variant="destructive" @click="confirmDelete">确认删除</AlertDialogAction></AlertDialogFooter>
+        <AlertDialogHeader><AlertDialogTitle>{{ t('resources.confirmDelete') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resources.deleteDescription') }}</AlertDialogDescription></AlertDialogHeader>
+        <AlertDialogFooter><AlertDialogCancel>{{ t('resources.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="deleting" variant="destructive" @click="confirmDelete">{{ t('resources.confirm') }}</AlertDialogAction></AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
     <AlertDialog v-model:open="bulkDeleteDialogOpen">
       <AlertDialogContent>
-        <AlertDialogHeader><AlertDialogTitle>确认批量删除？</AlertDialogTitle><AlertDialogDescription>将删除 {{ selectedIds.length }} 条记录，删除后无法恢复。</AlertDialogDescription></AlertDialogHeader>
-        <AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction :disabled="deleting" variant="destructive" @click="confirmBulkDelete">确认删除</AlertDialogAction></AlertDialogFooter>
+        <AlertDialogHeader><AlertDialogTitle>{{ t('resources.confirmBulkDelete') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resources.bulkDescription', { count: selectedIds.length }) }}</AlertDialogDescription></AlertDialogHeader>
+        <AlertDialogFooter><AlertDialogCancel>{{ t('resources.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="deleting" variant="destructive" @click="confirmBulkDelete">{{ t('resources.confirm') }}</AlertDialogAction></AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   </section>
-  <Alert v-else variant="destructive"><AlertTitle>资源不存在</AlertTitle><AlertDescription>未注册资源：{{ resourceName }}</AlertDescription></Alert>
+  <Alert v-else variant="destructive"><AlertTitle>{{ t('resources.notFound') }}</AlertTitle><AlertDescription>{{ t('resources.notRegistered', { name: resourceName }) }}</AlertDescription></Alert>
 </template>

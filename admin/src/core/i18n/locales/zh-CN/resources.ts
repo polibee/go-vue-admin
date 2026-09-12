@@ -1,4 +1,5 @@
 export default { resources: {
+  filterAria: '{label}筛选', selectPage: '选择当前页', sortBy: '按{label}排序', select: '选择 {id}', required: '{label}不能为空',
   loading: '加载中…', loadFailed: '资源加载失败', created: '记录已创建', saved: '记录已保存', deleted: '记录已删除', bulkDeleted: '选中记录已删除',
   createFailed: '创建失败', saveFailed: '保存失败', deleteFailed: '删除失败', bulkDeleteFailed: '批量删除失败', notFound: '资源不存在', notRegistered: '未注册资源：{name}',
   create: '新建', edit: '编辑', view: '查看', delete: '删除', bulkDelete: '批量删除', actions: '操作', records: '记录', noData: '暂无数据',

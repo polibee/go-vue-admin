@@ -4,6 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { apiClient } from '@/core/api/client'
 import { createGeneratedApiClient, type ExtensionResource } from '@/generated/api'
+import { useI18n } from 'vue-i18n'
 import ModuleCatalog from './components/ModuleCatalog.vue'
 import PluginCatalog from './components/PluginCatalog.vue'
 
@@ -13,6 +14,7 @@ const plugins = ref<ExtensionResource[]>([])
 const activeTab = ref('modules')
 const error = ref('')
 const busy = ref('')
+const { t } = useI18n()
 
 async function load() {
   error.value = ''
@@ -21,7 +23,7 @@ async function load() {
     modules.value = moduleResponse.data
     plugins.value = pluginResponse.data
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : '模块和插件列表加载失败'
+    error.value = cause instanceof Error ? cause.message : t('extensions.loadFailed')
   }
 }
 
@@ -31,7 +33,7 @@ async function setPluginState(item: ExtensionResource, state: 'enabled' | 'disab
   try {
     plugins.value = (await client.setPluginState(item.id, state)).data
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : '插件状态更新失败'
+    error.value = cause instanceof Error ? cause.message : t('extensions.actionFailed')
   } finally {
     busy.value = ''
   }
@@ -43,17 +45,17 @@ onMounted(load)
 <template>
   <section class="flex flex-col gap-6">
     <div>
-      <h1 class="text-2xl font-semibold tracking-tight">模块与插件</h1>
-      <p class="text-sm text-muted-foreground">业务模块负责产品能力，平台插件负责可插拔基础能力。</p>
+      <h1 class="text-2xl font-semibold tracking-tight">{{ t('extensions.moduleTitle') }} & {{ t('extensions.pluginTitle') }}</h1>
+      <p class="text-sm text-muted-foreground">{{ t('extensions.moduleDescription') }} {{ t('extensions.pluginDescription') }}</p>
     </div>
     <Alert v-if="error" variant="destructive">
-      <AlertTitle>操作失败</AlertTitle>
+      <AlertTitle>{{ t('extensions.actionFailed') }}</AlertTitle>
       <AlertDescription>{{ error }}</AlertDescription>
     </Alert>
     <Tabs v-model="activeTab" class="gap-6">
       <TabsList>
-        <TabsTrigger value="modules">业务模块</TabsTrigger>
-        <TabsTrigger value="plugins">平台插件</TabsTrigger>
+        <TabsTrigger value="modules">{{ t('extensions.moduleTitle') }}</TabsTrigger>
+        <TabsTrigger value="plugins">{{ t('extensions.pluginTitle') }}</TabsTrigger>
       </TabsList>
       <TabsContent value="modules">
         <ModuleCatalog :items="modules" />

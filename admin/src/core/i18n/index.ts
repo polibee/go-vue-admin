@@ -28,7 +28,7 @@ export type SupportedLocale = (typeof supportedLocales)[number]
 const localeStorageKey = 'go-vue-admin.locale'
 
 function initialLocale(): SupportedLocale {
-  const stored = window.localStorage.getItem(localeStorageKey)
+  const stored = typeof window !== 'undefined' ? window.localStorage.getItem(localeStorageKey) : null
   return stored === 'en' || stored === 'zh-CN' ? stored : 'zh-CN'
 }
 
@@ -44,6 +44,6 @@ export const i18n = createI18n({
 
 export function setLocale(locale: SupportedLocale): void {
   i18n.global.locale.value = locale
-  document.documentElement.lang = locale
-  window.localStorage.setItem(localeStorageKey, locale)
+  if (typeof document !== 'undefined') document.documentElement.lang = locale
+  if (typeof window !== 'undefined') window.localStorage.setItem(localeStorageKey, locale)
 }

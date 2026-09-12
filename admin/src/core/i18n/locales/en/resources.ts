@@ -1,4 +1,5 @@
 export default { resources: {
+  filterAria: 'Filter by {label}', selectPage: 'Select current page', sortBy: 'Sort by {label}', select: 'Select {id}', required: '{label} is required',
   loading: 'Loading…', loadFailed: 'Resource could not be loaded', created: 'Record created', saved: 'Record saved', deleted: 'Record deleted', bulkDeleted: 'Selected records deleted',
   createFailed: 'Create failed', saveFailed: 'Save failed', deleteFailed: 'Delete failed', bulkDeleteFailed: 'Bulk delete failed', notFound: 'Resource not found', notRegistered: 'Unregistered resource: {name}',
   create: 'New', edit: 'Edit', view: 'View', delete: 'Delete', bulkDelete: 'Delete selected', actions: 'Actions', records: 'Records', noData: 'No data',

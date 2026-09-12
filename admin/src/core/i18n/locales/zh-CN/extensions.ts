@@ -1,5 +1,6 @@
 export default {
   extensions: {
+    registered: '已注册的扩展功能', loading: '加载中…', viewResource: '查看扩展资源', unableToLoad: '无法加载',
     moduleTitle: '业务模块', moduleDescription: '业务模块负责产品能力和资源功能。',
     pluginTitle: '平台插件', pluginDescription: '平台插件负责可插拔的基础能力和运行时扩展。',
     status: '状态', enabled: '已启用', disabled: '已停用', version: '版本',

@@ -1,4 +1,5 @@
 export default {
+  apiErrors: { csrfUnavailable: 'Unable to obtain a security token. Please sign in again.', csrfInvalid: 'The security token is invalid. Please sign in again.', network: 'Unable to connect to the backend. Confirm that the API port is running.', requestFailed: 'Request failed. Please try again later.' },
   app: {
     title: 'Go Vue Admin', platform: 'Platform', admin: 'Admin Console', login: 'Admin Console Login',
     logout: 'Log out', dashboard: 'Dashboard', settings: 'Settings', media: 'Media', audit: 'Audit log',

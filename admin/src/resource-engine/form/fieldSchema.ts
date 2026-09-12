@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import type { ResourceField } from '../core/ResourceDefinition'
+import { i18n } from '@/core/i18n'
 
 export function createResourceSchema<T extends object>(fields: readonly ResourceField<T>[]) {
   const shape: Record<string, z.ZodTypeAny> = {}
@@ -20,7 +21,7 @@ export function createResourceSchema<T extends object>(fields: readonly Resource
     }
 
     if (field.required && field.type !== 'checkbox' && field.type !== 'switch') {
-      schema = schema.refine((value) => String(value).trim().length > 0, `${field.label}不能为空`)
+      schema = schema.refine((value) => String(value).trim().length > 0, i18n.global.t('resources.required', { label: field.label }))
     }
 
     shape[String(field.name)] = schema
