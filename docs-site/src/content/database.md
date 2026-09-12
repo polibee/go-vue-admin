@@ -4,6 +4,8 @@
 
 资源模块统一使用 GORM。数据库方言通过 DB_CONNECTION 选择：
 
+支持分项环境变量，也支持完整的 `DB_DSN`。切换到 Supabase 时使用 PostgreSQL 的连接池连接串并启用 TLS。
+
     RESOURCE_PROVIDER=database
     DB_CONNECTION=mysql
 

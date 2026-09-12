@@ -27,9 +27,12 @@ func (p *ResourceServiceProvider) Register(_ foundation.Application) {
 	host := fmt.Sprint(config.Env("DB_HOST", "127.0.0.1"))
 	port := fmt.Sprint(config.Env("DB_PORT", "3306"))
 	database := fmt.Sprint(config.Env("DB_DATABASE"))
-	dsn := resource.MySQLResourceDSN(username, password, host, port, database)
-	if driver == resource.ResourceDatabaseDriverPostgres {
-		dsn = resource.PostgresResourceDSN(username, password, host, port, database)
+	dsn := fmt.Sprint(config.Env("DB_DSN"))
+	if dsn == "" {
+		dsn = resource.MySQLResourceDSN(username, password, host, port, database)
+		if driver == resource.ResourceDatabaseDriverPostgres {
+			dsn = resource.PostgresResourceDSNWithSSLMode(username, password, host, port, database, fmt.Sprint(config.Env("DB_SSLMODE", "disable")))
+		}
 	}
 	_ = resource.ConfigureApplicationResourceDatabaseWithDriver(driver, dsn, resource.GormDatabaseOptions{MaxIdleConns: 10, MaxOpenConns: 100})
 }

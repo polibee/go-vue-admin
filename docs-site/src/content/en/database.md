@@ -4,6 +4,12 @@
 
 Set RESOURCE_PROVIDER=database to use real resource storage. Set DB_CONNECTION=mysql or postgres to select the GORM driver. RESOURCE_PROVIDER=mysql remains a compatibility alias.
 
+The application-owned GORM pool accepts either discrete database settings or a complete `DB_DSN`. For Supabase, select PostgreSQL and use its pooler connection string with TLS enabled:
+
+    RESOURCE_PROVIDER=database
+    DB_CONNECTION=postgres
+    DB_DSN=postgresql://postgres.<project-ref>:<password>@<pooler-host>:6543/postgres?sslmode=require
+
 The application owns one GORM pool and closes it during shutdown. Modules receive the shared pool and must not create independent connections.
 
 ## Example

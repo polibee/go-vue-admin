@@ -148,7 +148,12 @@ func MySQLResourceDSN(username, password, host, port, database string) string {
 }
 
 func PostgresResourceDSN(username, password, host, port, database string) string {
-	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=UTC", host, port, username, password, database)
+	return PostgresResourceDSNWithSSLMode(username, password, host, port, database, "disable")
+}
+
+func PostgresResourceDSNWithSSLMode(username, password, host, port, database, sslMode string) string {
+	if strings.TrimSpace(sslMode) == "" { sslMode = "disable" }
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s TimeZone=UTC", host, port, username, password, database, sslMode)
 }
 
 func (database *GormResourceDatabase) Close() error {
