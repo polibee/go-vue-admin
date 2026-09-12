@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -27,12 +28,13 @@ const record = ref<Record<string, unknown> | null>(null)
 const error = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
 const deleting = ref(false)
+const { t } = useI18n()
 
 onMounted(async () => {
   try {
     if (provider.value) record.value = await provider.value.get(id.value) as Record<string, unknown>
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : '记录加载失败'
+    error.value = cause instanceof Error ? cause.message : t('resources.loadFailed')
   }
 })
 
@@ -41,11 +43,11 @@ async function deleteRecord() {
   deleting.value = true
   try {
     await provider.value.delete(id.value)
-    toast.success('记录已删除')
+    toast.success(t('resources.deleted'))
     deleteDialogOpen.value = false
     await router.replace(`/admin/resources/${name.value}`)
   } catch (cause) {
-    toast.error(cause instanceof Error ? cause.message : '删除失败')
+    toast.error(cause instanceof Error ? cause.message : t('resources.deleteFailed'))
   } finally {
     deleting.value = false
   }
@@ -64,5 +66,5 @@ async function deleteRecord() {
       </AlertDialogContent>
     </AlertDialog>
   </section>
-  <Alert v-else variant="destructive"><AlertTitle>资源不存在</AlertTitle><AlertDescription>未注册资源：{{ name }}</AlertDescription></Alert>
+  <Alert v-else variant="destructive"><AlertTitle>{{ t('resources.notFound') }}</AlertTitle><AlertDescription>{{ t('resources.notRegistered', { name }) }}</AlertDescription></Alert>
 </template>
