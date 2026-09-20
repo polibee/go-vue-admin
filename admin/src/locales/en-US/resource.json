@@ -13,5 +13,6 @@
   "resourceNotFound": "Resource not found",
   "detail": "Resource detail",
   "detailDescription": "View the detailed fields for this resource record.",
-  "back": "Back to list"
+  "back": "Back to list",
+  "perPage": "{count} / page"
 }

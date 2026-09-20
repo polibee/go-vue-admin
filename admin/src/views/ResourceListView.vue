@@ -9,6 +9,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/u
 import { Input } from '@/components/ui/input'
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
@@ -29,6 +30,7 @@ const meta = ref<ResourceMeta>({ page: 1, per_page: 10, total: 0, last_page: 1 }
 const search = ref('')
 const sort = ref('id')
 const direction = ref<'asc' | 'desc'>('desc')
+const pageSize = ref('10')
 const loading = ref(true)
 const error = ref('')
 
@@ -52,7 +54,7 @@ async function loadRows(page = 1) {
   loading.value = true
   error.value = ''
   try {
-    const params = new URLSearchParams({ page: String(page), per_page: String(meta.value.per_page), sort: sort.value, dir: direction.value })
+    const params = new URLSearchParams({ page: String(page), per_page: pageSize.value, sort: sort.value, dir: direction.value })
     if (search.value.trim()) params.set('search', search.value.trim())
     const response = await apiFetch<ResourceListResponse>(`/api/v1/admin/resources/${resourceName.value}?${params}`, {}, auth.token)
     rows.value = response.data
@@ -66,6 +68,11 @@ async function loadRows(page = 1) {
 }
 
 function submitSearch() { void loadRows(1) }
+function changePageSize(value: unknown) {
+  pageSize.value = String(value)
+  meta.value.per_page = Number(pageSize.value)
+  void loadRows(1)
+}
 function sortBy(column: ResourceColumn) {
   if (!column.sortable) return
   if (sort.value === column.name) direction.value = direction.value === 'asc' ? 'desc' : 'asc'
@@ -113,7 +120,7 @@ watch(resourceName, () => { void loadRows(1) })
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
         <Empty v-else-if="!rows.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
         <Table v-else><TableHeader><TableRow><TableHead v-for="column in currentManifest?.columns || []" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-for="column in currentManifest?.columns || []" :key="column.name">{{ displayValue(row[column.name]) }}</TableCell></TableRow></TableBody></Table>
-        <div v-if="!loading && meta.total > 0" class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between"><p class="text-sm text-muted-foreground">{{ t('resource.page', { page: meta.page }) }}</p><Pagination v-model:page="meta.page" :items-per-page="meta.per_page" :total="meta.total" @update:page="loadRows"><PaginationContent v-slot="{ items }"><PaginationPrevious /><template v-for="(item, index) in items" :key="index"><PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === meta.page">{{ item.value }}</PaginationItem></template><PaginationNext /></PaginationContent></Pagination></div>
+        <div v-if="!loading && meta.total > 0" class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between"><p class="text-sm text-muted-foreground">{{ t('resource.page', { page: meta.page }) }}</p><div class="flex items-center gap-2"><Select :model-value="pageSize" @update:model-value="changePageSize"><SelectTrigger class="w-24"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="10">{{ t('resource.perPage', { count: 10 }) }}</SelectItem><SelectItem value="20">{{ t('resource.perPage', { count: 20 }) }}</SelectItem><SelectItem value="50">{{ t('resource.perPage', { count: 50 }) }}</SelectItem></SelectContent></Select></div><Pagination v-model:page="meta.page" :items-per-page="meta.per_page" :total="meta.total" @update:page="loadRows"><PaginationContent v-slot="{ items }"><PaginationPrevious /><template v-for="(item, index) in items" :key="index"><PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === meta.page">{{ item.value }}</PaginationItem></template><PaginationNext /></PaginationContent></Pagination></div>
       </CardContent>
     </Card>
   </div>
