@@ -1,0 +1,13 @@
+{
+  "unknown": "The operation failed. Please try again later.",
+  "VALIDATION_ERROR": "The request parameters are invalid.",
+  "AUTH_INVALID_CREDENTIALS": "The email or password is incorrect.",
+  "AUTH_UNAUTHORIZED": "Your session has expired. Please sign in again.",
+  "RBAC_FORBIDDEN": "You do not have permission to perform this action.",
+  "RBAC_ROLE_NOT_FOUND": "The role was not found.",
+  "RBAC_PERMISSION_NOT_FOUND": "The permission was not found.",
+  "RBAC_USER_NOT_FOUND": "The user was not found.",
+  "RBAC_SYSTEM_ROLE": "This system role cannot be changed this way.",
+  "RBAC_LAST_ADMIN": "The last active administrator cannot be removed.",
+  "INTERNAL_ERROR": "The service is temporarily unavailable. Please try again later."
+}

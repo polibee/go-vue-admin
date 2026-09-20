@@ -1,0 +1,8 @@
+{
+  "errorTitle": "Unable to load page",
+  "errorDescription": "This page is temporarily unavailable. Return to the dashboard and try again.",
+  "backHome": "Back to dashboard",
+  "loading": "Loading…",
+  "emptyTitle": "No data",
+  "emptyDescription": "There is no content to display yet."
+}

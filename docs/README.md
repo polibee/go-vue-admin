@@ -1,0 +1,33 @@
+# Go Vue Admin 开发文档
+
+本项目是基于 **Goravel v1.18 + Vue 3 + shadcn-vue** 的通用后台管理平台。项目只建设后台平台能力，不重复实现 Goravel 已经提供的 Web 框架能力。
+
+## 阅读顺序
+
+- [architecture.md](./architecture.md)：总体架构和依赖方向
+- [goravel-boundaries.md](./goravel-boundaries.md)：Goravel 能力边界
+- [module-system.md](./module-system.md)：模块组织和注册
+- [resource-engine.md](./resource-engine.md)：标准 CRUD 资源
+- [frontend.md](./frontend.md)：Vue Admin 和 shadcn-vue 规范
+- [i18n.md](./i18n.md)：中文、英文和模块化语言包
+- [openapi.md](./openapi.md)：前后端 API 契约
+- [generator.md](./generator.md)：代码生成器
+- [plugin-system.md](./plugin-system.md)：插件系统设计预留
+- [security.md](./security.md)：认证、授权和敏感数据
+- [authentication.md](./authentication.md)：JWT 和 Refresh Token 认证
+- [integrations.md](./integrations.md)：Goravel 驱动和扩展包集成
+- [testing.md](./testing.md)：测试和验收
+- [roadmap.md](./roadmap.md)：分阶段路线图
+
+## 核心原则
+
+```text
+Goravel 有的能力不重复实现
+标准 CRUD 优先使用 Resource
+复杂业务使用普通 Vue 页面和 Goravel Service
+前端直接使用 shadcn-vue 官方组件
+生成代码与人工代码分离
+权限必须由后端最终裁决
+```
+
+第一阶段只要求：Goravel v1.18 基础工程、后台壳层、JWT 认证、RBAC、标准 Resource CRUD、OpenAPI、TypeScript Client、PostgreSQL、Redis 和基础审计。插件运行时、AI 生成、全局搜索、复杂 Dashboard、导入导出和数据库反向工程属于后续能力。

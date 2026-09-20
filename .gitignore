@@ -1,0 +1,25 @@
+# Go / backend
+backend/.env
+backend/storage/*.log
+backend/storage/logs/
+backend/storage/bin/
+backend/.gocache/
+backend/tmp/
+
+# Vue / frontend
+admin/node_modules/
+admin/dist/
+admin/.env
+admin/.env.*
+!admin/.env.example
+admin/storage/
+
+# Workspace and tooling
+.pnpm-store/
+.superpowers/
+.agents/
+.vscode/
+.idea/
+*.log
+.DS_Store
+

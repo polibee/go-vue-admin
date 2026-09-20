@@ -1,0 +1,13 @@
+{
+  "unknown": "操作失败，请稍后重试",
+  "VALIDATION_ERROR": "请求参数无效",
+  "AUTH_INVALID_CREDENTIALS": "账号或密码错误",
+  "AUTH_UNAUTHORIZED": "登录状态已失效，请重新登录",
+  "RBAC_FORBIDDEN": "你没有执行此操作的权限",
+  "RBAC_ROLE_NOT_FOUND": "角色不存在",
+  "RBAC_PERMISSION_NOT_FOUND": "权限不存在",
+  "RBAC_USER_NOT_FOUND": "用户不存在",
+  "RBAC_SYSTEM_ROLE": "系统角色不能执行此操作",
+  "RBAC_LAST_ADMIN": "不能移除最后一个有效管理员",
+  "INTERNAL_ERROR": "服务暂时不可用，请稍后重试"
+}

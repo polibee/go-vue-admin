@@ -1,0 +1,6 @@
+{
+  "appName": "Go Vue Admin",
+  "environmentReady": "管理端环境已准备就绪",
+  "environmentDescription": "Vue 3、TypeScript、Pinia、Vue Router、Vue I18n 与 shadcn-vue 官方组件配置已完成。",
+  "navigation": "导航"
+}
