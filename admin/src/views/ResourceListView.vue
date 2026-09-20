@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { RefreshCw, Search } from '@lucide/vue'
+import { ArrowDownUp, RefreshCw, Search } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -27,6 +27,8 @@ const manifests = ref<ResourceManifest[]>([])
 const rows = ref<Record<string, unknown>[]>([])
 const meta = ref<ResourceMeta>({ page: 1, per_page: 10, total: 0, last_page: 1 })
 const search = ref('')
+const sort = ref('id')
+const direction = ref<'asc' | 'desc'>('desc')
 const loading = ref(true)
 const error = ref('')
 
@@ -50,7 +52,7 @@ async function loadRows(page = 1) {
   loading.value = true
   error.value = ''
   try {
-    const params = new URLSearchParams({ page: String(page), per_page: String(meta.value.per_page), sort: 'id', dir: 'desc' })
+    const params = new URLSearchParams({ page: String(page), per_page: String(meta.value.per_page), sort: sort.value, dir: direction.value })
     if (search.value.trim()) params.set('search', search.value.trim())
     const response = await apiFetch<ResourceListResponse>(`/api/v1/admin/resources/${resourceName.value}?${params}`, {}, auth.token)
     rows.value = response.data
@@ -64,6 +66,12 @@ async function loadRows(page = 1) {
 }
 
 function submitSearch() { void loadRows(1) }
+function sortBy(column: ResourceColumn) {
+  if (!column.sortable) return
+  if (sort.value === column.name) direction.value = direction.value === 'asc' ? 'desc' : 'asc'
+  else { sort.value = column.name; direction.value = 'asc' }
+  void loadRows(1)
+}
 function selectResource(name: string) { void router.push(`/${name}`) }
 function displayValue(value: unknown) { return value === null || value === undefined ? '—' : String(value) }
 
@@ -104,7 +112,7 @@ watch(resourceName, () => { void loadRows(1) })
       <CardContent>
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
         <Empty v-else-if="!rows.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
-        <Table v-else><TableHeader><TableRow><TableHead v-for="column in currentManifest?.columns || []" :key="column.name">{{ column.label }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-for="column in currentManifest?.columns || []" :key="column.name">{{ displayValue(row[column.name]) }}</TableCell></TableRow></TableBody></Table>
+        <Table v-else><TableHeader><TableRow><TableHead v-for="column in currentManifest?.columns || []" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-for="column in currentManifest?.columns || []" :key="column.name">{{ displayValue(row[column.name]) }}</TableCell></TableRow></TableBody></Table>
         <div v-if="!loading && meta.total > 0" class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between"><p class="text-sm text-muted-foreground">{{ t('resource.page', { page: meta.page }) }}</p><Pagination v-model:page="meta.page" :items-per-page="meta.per_page" :total="meta.total" @update:page="loadRows"><PaginationContent v-slot="{ items }"><PaginationPrevious /><template v-for="(item, index) in items" :key="index"><PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === meta.page">{{ item.value }}</PaginationItem></template><PaginationNext /></PaginationContent></Pagination></div>
       </CardContent>
     </Card>
