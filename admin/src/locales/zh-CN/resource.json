@@ -10,5 +10,8 @@
   "page": "第 {page} 页",
   "previous": "上一页",
   "next": "下一页",
-  "resourceNotFound": "资源不存在"
+  "resourceNotFound": "资源不存在",
+  "detail": "资源详情",
+  "detailDescription": "查看资源记录的详细字段。",
+  "back": "返回列表"
 }

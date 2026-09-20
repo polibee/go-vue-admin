@@ -41,7 +41,7 @@ async function loadManifests() {
   if (!auth.token) return
   manifests.value = await apiFetch<ResourceManifest[]>('/api/v1/admin/resources', {}, auth.token)
   if (!currentManifest.value && manifests.value.length) {
-    await router.replace(`/resources/${manifests.value[0].name}`)
+    await router.replace(`/${manifests.value[0].name}`)
   }
 }
 
@@ -64,7 +64,7 @@ async function loadRows(page = 1) {
 }
 
 function submitSearch() { void loadRows(1) }
-function selectResource(name: string) { void router.push(`/resources/${name}`) }
+function selectResource(name: string) { void router.push(`/${name}`) }
 function displayValue(value: unknown) { return value === null || value === undefined ? '—' : String(value) }
 
 onMounted(async () => {
@@ -104,7 +104,7 @@ watch(resourceName, () => { void loadRows(1) })
       <CardContent>
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
         <Empty v-else-if="!rows.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
-        <Table v-else><TableHeader><TableRow><TableHead v-for="column in currentManifest?.columns || []" :key="column.name">{{ column.label }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)"><TableCell v-for="column in currentManifest?.columns || []" :key="column.name">{{ displayValue(row[column.name]) }}</TableCell></TableRow></TableBody></Table>
+        <Table v-else><TableHeader><TableRow><TableHead v-for="column in currentManifest?.columns || []" :key="column.name">{{ column.label }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-for="column in currentManifest?.columns || []" :key="column.name">{{ displayValue(row[column.name]) }}</TableCell></TableRow></TableBody></Table>
         <div v-if="!loading && meta.total > 0" class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between"><p class="text-sm text-muted-foreground">{{ t('resource.page', { page: meta.page }) }}</p><Pagination v-model:page="meta.page" :items-per-page="meta.per_page" :total="meta.total" @update:page="loadRows"><PaginationContent v-slot="{ items }"><PaginationPrevious /><template v-for="(item, index) in items" :key="index"><PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === meta.page">{{ item.value }}</PaginationItem></template><PaginationNext /></PaginationContent></Pagination></div>
       </CardContent>
     </Card>
