@@ -10,6 +10,18 @@ Extended Resource  标准资源 + 自定义 Action、Slot 或详情区
 Custom Page        普通 Vue 页面 + Goravel Controller/Service
 ```
 
+## 当前实现
+
+第一片已完成资源清单 Registry：
+
+- `backend/app/resource` 提供无执行代码的 `Manifest`、字段、列和注册表；
+- 注册表拒绝空标识和重复资源，并按资源名稳定排序；
+- `GET /api/v1/admin/resources` 返回当前 Admin 资源清单；
+- 资源清单接口要求 `admin.users.view` 权限；
+- 当前登记 `users`、`roles`、`permissions` 三个基础资源。
+
+后续列表查询、分页、筛选和表单 API 必须复用该清单契约，不能在页面内重新定义资源元数据。
+
 ## Resource Definition
 
 ```text

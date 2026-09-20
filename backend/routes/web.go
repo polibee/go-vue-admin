@@ -28,6 +28,8 @@ func Web() {
 	facades.Route().Post("/api/v1/auth/logout", authController.Logout)
 
 	rbacController := controllers.NewRBACController()
+	resourceController := controllers.NewResourceController()
+	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/resources", resourceController.Index)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/users", rbacController.Users)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.roles.manage")).Get("/api/v1/admin/roles", rbacController.Roles)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.permissions.manage")).Get("/api/v1/admin/permissions", rbacController.Permissions)
