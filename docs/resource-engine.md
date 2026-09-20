@@ -20,7 +20,7 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 - 资源清单接口要求 `admin.users.view` 权限；
 - 当前登记 `users`、`roles`、`permissions` 三个基础资源。
 
-后续列表查询、分页、筛选和表单 API 必须复用该清单契约，不能在页面内重新定义资源元数据。
+后续列表查询、分页、筛选和表单 API 必须复用该清单契约，不能在页面内重新定义资源元数据。`n`n资源列表第二片已完成：`n`n- `GET /api/v1/admin/resources/:resource` 提供统一列表数据；`n- 支持 `page`、`per_page`、`search`、`sort`、`dir` 参数；`n- 返回 `data` 与 `meta` 分页元数据；`n- 排序字段按资源白名单限制，搜索使用参数绑定；`n- 当前支持 users、roles、permissions。
 
 ## Resource Definition
 
