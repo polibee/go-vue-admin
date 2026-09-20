@@ -9,5 +9,6 @@
   "RBAC_USER_NOT_FOUND": "用户不存在",
   "RBAC_SYSTEM_ROLE": "系统角色不能执行此操作",
   "RBAC_LAST_ADMIN": "不能移除最后一个有效管理员",
+  "RESOURCE_NOT_FOUND": "资源不存在",
   "INTERNAL_ERROR": "服务暂时不可用，请稍后重试"
 }

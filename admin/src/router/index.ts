@@ -20,6 +20,7 @@ const router = createRouter({
           component: () => import('@/views/AdminHomeView.vue'),
         },
         { path: 'rbac', name: 'rbac', component: () => import('@/views/RBACView.vue') },
+        { path: 'resources/:resource', name: 'resource-list', component: () => import('@/views/ResourceListView.vue') },
         { path: 'loading', name: 'loading', component: () => import('@/views/LoadingView.vue') },
         { path: 'empty', name: 'empty', component: () => import('@/views/EmptyView.vue') },
         { path: 'error', name: 'error', component: () => import('@/views/ErrorView.vue') },

@@ -1,0 +1,14 @@
+{
+  "title": "Resource list",
+  "description": "Browse admin data through the shared resource contract.",
+  "search": "Search resources",
+  "searchPlaceholder": "Enter a keyword and press Enter",
+  "refresh": "Refresh",
+  "loading": "Loading resource",
+  "total": "{count} items",
+  "noData": "No data",
+  "page": "Page {page}",
+  "previous": "Previous",
+  "next": "Next",
+  "resourceNotFound": "Resource not found"
+}

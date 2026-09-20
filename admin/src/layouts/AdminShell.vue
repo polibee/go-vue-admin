@@ -58,6 +58,11 @@ async function logout() {
                   <RouterLink to="/rbac"><ShieldCheck /><span>{{ t('rbac.title') }}</span></RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton as-child :is-active="$route.name === 'resource-list'" :tooltip="t('resource.title')">
+                  <RouterLink to="/resources/users"><LayoutDashboard /><span>{{ t('resource.title') }}</span></RouterLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -1,0 +1,14 @@
+{
+  "title": "资源列表",
+  "description": "使用统一资源契约浏览后台数据。",
+  "search": "搜索资源",
+  "searchPlaceholder": "输入关键词后回车",
+  "refresh": "刷新",
+  "loading": "正在加载资源",
+  "total": "共 {count} 条",
+  "noData": "暂无数据",
+  "page": "第 {page} 页",
+  "previous": "上一页",
+  "next": "下一页",
+  "resourceNotFound": "资源不存在"
+}

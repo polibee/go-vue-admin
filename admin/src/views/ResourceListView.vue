@@ -1,0 +1,112 @@
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { RefreshCw, Search } from '@lucide/vue'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { Input } from '@/components/ui/input'
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
+import { useAuthStore } from '@/stores/auth'
+import { useI18n } from 'vue-i18n'
+
+interface ResourceColumn { name: string; label: string; sortable: boolean }
+interface ResourceManifest { name: string; label: string; route: string; columns: ResourceColumn[] }
+interface ResourceMeta { page: number; per_page: number; total: number; last_page: number }
+interface ResourceListResponse { data: Record<string, unknown>[]; meta: ResourceMeta }
+
+const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
+const manifests = ref<ResourceManifest[]>([])
+const rows = ref<Record<string, unknown>[]>([])
+const meta = ref<ResourceMeta>({ page: 1, per_page: 10, total: 0, last_page: 1 })
+const search = ref('')
+const loading = ref(true)
+const error = ref('')
+
+const resourceName = computed(() => String(route.params.resource || 'users'))
+const currentManifest = computed(() => manifests.value.find((item) => item.name === resourceName.value))
+
+function localizedError(value: unknown) {
+  return value instanceof ApiError ? t(errorMessageKey(value.code)) : t('errors.unknown')
+}
+
+async function loadManifests() {
+  if (!auth.token) return
+  manifests.value = await apiFetch<ResourceManifest[]>('/api/v1/admin/resources', {}, auth.token)
+  if (!currentManifest.value && manifests.value.length) {
+    await router.replace(`/resources/${manifests.value[0].name}`)
+  }
+}
+
+async function loadRows(page = 1) {
+  if (!auth.token || !currentManifest.value) return
+  loading.value = true
+  error.value = ''
+  try {
+    const params = new URLSearchParams({ page: String(page), per_page: String(meta.value.per_page), sort: 'id', dir: 'desc' })
+    if (search.value.trim()) params.set('search', search.value.trim())
+    const response = await apiFetch<ResourceListResponse>(`/api/v1/admin/resources/${resourceName.value}?${params}`, {}, auth.token)
+    rows.value = response.data
+    meta.value = response.meta
+  } catch (value) {
+    rows.value = []
+    error.value = localizedError(value)
+  } finally {
+    loading.value = false
+  }
+}
+
+function submitSearch() { void loadRows(1) }
+function selectResource(name: string) { void router.push(`/resources/${name}`) }
+function displayValue(value: unknown) { return value === null || value === undefined ? '—' : String(value) }
+
+onMounted(async () => {
+  try {
+    await loadManifests()
+    await loadRows()
+  } catch (value) {
+    error.value = localizedError(value)
+    loading.value = false
+  }
+})
+watch(resourceName, () => { void loadRows(1) })
+</script>
+
+<template>
+  <div class="flex flex-col gap-6">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight">{{ t('resource.title') }}</h1>
+        <p class="text-sm text-muted-foreground">{{ t('resource.description') }}</p>
+      </div>
+      <Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
+        <RefreshCw data-icon="inline-start" />{{ t('resource.refresh') }}
+      </Button>
+    </div>
+
+    <div v-if="manifests.length" class="flex flex-wrap gap-2">
+      <Button v-for="manifest in manifests" :key="manifest.name" :variant="manifest.name === resourceName ? 'default' : 'outline'" size="sm" @click="selectResource(manifest.name)">{{ manifest.label }}</Button>
+    </div>
+
+    <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <Card>
+      <CardHeader class="gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div><CardTitle>{{ currentManifest?.label || t('resource.resourceNotFound') }}</CardTitle><CardDescription>{{ t('resource.total', { count: meta.total }) }}</CardDescription></div>
+        <form class="flex w-full gap-2 sm:w-auto" @submit.prevent="submitSearch"><Input v-model="search" class="sm:w-64" :placeholder="t('resource.searchPlaceholder')" :aria-label="t('resource.search')" /><Button type="submit" size="icon" :aria-label="t('resource.search')"><Search /></Button></form>
+      </CardHeader>
+      <CardContent>
+        <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
+        <Empty v-else-if="!rows.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
+        <Table v-else><TableHeader><TableRow><TableHead v-for="column in currentManifest?.columns || []" :key="column.name">{{ column.label }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)"><TableCell v-for="column in currentManifest?.columns || []" :key="column.name">{{ displayValue(row[column.name]) }}</TableCell></TableRow></TableBody></Table>
+        <div v-if="!loading && meta.total > 0" class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between"><p class="text-sm text-muted-foreground">{{ t('resource.page', { page: meta.page }) }}</p><Pagination v-model:page="meta.page" :items-per-page="meta.per_page" :total="meta.total" @update:page="loadRows"><PaginationContent v-slot="{ items }"><PaginationPrevious /><template v-for="(item, index) in items" :key="index"><PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === meta.page">{{ item.value }}</PaginationItem></template><PaginationNext /></PaginationContent></Pagination></div>
+      </CardContent>
+    </Card>
+  </div>
+</template>
