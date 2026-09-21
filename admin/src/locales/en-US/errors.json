@@ -14,5 +14,7 @@
   "RBAC_SYSTEM_ROLE": "This system role cannot be changed this way.",
   "RBAC_LAST_ADMIN": "The last active administrator cannot be removed.",
   "RESOURCE_NOT_FOUND": "The resource was not found.",
+  "SETTINGS_INVALID": "The system setting parameters are invalid.",
+  "SETTINGS_ERROR": "System settings are temporarily unavailable.",
   "INTERNAL_ERROR": "The service is temporarily unavailable. Please try again later."
 }

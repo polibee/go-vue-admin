@@ -4,9 +4,9 @@ import (
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/support"
 
-	"goravel/app/facades"
 	admincontrollers "goravel/app/core/admin/controllers"
 	authcontrollers "goravel/app/core/auth/controllers"
+	"goravel/app/facades"
 	adminmiddleware "goravel/app/http/middleware"
 	usercontrollers "goravel/app/modules/users/controllers"
 	"goravel/app/openapi"
@@ -43,9 +43,12 @@ func Web() {
 	overviewController := admincontrollers.NewOverviewController()
 	auditController := admincontrollers.NewAuditController()
 	resourceController := admincontrollers.NewResourceController()
+	settingsController := admincontrollers.NewSettingsController()
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/resources", resourceController.Index)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/overview", overviewController.Index)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/audit-logs", auditController.Index)
+	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.settings.manage")).Get("/api/v1/admin/settings", settingsController.Index)
+	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.settings.manage")).Put("/api/v1/admin/settings/:key", settingsController.Upsert)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/resources/:resource", resourceController.List)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/resources/:resource/:id", resourceController.Show)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/users", rbacController.Users)

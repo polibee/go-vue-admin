@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ClipboardList, Languages, LayoutDashboard, LogOut, ShieldCheck, Unplug } from '@lucide/vue'
+import { ClipboardList, Languages, LayoutDashboard, LogOut, Settings, ShieldCheck, Unplug } from '@lucide/vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
@@ -66,6 +66,11 @@ async function logoutAll() {
               <SidebarMenuItem v-if="auth.can('admin.users.view')">
                 <SidebarMenuButton as-child :is-active="$route.name === 'audit-logs'" :tooltip="t('auth.auditLogs')">
                   <RouterLink to="/audit-logs"><ClipboardList /><span>{{ t('auth.auditLogs') }}</span></RouterLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem v-if="auth.can('admin.settings.manage')">
+                <SidebarMenuButton as-child :is-active="$route.name === 'settings'" :tooltip="t('settings.title')">
+                  <RouterLink to="/settings"><Settings /><span>{{ t('settings.title') }}</span></RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem v-if="auth.can('admin.users.view')">

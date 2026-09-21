@@ -11,6 +11,8 @@ import enUSErrors from '@/locales/en-US/errors.json'
 import zhCNErrors from '@/locales/zh-CN/errors.json'
 import enUSResource from '@/locales/en-US/resource.json'
 import zhCNResource from '@/locales/zh-CN/resource.json'
+import enUSSettings from '@/locales/en-US/settings.json'
+import zhCNSettings from '@/locales/zh-CN/settings.json'
 
 export const SUPPORTED_LOCALES = ['zh-CN', 'en-US'] as const
 
@@ -21,8 +23,8 @@ const i18n = createI18n({
   locale: initialLocale,
   fallbackLocale: 'en-US',
   messages: {
-    'zh-CN': { core: zhCNCcore, auth: zhCNAuth, errors: zhCNErrors, states: zhCNStates, rbac: zhCNRbac, resource: zhCNResource },
-    'en-US': { core: enUSCore, auth: enUSAuth, errors: enUSErrors, states: enUSStates, rbac: enUSRbac, resource: enUSResource },
+    'zh-CN': { core: zhCNCcore, auth: zhCNAuth, errors: zhCNErrors, states: zhCNStates, rbac: zhCNRbac, resource: zhCNResource, settings: zhCNSettings },
+    'en-US': { core: enUSCore, auth: enUSAuth, errors: enUSErrors, states: enUSStates, rbac: enUSRbac, resource: enUSResource, settings: enUSSettings },
   },
 })
 

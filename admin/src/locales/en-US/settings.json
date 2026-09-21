@@ -1,0 +1,19 @@
+{
+  "title": "System settings",
+  "description": "Manage reusable key-value configuration for the admin panel.",
+  "refresh": "Refresh",
+  "addTitle": "Add setting",
+  "addDescription": "Settings are managed by key so future modules can reuse the same configuration store.",
+  "key": "Key",
+  "group": "Group",
+  "type": "Type",
+  "value": "Value",
+  "descriptionLabel": "Description",
+  "add": "Add",
+  "save": "Save",
+  "saved": "System setting saved",
+  "keyRequired": "A setting key is required",
+  "emptyTitle": "No system settings",
+  "emptyDescription": "Add the first reusable system setting to start managing configuration.",
+  "noDescription": "No description"
+}

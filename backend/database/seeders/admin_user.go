@@ -72,6 +72,7 @@ func (s *AdminUser) Run() error {
 		{Name: "admin.users.manage", DisplayName: "Manage users"},
 		{Name: "admin.roles.manage", DisplayName: "Manage roles"},
 		{Name: "admin.permissions.manage", DisplayName: "Manage permissions"},
+		{Name: "admin.settings.manage", DisplayName: "Manage system settings"},
 	} {
 		var permissionExists []models.Permission
 		if err := facades.Orm().Query().Where("name = ?", permission.Name).Get(&permissionExists); err != nil {

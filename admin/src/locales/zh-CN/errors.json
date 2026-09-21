@@ -14,5 +14,7 @@
   "RBAC_SYSTEM_ROLE": "系统角色不能执行此操作",
   "RBAC_LAST_ADMIN": "不能移除最后一个有效管理员",
   "RESOURCE_NOT_FOUND": "资源不存在",
+  "SETTINGS_INVALID": "系统设置参数无效",
+  "SETTINGS_ERROR": "系统设置暂时无法加载",
   "INTERNAL_ERROR": "服务暂时不可用，请稍后重试"
 }
