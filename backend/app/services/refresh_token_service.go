@@ -23,6 +23,7 @@ type refreshTokenStore interface {
 	GetString(key string, def ...string) string
 	Forget(key string) bool
 	Probe() error
+	RevokeAll(userID uint) error
 }
 
 type RefreshTokenService struct {
@@ -76,6 +77,13 @@ func (s *RefreshTokenService) Revoke(raw string) {
 	if raw != "" {
 		s.store.Forget(refreshTokenKey(raw))
 	}
+}
+
+func (s *RefreshTokenService) RevokeAll(userID uint) error {
+	if err := s.probe(); err != nil {
+		return err
+	}
+	return s.store.RevokeAll(userID)
 }
 
 func refreshTokenKey(raw string) string {

@@ -35,6 +35,8 @@ func (f *fakeRefreshTokenStore) Probe() error {
 	return nil
 }
 
+func (f *fakeRefreshTokenStore) RevokeAll(_ uint) error { return nil }
+
 func TestRefreshTokenIssueAndConsumeRotatesOpaqueToken(t *testing.T) {
 	store := &fakeRefreshTokenStore{values: map[string]string{}}
 	service := NewRefreshTokenService(store)

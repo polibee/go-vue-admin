@@ -21,6 +21,7 @@ func Spec() map[string]any {
 			"/auth/refresh": map[string]any{"post": map[string]any{
 				"security": []any{}, "operationId": "refresh", "responses": map[string]any{"200": jsonResponse("RefreshResponse"), "401": errorResponse()},
 			}},
+			"/auth/logout-all":            map[string]any{"post": operation("logoutAll")},
 			"/auth/me":                    map[string]any{"get": operation("currentUser")},
 			"/admin/resources":            map[string]any{"get": operation("listResources")},
 			"/admin/resources/{resource}": map[string]any{"get": operation("listResourceRows")},

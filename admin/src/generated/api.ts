@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* Generated from http://127.0.0.1:3000/api/openapi.json. DO NOT EDIT. */
-/* Contract paths: /admin/overview, /admin/resources, /admin/resources/{resource}, /admin/users/status, /auth/login, /auth/me, /auth/refresh */
+/* Contract paths: /admin/overview, /admin/resources, /admin/resources/{resource}, /admin/users/status, /auth/login, /auth/logout-all, /auth/me, /auth/refresh */
 
 import { apiFetch, apiFetchEnvelope } from '@/lib/api'
 
@@ -20,6 +20,7 @@ export const generatedApi = {
   refresh() { return apiFetch<RefreshResponse>('/api/v1/auth/refresh', { method: 'POST' }) },
   currentUser(token: string) { return apiFetch<AuthUser>('/api/v1/auth/me', {}, token) },
   logout(token: string) { return apiFetch<void>('/api/v1/auth/logout', { method: 'POST' }, token) },
+  logoutAll(token: string) { return apiFetch<void>('/api/v1/auth/logout-all', { method: 'POST' }, token) },
   resourceManifests(token: string) { return apiFetch<ResourceManifest[]>('/api/v1/admin/resources', {}, token) },
   overview(token: string) { return apiFetch<AdminOverview>('/api/v1/admin/overview', {}, token) },
   resourceList<T = Record<string, unknown>>(resource: string, query: URLSearchParams, token: string) { return apiFetchEnvelope<T[]>('/api/v1/admin/resources/' + resource + '?' + query, {}, token) as unknown as Promise<ResourceList<T>> },

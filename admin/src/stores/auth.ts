@@ -43,5 +43,14 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = undefined
   }
 
-  return { token, user, isAuthenticated, login, fetchCurrentUser, restore, logout }
+  async function logoutAll() {
+    const tokenValue = token.value
+    if (tokenValue) {
+      await generatedApi.logoutAll(tokenValue)
+    }
+    token.value = undefined
+    user.value = undefined
+  }
+
+  return { token, user, isAuthenticated, login, fetchCurrentUser, restore, logout, logoutAll }
 })

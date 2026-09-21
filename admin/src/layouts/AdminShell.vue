@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Languages, LayoutDashboard, LogOut, ShieldCheck } from '@lucide/vue'
+import { Languages, LayoutDashboard, LogOut, ShieldCheck, Unplug } from '@lucide/vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,11 @@ function toggleLocale() {
 
 async function logout() {
   await auth.logout()
+  await router.replace({ name: 'login' })
+}
+
+async function logoutAll() {
+  await auth.logoutAll()
   await router.replace({ name: 'login' })
 }
 </script>
@@ -85,6 +90,10 @@ async function logout() {
                 <DropdownMenuItem @click="logout">
                   <LogOut />
                   {{ t('auth.logout') }}
+                </DropdownMenuItem>
+                <DropdownMenuItem @click="logoutAll">
+                  <Unplug />
+                  {{ t('auth.logoutAll') }}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -102,6 +102,30 @@ func (r *AuthController) Logout(ctx http.Context) http.Response {
 	return response.NoContent(204)
 }
 
+func (r *AuthController) LogoutAll(ctx http.Context) http.Response {
+	if err := r.parseToken(ctx); err != nil {
+		return unauthorized(ctx)
+	}
+	var user models.User
+	if err := facades.Auth(ctx).User(&user); err != nil {
+		return unauthorized(ctx)
+	}
+	response := ctx.Response().WithoutCookie(services.RefreshTokenCookieName)
+	if err := services.NewDurableRefreshTokenService().RevokeAll(user.ID); err != nil {
+		return response.Status(503).Json(http.Json{
+			"code":    "AUTH_SESSION_STORE_UNAVAILABLE",
+			"message": "authentication session storage is unavailable",
+		})
+	}
+	if err := facades.Auth(ctx).Logout(); err != nil {
+		return response.Status(503).Json(http.Json{
+			"code":    "AUTH_SESSION_STORE_UNAVAILABLE",
+			"message": "authentication session storage is unavailable",
+		})
+	}
+	return response.NoContent(204)
+}
+
 func (r *AuthController) Refresh(ctx http.Context) http.Response {
 	refreshService := services.NewDurableRefreshTokenService()
 	userID, err := refreshService.Consume(ctx.Request().Cookie(services.RefreshTokenCookieName))

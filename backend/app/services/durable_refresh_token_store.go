@@ -36,6 +36,8 @@ func (s cacheRefreshTokenStore) Probe() error {
 	return nil
 }
 
+func (cacheRefreshTokenStore) RevokeAll(_ uint) error { return nil }
+
 type postgresRefreshTokenStore struct{}
 
 func (postgresRefreshTokenStore) Put(key string, value any, ttl time.Duration) error {
@@ -73,6 +75,11 @@ func (postgresRefreshTokenStore) Probe() error {
 	return err
 }
 
+func (postgresRefreshTokenStore) RevokeAll(userID uint) error {
+	_, err := facades.Orm().Query().Table("auth_refresh_tokens").Where("user_id = ?", userID).Delete()
+	return err
+}
+
 type durableRefreshTokenStore struct {
 	database refreshTokenStore
 	cache    refreshTokenStore
@@ -87,11 +94,7 @@ func (s durableRefreshTokenStore) Put(key string, value any, ttl time.Duration) 
 }
 
 func (s durableRefreshTokenStore) GetString(key string, def ...string) string {
-	if s.cache.Probe() == nil {
-		if value := s.cache.GetString(key, def...); value != "" {
-			return value
-		}
-	}
+	// PostgreSQL is authoritative so logout-all cannot be bypassed by a stale Redis mirror.
 	return s.database.GetString(key, def...)
 }
 
@@ -103,6 +106,10 @@ func (s durableRefreshTokenStore) Forget(key string) bool {
 
 func (s durableRefreshTokenStore) Probe() error {
 	return s.database.Probe()
+}
+
+func (s durableRefreshTokenStore) RevokeAll(userID uint) error {
+	return s.database.RevokeAll(userID)
 }
 
 func NewDurableRefreshTokenService() *RefreshTokenService {
