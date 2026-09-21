@@ -15,7 +15,7 @@ function Assert-Contract([bool]$Condition, [string]$Message) {
 
 $spec = Invoke-RestMethod -Uri "$BaseUrl/api/openapi.json"
 Assert-Contract ($spec.openapi -eq "3.0.3") "OpenAPI version is 3.0.3"
-foreach ($path in @("/auth/login", "/auth/refresh", "/auth/logout-all", "/auth/me", "/admin/resources", "/admin/resources/{resource}", "/admin/overview", "/admin/audit-logs", "/admin/users/status")) {
+foreach ($path in @("/auth/login", "/auth/refresh", "/auth/logout-all", "/auth/me", "/admin/registry", "/admin/{resource}", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/users/status")) {
     Assert-Contract ($null -ne $spec.paths.$path) "contract path exists: $path"
 }
 
@@ -30,9 +30,9 @@ $token = $login.data.access_token
 Assert-Contract (-not [string]::IsNullOrWhiteSpace($token)) "login returns an access token"
 $headers = @{ Authorization = "Bearer $token" }
 
-$resources = Invoke-RestMethod -Uri "$BaseUrl/api/v1/admin/resources" -Headers $headers
+$resources = Invoke-RestMethod -Uri "$BaseUrl/api/v1/admin/registry" -Headers $headers
 Assert-Contract ($resources.data.Count -ge 1) "resource manifest returns data"
-$users = Invoke-RestMethod -Uri "$BaseUrl/api/v1/admin/resources/users?page=1&per_page=10&sort=id&dir=desc" -Headers $headers
+$users = Invoke-RestMethod -Uri "$BaseUrl/api/v1/admin/users?page=1&per_page=10&sort=id&dir=desc" -Headers $headers
 Assert-Contract ($null -ne $users.meta) "user resource list returns pagination metadata"
 Assert-Contract ($null -ne $users.data) "user resource list returns data"
 

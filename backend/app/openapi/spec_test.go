@@ -8,18 +8,21 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		t.Fatalf("unexpected OpenAPI version: %v", spec["openapi"])
 	}
 	paths := spec["paths"].(map[string]any)
-	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/resources", "/admin/resources/{resource}", "/admin/resources/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/settings", "/admin/settings/{key}", "/admin/users/status"} {
+	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/{resource}", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/settings", "/admin/settings/{key}", "/admin/users/status"} {
 		if _, ok := paths[path]; !ok {
 			t.Fatalf("missing contract path %s", path)
 		}
 	}
-	resourceCollection := paths["/admin/resources/{resource}"].(map[string]any)
+	if _, ok := paths["/admin/resources/{resource}"]; ok {
+		t.Fatal("legacy resources route remains in contract")
+	}
+	resourceCollection := paths["/admin/{resource}"].(map[string]any)
 	for _, method := range []string{"get", "post"} {
 		if _, ok := resourceCollection[method]; !ok {
 			t.Fatalf("missing resource collection method %s", method)
 		}
 	}
-	resourceItem := paths["/admin/resources/{resource}/{id}"].(map[string]any)
+	resourceItem := paths["/admin/{resource}/{id}"].(map[string]any)
 	for _, method := range []string{"get", "put", "delete"} {
 		if _, ok := resourceItem[method]; !ok {
 			t.Fatalf("missing resource item method %s", method)

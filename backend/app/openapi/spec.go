@@ -28,12 +28,12 @@ func Spec() map[string]any {
 			}},
 			"/auth/logout-all": map[string]any{"post": operation("logoutAll")},
 			"/auth/me":         map[string]any{"get": operation("currentUser")},
-			"/admin/resources": map[string]any{"get": operation("listResources")},
-			"/admin/resources/{resource}": map[string]any{
+			"/admin/registry":  map[string]any{"get": operation("listResources")},
+			"/admin/{resource}": map[string]any{
 				"get":  listOperation("listResourceRows", []map[string]any{pathParameter("resource"), queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("search", "string"), queryParameter("sort", "string"), queryParameter("dir", "string")}),
 				"post": resourceWriteOperation("createResource", "201"),
 			},
-			"/admin/resources/{resource}/{id}": map[string]any{
+			"/admin/{resource}/{id}": map[string]any{
 				"get":    resourceItemOperation("showResource"),
 				"put":    resourceWriteOperation("updateResource", "200", true),
 				"delete": map[string]any{"operationId": "deleteResource", "parameters": []map[string]any{pathParameter("resource"), pathParameter("id")}, "responses": map[string]any{"204": map[string]any{"description": "Resource deleted"}, "401": errorResponse(), "403": errorResponse(), "404": errorResponse()}},
