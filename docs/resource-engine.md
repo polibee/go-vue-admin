@@ -22,6 +22,15 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 
 后续列表查询、分页、筛选和表单 API 必须复用该清单契约，不能在页面内重新定义资源元数据。`n`n资源列表第二片已完成：`n`n- `GET /api/v1/admin/resources/:resource` 提供统一列表数据；`n- 支持 `page`、`per_page`、`search`、`sort`、`dir` 参数；`n- 返回 `data` 与 `meta` 分页元数据；`n- 排序字段按资源白名单限制，搜索使用参数绑定；`n- 当前支持 users、roles、permissions。
 
+用户资源写操作已通过独立的 `admin.users.manage` 权限保护：
+
+- `POST /api/v1/admin/users` 创建用户并使用 Goravel Hash 保存密码；
+- `PUT /api/v1/admin/users/:id` 编辑用户，密码留空时保持不变；
+- `DELETE /api/v1/admin/users/:id` 删除用户并清理角色关联；
+- 最后一个具备管理权限的活动管理员不能被删除。
+
+Admin 前端提供 `/users/new`、`/users/:id/edit` 和用户详情删除确认流程。roles、permissions 的通用写表单仍沿用 RBAC 专用页面。
+
 ## Resource Definition
 
 ```text
