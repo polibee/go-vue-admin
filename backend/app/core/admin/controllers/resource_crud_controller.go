@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/goravel/framework/contracts/http"
 
@@ -74,11 +76,64 @@ func bindGeneratedValues(ctx http.Context, manifest resource.Manifest) (map[stri
 	for _, field := range manifest.Fields {
 		allowed[field.Name] = true
 	}
+	return validateGeneratedValues(payload, manifest)
+}
+
+func validateGeneratedValues(payload map[string]any, manifest resource.Manifest) (map[string]any, error) {
 	values := make(map[string]any)
+	fields := make(map[string]resource.Field, len(manifest.Fields))
+	for _, field := range manifest.Fields {
+		fields[field.Name] = field
+	}
 	for key, value := range payload {
-		if allowed[key] {
-			values[key] = value
+		field, ok := fields[key]
+		if !ok {
+			continue
+		}
+		if err := validateGeneratedField(field, value); err != nil {
+			return nil, err
+		}
+		values[key] = value
+	}
+	for _, field := range manifest.Fields {
+		if field.Required {
+			value, exists := values[field.Name]
+			if !exists || value == nil || (field.Type != "boolean" && strings.TrimSpace(fmt.Sprint(value)) == "") {
+				return nil, fmt.Errorf("required field %q is missing", field.Name)
+			}
 		}
 	}
 	return values, nil
+}
+
+func validateGeneratedField(field resource.Field, value any) error {
+	if value == nil {
+		return nil
+	}
+	switch field.Type {
+	case "boolean":
+		if _, ok := value.(bool); !ok {
+			return fmt.Errorf("field %q must be boolean", field.Name)
+		}
+	case "integer":
+		switch value.(type) {
+		case float64, float32, int, int32, int64:
+		default:
+			return fmt.Errorf("field %q must be integer", field.Name)
+		}
+	case "select":
+		text, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("field %q must be a select value", field.Name)
+		}
+		if len(field.Options) > 0 {
+			for _, option := range field.Options {
+				if option.Value == text {
+					return nil
+				}
+			}
+			return fmt.Errorf("field %q has an invalid option", field.Name)
+		}
+	}
+	return nil
 }

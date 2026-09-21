@@ -105,13 +105,17 @@ func manifestSource(spec Spec, packageName string) string {
 	for _, field := range spec.Fields {
 		label := humanize(field.Name)
 		if len(field.Options) == 0 {
-			fmt.Fprintf(&fields, "\t\t{Name: %q, Label: %q, Type: %q},\n", field.Name, label, field.Type)
+			if field.Required {
+				fmt.Fprintf(&fields, "\t\t{Name: %q, Label: %q, Type: %q, Required: true},\n", field.Name, label, field.Type)
+			} else {
+				fmt.Fprintf(&fields, "\t\t{Name: %q, Label: %q, Type: %q},\n", field.Name, label, field.Type)
+			}
 		} else {
 			var values strings.Builder
 			for _, option := range field.Options {
 				fmt.Fprintf(&values, "{Value: %q, Label: %q}, ", option.Value, option.Label)
 			}
-			fmt.Fprintf(&fields, "\t\t{Name: %q, Label: %q, Type: %q, Options: []resource.Option{%s}},\n", field.Name, label, field.Type, values.String())
+			fmt.Fprintf(&fields, "\t\t{Name: %q, Label: %q, Type: %q, Required: %t, Options: []resource.Option{%s}},\n", field.Name, label, field.Type, field.Required, values.String())
 		}
 		fmt.Fprintf(&columns, "\t\t{Name: %q, Label: %q, Sortable: true},\n", field.Name, label)
 	}
