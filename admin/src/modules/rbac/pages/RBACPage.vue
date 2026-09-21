@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
+import { generatedApi } from '@/generated/api'
 import { useAuthStore } from '@/stores/auth'
 import { userStatusLabelKey, type UserStatus } from '@/lib/user-status'
 
@@ -88,8 +89,8 @@ async function saveRole() {
   saving.value = true
   actionError.value = ''
   try {
-    const path = editingRoleId.value ? `/api/v1/admin/roles/${editingRoleId.value}` : '/api/v1/admin/roles'
-    await apiFetch(path, { method: editingRoleId.value ? 'PUT' : 'POST', body: JSON.stringify(roleForm) }, auth.token)
+    if (editingRoleId.value) await generatedApi.resourceUpdate('roles', editingRoleId.value, roleForm, auth.token)
+    else await generatedApi.resourceCreate('roles', roleForm, auth.token)
     roleDialogOpen.value = false
     await loadRBAC()
   } catch (saveError) {
@@ -110,7 +111,7 @@ async function deleteRole() {
   saving.value = true
   actionError.value = ''
   try {
-    await apiFetch(`/api/v1/admin/roles/${roleToDelete.value.id}`, { method: 'DELETE' }, auth.token)
+    await generatedApi.resourceDelete('roles', roleToDelete.value.id, auth.token)
     deleteRoleDialogOpen.value = false
     await loadRBAC()
   } catch (deleteError) {
@@ -125,7 +126,7 @@ async function openRolePermissions(role: RBACRole) {
   selectedRole.value = role
   actionError.value = ''
   try {
-    const current = await apiFetch<RBACRoleDetail>(`/api/v1/admin/roles/${role.id}`, {}, auth.token)
+    const current = await generatedApi.resourceShow<RBACRoleDetail>('roles', role.id, auth.token)
     selectedPermissionIDs.value = current.permissions.map((permission) => permission.id)
   } catch (loadError) {
     actionError.value = localizedError(loadError)

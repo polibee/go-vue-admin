@@ -14,9 +14,9 @@ import { Pagination, PaginationContent, PaginationItem, PaginationNext, Paginati
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
+import { ApiError, errorMessageKey } from '@/lib/api'
 import { generatedApi, type ResourceManifest as GeneratedResourceManifest, type ResourceListMeta } from '@/generated/api'
-import { canDeleteResource, resourceActionPath } from '@/lib/resource-actions'
+import { canDeleteResource } from '@/lib/resource-actions'
 import { useAuthStore } from '@/stores/auth'
 import { USER_STATUSES, userStatusLabelKey, type UserStatus } from '@/lib/user-status'
 import { useI18n } from 'vue-i18n'
@@ -63,7 +63,7 @@ function localizedError(value: unknown) {
 
 async function loadManifests() {
   if (!auth.token) return
-  manifests.value = await generatedApi.resourceManifests(auth.token)
+  manifests.value = await generatedApi.resourceRegistry(auth.token)
   if (!currentManifest.value && manifests.value.length) {
     await router.replace(`/${manifests.value[0].name}`)
   }
@@ -155,7 +155,7 @@ async function deleteRow() {
   deleting.value = true
   error.value = ''
   try {
-    await apiFetch(resourceActionPath(resourceName.value, String(deleteTarget.value.id), 'delete'), { method: 'DELETE' }, auth.token)
+    await generatedApi.resourceDelete(resourceName.value, String(deleteTarget.value.id), auth.token)
     deleteDialogOpen.value = false
     await loadRows(meta.value.page)
   } catch (value) {

@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
+import { ApiError, errorMessageKey } from '@/lib/api'
+import { generatedApi } from '@/generated/api'
 import { createResourceForm, serializeResourceForm, type ResourceFormField } from '@/lib/resource-form'
 import { generatePassword } from '@/lib/password-generator'
 import { userStatusLabelKey, type UserStatus } from '@/lib/user-status'
@@ -57,11 +58,11 @@ async function copyUserPassword() {
 onMounted(async () => {
   if (!auth.token) return
   try {
-    const manifests = await apiFetch<ResourceManifest[]>('/api/v1/admin/resources', {}, auth.token)
+    const manifests = await generatedApi.resourceRegistry(auth.token)
     const manifest = manifests.find((item) => item.name === 'users')
     if (!manifest) throw new Error('users manifest missing')
     fields.value = manifest.fields
-    const record = editing.value ? await apiFetch<Record<string, unknown>>(`/api/v1/admin/resources/users/${route.params.id}`, {}, auth.token) : {}
+    const record = editing.value ? await generatedApi.resourceShow<Record<string, unknown>>('users', String(route.params.id), auth.token) : {}
     form.value = createResourceForm(fields.value, record)
   } catch (value) {
     error.value = localizedError(value)
@@ -75,9 +76,9 @@ async function submit() {
   saving.value = true
   error.value = ''
   try {
-    const path = editing.value ? `/api/v1/admin/users/${route.params.id}` : '/api/v1/admin/users'
-    const method = editing.value ? 'PUT' : 'POST'
-    await apiFetch(path, { method, body: JSON.stringify(serializeResourceForm(fields.value, form.value)) }, auth.token)
+    const payload = serializeResourceForm(fields.value, form.value)
+    if (editing.value) await generatedApi.resourceUpdate('users', String(route.params.id), payload, auth.token)
+    else await generatedApi.resourceCreate('users', payload, auth.token)
     await router.push('/users')
   } catch (value) {
     error.value = localizedError(value)

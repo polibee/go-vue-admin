@@ -8,9 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
+import { ApiError, errorMessageKey } from '@/lib/api'
 import { generatedApi } from '@/generated/api'
-import { canDeleteResource, resourceActionPath } from '@/lib/resource-actions'
+import { canDeleteResource } from '@/lib/resource-actions'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 
@@ -45,7 +45,7 @@ onMounted(async () => {
   if (!auth.token) return
   try {
     const [manifests, record] = await Promise.all([
-      apiFetch<ResourceManifest[]>('/api/v1/admin/resources', {}, auth.token),
+      generatedApi.resourceRegistry(auth.token),
       generatedApi.resourceShow<Record<string, unknown>>(resourceName.value, String(route.params.id), auth.token),
     ])
     manifest.value = manifests.find((item) => item.name === resourceName.value)
@@ -66,11 +66,7 @@ async function deleteRecord() {
   deleting.value = true
   error.value = ''
   try {
-    if (resourceName.value === 'users' || resourceName.value === 'roles') {
-      await apiFetch(resourceActionPath(resourceName.value, String(route.params.id), 'delete'), { method: 'DELETE' }, auth.token)
-    } else {
-      await generatedApi.resourceDelete(resourceName.value, String(route.params.id), auth.token)
-    }
+    await generatedApi.resourceDelete(resourceName.value, String(route.params.id), auth.token)
     await router.push(`/${resourceName.value}`)
   } catch (value) {
     error.value = localizedError(value)

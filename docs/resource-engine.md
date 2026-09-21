@@ -12,16 +12,20 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 
 ## 当前实现
 
-第一片已完成资源清单 Registry：
+资源 Registry 由 `backend/app/modules/admin/registry` 统一维护，底层契约位于
+`backend/app/core/resource`。注册表拒绝空标识和重复资源，并按资源名稳定排序。
 
-- `backend/app/core/resource` 提供无执行代码的 `Manifest`、字段、列和注册表引擎；
-- `backend/app/modules/admin/registry` 保存管理端当前启用的业务资源注册表；
-- 注册表拒绝空标识和重复资源，并按资源名稳定排序；
-- `GET /api/v1/admin/resources` 返回当前 Admin 资源清单；
-- 资源清单接口要求 `admin.users.view` 权限；
-- 当前登记 `users`、`roles`、`permissions` 三个基础资源。
+- `GET /api/v1/admin/registry` 返回当前 Admin 资源清单；
+- 清单接口要求 `admin.users.view` 权限；
+- 当前登记 `users`、`roles`、`permissions` 三个基础资源；
+- 列表、详情、新增、编辑和删除统一使用 `/api/v1/admin/{resource}` 与
+  `/api/v1/admin/{resource}/{id}`；
+- 列表支持 `page`、`per_page`、`search`、`sort`、`dir` 参数，返回 `data` 与 `meta`；
+- 排序字段按资源白名单限制，搜索使用参数绑定。
 
-后续列表查询、分页、筛选和表单 API 必须复用该清单契约，不能在页面内重新定义资源元数据。`n`n资源列表第二片已完成：`n`n- `GET /api/v1/admin/resources/:resource` 提供统一列表数据；`n- 支持 `page`、`per_page`、`search`、`sort`、`dir` 参数；`n- 返回 `data` 与 `meta` 分页元数据；`n- 排序字段按资源白名单限制，搜索使用参数绑定；`n- 当前支持 users、roles、permissions。
+资源页面必须复用 Registry 契约，不能在页面内重新定义资源元数据。用户和角色的
+统一 CRUD 入口仍由各自 Domain Service 承担安全校验；关系操作和用户批量状态属于
+明确的业务 Action，继续使用专用关系端点。
 
 用户资源写操作已通过独立的 `admin.users.manage` 权限保护：
 

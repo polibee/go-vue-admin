@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
+import { ApiError, errorMessageKey } from '@/lib/api'
+import { generatedApi } from '@/generated/api'
 import { createResourceForm, serializeResourceForm, type ResourceFormField } from '@/lib/resource-form'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
@@ -31,11 +32,11 @@ function fieldId(field: ResourceFormField) { return `role-field-${field.name}` }
 onMounted(async () => {
   if (!auth.token) return
   try {
-    const manifests = await apiFetch<ResourceManifest[]>('/api/v1/admin/resources', {}, auth.token)
+    const manifests = await generatedApi.resourceRegistry(auth.token)
     const manifest = manifests.find((item) => item.name === 'roles')
     if (!manifest) throw new Error('roles manifest missing')
     fields.value = manifest.fields
-    const record = editing.value ? await apiFetch<Record<string, unknown>>(`/api/v1/admin/resources/roles/${route.params.id}`, {}, auth.token) : {}
+    const record = editing.value ? await generatedApi.resourceShow<Record<string, unknown>>('roles', String(route.params.id), auth.token) : {}
     form.value = createResourceForm(fields.value, record)
   } catch (value) {
     error.value = localizedError(value)
@@ -49,9 +50,9 @@ async function submit() {
   saving.value = true
   error.value = ''
   try {
-    const path = editing.value ? `/api/v1/admin/roles/${route.params.id}` : '/api/v1/admin/roles'
-    const method = editing.value ? 'PUT' : 'POST'
-    await apiFetch(path, { method, body: JSON.stringify(serializeResourceForm(fields.value, form.value)) }, auth.token)
+    const payload = serializeResourceForm(fields.value, form.value)
+    if (editing.value) await generatedApi.resourceUpdate('roles', String(route.params.id), payload, auth.token)
+    else await generatedApi.resourceCreate('roles', payload, auth.token)
     await router.push('/roles')
   } catch (value) {
     error.value = localizedError(value)
