@@ -40,6 +40,32 @@ func (s *RBACService) UserHasPermission(ctx http.Context, permission string) (bo
 		Exists()
 }
 
+func (s *RBACService) PermissionsForUser(userID uint) ([]string, error) {
+	var rows []struct {
+		Name string `db:"name"`
+	}
+	if err := facades.Orm().Query().
+		Table("permissions").
+		Select("permissions.name").
+		Join("JOIN permission_role ON permission_role.permission_id = permissions.id").
+		Join("JOIN role_user ON role_user.role_id = permission_role.role_id").
+		Where("role_user.user_id = ?", userID).
+		OrderBy("permissions.name").
+		Get(&rows); err != nil {
+		return nil, err
+	}
+	permissions := make([]string, 0, len(rows))
+	seen := make(map[string]struct{}, len(rows))
+	for _, row := range rows {
+		if _, ok := seen[row.Name]; ok {
+			continue
+		}
+		seen[row.Name] = struct{}{}
+		permissions = append(permissions, row.Name)
+	}
+	return permissions, nil
+}
+
 func (s *RBACService) IsLastActiveAdmin(userID int64) (bool, error) {
 	var activeAdmins []struct {
 		UserID int64 `db:"user_id"`

@@ -1,6 +1,8 @@
 {
   "errorTitle": "Unable to load page",
   "errorDescription": "This page is temporarily unavailable. Return to the dashboard and try again.",
+  "forbiddenTitle": "Access denied",
+  "forbiddenDescription": "Your account does not have permission to access this page.",
   "backHome": "Back to dashboard",
   "loading": "Loading…",
   "emptyTitle": "No data",

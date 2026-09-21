@@ -1,6 +1,8 @@
 {
   "errorTitle": "页面加载失败",
   "errorDescription": "页面暂时无法访问，请返回控制台重试。",
+  "forbiddenTitle": "无权访问",
+  "forbiddenDescription": "当前账号没有访问此页面的权限。",
   "backHome": "返回控制台",
   "loading": "正在加载…",
   "emptyTitle": "暂无数据",

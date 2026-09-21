@@ -63,13 +63,17 @@ func (r *AuthController) Login(ctx http.Context) http.Response {
 		})
 	}
 	recordAudit(user.ID, "auth.login", map[string]any{"method": "password"})
+	publicUser, err := authUserPublic(&user)
+	if err != nil {
+		return ctx.Response().Status(500).Json(http.Json{"code": "RBAC_PERMISSIONS_ERROR"})
+	}
 
 	response := ctx.Response().Cookie(refreshTokenCookie(refreshToken))
 	return response.Success().Json(http.Json{
 		"data": http.Json{
 			"access_token": token,
 			"token_type":   "Bearer",
-			"user":         user.Public(),
+			"user":         publicUser,
 		},
 	})
 }
@@ -84,7 +88,11 @@ func (r *AuthController) Me(ctx http.Context) http.Response {
 		return unauthorized(ctx)
 	}
 
-	return ctx.Response().Success().Json(http.Json{"data": user.Public()})
+	publicUser, err := authUserPublic(&user)
+	if err != nil {
+		return ctx.Response().Status(500).Json(http.Json{"code": "RBAC_PERMISSIONS_ERROR"})
+	}
+	return ctx.Response().Success().Json(http.Json{"data": publicUser})
 }
 
 func (r *AuthController) Logout(ctx http.Context) http.Response {
@@ -198,6 +206,16 @@ func recordAudit(userID uint, action string, metadata map[string]any) {
 	if err := services.NewAuditService().Record(userID, action, metadata); err != nil {
 		facades.Log().Errorf("audit record failed action=%s user_id=%d error=%v", action, userID, err)
 	}
+}
+
+func authUserPublic(user *models.User) (map[string]any, error) {
+	publicUser := user.Public()
+	permissions, err := services.NewRBACService().PermissionsForUser(user.ID)
+	if err != nil {
+		return nil, err
+	}
+	publicUser["permissions"] = permissions
+	return publicUser, nil
 }
 
 func sessionStoreUnavailable(ctx http.Context) http.Response {

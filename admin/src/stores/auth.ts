@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { generatedApi, type AuthUser, type LoginResponse } from '@/generated/api'
+import { hasAnyPermission, hasPermission } from '@/lib/permissions'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | undefined>()
@@ -8,6 +9,8 @@ export const useAuthStore = defineStore('auth', () => {
   const restored = ref(false)
 
   const isAuthenticated = computed(() => Boolean(token.value && user.value))
+  const can = (permission: string) => hasPermission(user.value?.permissions, permission)
+  const canAny = (permissions: string[]) => hasAnyPermission(user.value?.permissions, permissions)
 
   async function login(email: string, password: string) {
     const response: LoginResponse = await generatedApi.login({ email, password })
@@ -52,5 +55,5 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = undefined
   }
 
-  return { token, user, isAuthenticated, login, fetchCurrentUser, restore, logout, logoutAll }
+  return { token, user, isAuthenticated, can, canAny, login, fetchCurrentUser, restore, logout, logoutAll }
 })

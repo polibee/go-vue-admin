@@ -115,6 +115,7 @@ GET  /api/v1/auth/me
 - 用户角色查询和绑定接口；
 - 基于 `admin.users.view`、`admin.roles.manage`、`admin.permissions.manage` 的后端细粒度授权；
 - API 错误统一返回稳定 `code`，前端按模块语言包渲染中文或英文。
+- 登录和当前用户接口返回权限标识，前端据此隐藏无权菜单和操作，并在路由层显示统一无权页面；后端权限中间件仍是最终授权边界。
 
 当前实现已接入独立的随机 Refresh Token：登录写入 HttpOnly Cookie，PostgreSQL 保存权威会话，Redis 保存镜像和高速副本；刷新时一次性消费并轮换，Redis 不可用时自动查询 PostgreSQL，重放返回 401，登出和 `logout-all` 会撤销并清除 Cookie。认证事件会写入 PostgreSQL 审计日志，并在管理端支持筛选、分页和详情查看。生产环境仍需按部署拓扑配置 HTTPS、SameSite 和跨来源 Cookie 策略；登录限流仍属于后续增强。系统角色 `super-admin` 受到保护，最后一个具备管理权限的管理员不能被移除。
 

@@ -18,7 +18,7 @@ const content = `/* eslint-disable */
 import { apiFetch, apiFetchEnvelope } from '@/lib/api'
 
 export type UserStatus = ${statuses.map((status) => JSON.stringify(status)).join(' | ')}
-export interface AuthUser { id: number; name: string; email: string; status: UserStatus; locale: string }
+export interface AuthUser { id: number; name: string; email: string; status: UserStatus; locale: string; permissions: string[] }
 export interface LoginRequest { email: string; password: string }
 export interface LoginResponse { access_token: string; token_type: string; user: AuthUser }
 export interface RefreshResponse { access_token: string; token_type: string }

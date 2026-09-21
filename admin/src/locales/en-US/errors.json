@@ -5,6 +5,7 @@
   "AUTH_UNAUTHORIZED": "Your session has expired. Please sign in again.",
   "AUTH_SESSION_STORE_UNAVAILABLE": "Authentication is temporarily unavailable. Please try again later.",
   "RBAC_FORBIDDEN": "You do not have permission to perform this action.",
+  "RBAC_PERMISSIONS_ERROR": "User permissions could not be loaded.",
   "RBAC_ROLE_NOT_FOUND": "The role was not found.",
   "RBAC_PERMISSION_NOT_FOUND": "The permission was not found.",
   "RBAC_USER_NOT_FOUND": "The user was not found.",

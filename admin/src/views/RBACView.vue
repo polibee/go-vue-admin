@@ -53,9 +53,9 @@ async function loadRBAC() {
   error.value = ''
   try {
     const [userData, roleData, permissionData] = await Promise.all([
-      apiFetch<RBACUser[]>('/api/v1/admin/users', {}, auth.token),
-      apiFetch<RBACRole[]>('/api/v1/admin/roles', {}, auth.token),
-      apiFetch<RBACPermission[]>('/api/v1/admin/permissions', {}, auth.token),
+      auth.can('admin.users.view') ? apiFetch<RBACUser[]>('/api/v1/admin/users', {}, auth.token) : Promise.resolve([]),
+      auth.canAny(['admin.roles.manage', 'admin.permissions.manage']) ? apiFetch<RBACRole[]>('/api/v1/admin/roles', {}, auth.token) : Promise.resolve([]),
+      auth.canAny(['admin.roles.manage', 'admin.permissions.manage']) ? apiFetch<RBACPermission[]>('/api/v1/admin/permissions', {}, auth.token) : Promise.resolve([]),
     ])
     users.value = userData
     roles.value = roleData
@@ -191,27 +191,27 @@ onMounted(loadRBAC)
   <div class="flex flex-col gap-6">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div><h1 class="text-2xl font-semibold tracking-tight">{{ t('rbac.title') }}</h1><p class="text-sm text-muted-foreground">{{ t('rbac.description') }}</p></div>
-      <Button @click="openCreateRole">{{ t('rbac.createRole') }}</Button>
+      <Button v-if="auth.can('admin.roles.manage')" @click="openCreateRole">{{ t('rbac.createRole') }}</Button>
     </div>
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Alert v-if="actionError" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <div v-if="loading" class="grid gap-4 lg:grid-cols-3"><Skeleton v-for="item in 3" :key="item" class="h-64" /></div>
     <div v-else class="grid gap-4 lg:grid-cols-3">
-      <Card>
+      <Card v-if="auth.can('admin.users.view')">
         <CardHeader><CardTitle>{{ t('rbac.users') }}</CardTitle><CardDescription>{{ users.length }}</CardDescription></CardHeader>
         <CardContent>
           <Empty v-if="!users.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('rbac.noUsers') }}</EmptyDescription></EmptyHeader></Empty>
-          <Table v-else><TableHeader><TableRow><TableHead>{{ t('rbac.name') }}</TableHead><TableHead>{{ t('rbac.status') }}</TableHead><TableHead /></TableRow></TableHeader><TableBody><TableRow v-for="user in users" :key="user.id"><TableCell><div class="font-medium">{{ user.name }}</div><div class="text-xs text-muted-foreground">{{ user.email }}</div></TableCell><TableCell><Badge variant="secondary">{{ t(userStatusLabelKey(user.status)) }}</Badge></TableCell><TableCell><Button variant="ghost" size="sm" @click="openUserRoles(user)">{{ t('rbac.assignRoles') }}</Button></TableCell></TableRow></TableBody></Table>
+          <Table v-else><TableHeader><TableRow><TableHead>{{ t('rbac.name') }}</TableHead><TableHead>{{ t('rbac.status') }}</TableHead><TableHead /></TableRow></TableHeader><TableBody><TableRow v-for="user in users" :key="user.id"><TableCell><div class="font-medium">{{ user.name }}</div><div class="text-xs text-muted-foreground">{{ user.email }}</div></TableCell><TableCell><Badge variant="secondary">{{ t(userStatusLabelKey(user.status)) }}</Badge></TableCell><TableCell><Button v-if="auth.can('admin.roles.manage')" variant="ghost" size="sm" @click="openUserRoles(user)">{{ t('rbac.assignRoles') }}</Button></TableCell></TableRow></TableBody></Table>
         </CardContent>
       </Card>
-      <Card class="lg:col-span-2">
+      <Card v-if="auth.can('admin.roles.manage')" class="lg:col-span-2">
         <CardHeader><CardTitle>{{ t('rbac.roles') }}</CardTitle><CardDescription>{{ roles.length }}</CardDescription></CardHeader>
         <CardContent>
           <Empty v-if="!roles.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('rbac.noRoles') }}</EmptyDescription></EmptyHeader></Empty>
           <Table v-else><TableHeader><TableRow><TableHead>{{ t('rbac.name') }}</TableHead><TableHead>{{ t('rbac.displayName') }}</TableHead><TableHead /></TableRow></TableHeader><TableBody><TableRow v-for="role in roles" :key="role.id"><TableCell><div class="font-medium">{{ role.name }}</div></TableCell><TableCell>{{ role.display_name }}</TableCell><TableCell class="flex justify-end gap-1"><Button variant="ghost" size="sm" @click="openRolePermissions(role)">{{ t('rbac.assignPermissions') }}</Button><Button variant="ghost" size="sm" @click="openEditRole(role)">{{ t('rbac.editRole') }}</Button><Button variant="ghost" size="sm" :disabled="role.name === 'super-admin'" @click="openDeleteRole(role)">{{ t('rbac.deleteRole') }}</Button></TableCell></TableRow></TableBody></Table>
         </CardContent>
       </Card>
-      <Card class="lg:col-span-3">
+      <Card v-if="auth.canAny(['admin.roles.manage', 'admin.permissions.manage'])" class="lg:col-span-3">
         <CardHeader><CardTitle>{{ t('rbac.permissions') }}</CardTitle><CardDescription>{{ permissions.length }}</CardDescription></CardHeader>
         <CardContent><Empty v-if="!permissions.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('rbac.noPermissions') }}</EmptyDescription></EmptyHeader></Empty><ul v-else class="grid gap-3 md:grid-cols-2 lg:grid-cols-3"><li v-for="permission in permissions" :key="permission.id" class="rounded-md border p-3"><div class="font-medium">{{ permission.display_name }}</div><div class="text-xs text-muted-foreground">{{ permission.name }}</div></li></ul></CardContent>
       </Card>
