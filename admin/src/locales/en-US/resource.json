@@ -28,7 +28,10 @@
   "saving": "Saving…",
   "save": "Save",
   "cancel": "Cancel",
-  "create": "New resource"
+  "create": "New resource",
+  "filterAll": "All",
+  "trueValue": "Yes",
+  "falseValue": "No"
   ,"actions": "Actions"
   ,"edit": "Edit"
   ,"delete": "Delete"

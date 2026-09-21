@@ -28,7 +28,10 @@
   "saving": "保存中…",
   "save": "保存",
   "cancel": "取消",
-  "create": "新建资源"
+  "create": "新建资源",
+  "filterAll": "全部",
+  "trueValue": "是",
+  "falseValue": "否"
   ,"actions": "操作"
   ,"edit": "编辑"
   ,"delete": "删除"

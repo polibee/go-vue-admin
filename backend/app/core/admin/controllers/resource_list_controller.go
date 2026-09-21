@@ -7,6 +7,7 @@ import (
 	"github.com/goravel/framework/contracts/database/orm"
 	"github.com/goravel/framework/contracts/http"
 
+	"goravel/app/core/resource"
 	"goravel/app/facades"
 	"goravel/app/models"
 	"goravel/app/modules/admin/registry"
@@ -73,7 +74,13 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 			allowedColumns[column.Name] = true
 			searchColumns = append(searchColumns, column.Name)
 		}
-		q = applyResourceSearch(q, query.Search, searchColumns...)
+		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFields(manifest))...)
+		for _, field := range resourceFilterFields(manifest) {
+			value := strings.TrimSpace(ctx.Request().Query(field.Name))
+			if value != "" && value != "all" && resourceFilterValueAllowed(field, value) {
+				q = q.Where(field.Name+" = ?", value)
+			}
+		}
 		query.Sort = allowedSort(query.Sort, allowedColumns, "id")
 		q = q.OrderBy(query.Sort, query.Dir)
 		if err := q.Paginate(query.Page, query.PerPage, rows, &total); err != nil {
@@ -116,6 +123,49 @@ func applyResourceSearch(query orm.Query, search string, columns ...string) orm.
 		query = query.OrWhere(column+" LIKE ?", like)
 	}
 	return query
+}
+
+func resourceSearchFields(manifest resource.Manifest) []resource.Field {
+	fields := make([]resource.Field, 0)
+	for _, field := range manifest.Fields {
+		if field.Type == "text" || field.Type == "email" {
+			fields = append(fields, field)
+		}
+	}
+	return fields
+}
+
+func resourceFilterFields(manifest resource.Manifest) []resource.Field {
+	fields := make([]resource.Field, 0)
+	for _, field := range manifest.Fields {
+		if field.Type == "select" || field.Type == "boolean" {
+			fields = append(fields, field)
+		}
+	}
+	return fields
+}
+
+func fieldNames(fields []resource.Field) []string {
+	names := make([]string, 0, len(fields))
+	for _, field := range fields {
+		names = append(names, field.Name)
+	}
+	return names
+}
+
+func resourceFilterValueAllowed(field resource.Field, value string) bool {
+	if field.Type == "boolean" {
+		return value == "true" || value == "false" || value == "1" || value == "0"
+	}
+	if len(field.Options) == 0 {
+		return true
+	}
+	for _, option := range field.Options {
+		if option.Value == value {
+			return true
+		}
+	}
+	return false
 }
 
 func allowedSort(value string, allowed map[string]bool, fallback string) string {

@@ -47,9 +47,11 @@ const selectedIds = ref<string[]>([])
 const bulkStatus = ref<UserStatus>('disabled')
 const bulkStatusDialogOpen = ref(false)
 const bulkUpdating = ref(false)
+const filterValues = ref<Record<string, string>>({})
 
 const resourceName = computed(() => props.resource || String(route.params.resource || 'users'))
 const currentManifest = computed(() => manifests.value.find((item) => item.name === resourceName.value))
+const filterFields = computed(() => (currentManifest.value?.fields || []).filter((field) => field.type === 'select' || field.type === 'boolean'))
 const canManageUsers = computed(() => auth.can('admin.users.manage'))
 const canManageRoles = computed(() => auth.can('admin.roles.manage'))
 const canCreate = computed(() => resourceName.value === 'users' ? canManageUsers.value : resourceName.value === 'roles' ? canManageRoles.value : hasAction('create'))
@@ -75,6 +77,10 @@ async function loadRows(page = 1) {
     const params = new URLSearchParams({ page: String(page), per_page: pageSize.value, sort: sort.value, dir: direction.value })
     if (search.value.trim()) params.set('search', search.value.trim())
     if (resourceName.value === 'users' && statusFilter.value !== 'all') params.set('status', statusFilter.value)
+    for (const field of filterFields.value) {
+      const value = filterValues.value[field.name]
+      if (value && value !== 'all') params.set(field.name, value)
+    }
     const response = await generatedApi.resourceList<Record<string, unknown>>(resourceName.value, params, auth.token)
     rows.value = response.data
     meta.value = response.meta as unknown as ResourceMeta
@@ -103,6 +109,13 @@ function selectResource(name: string) { void router.push(`/${name}`) }
 function displayValue(value: unknown) { return value === null || value === undefined ? '—' : String(value) }
 function statusLabel(value: unknown) { return typeof value === 'string' ? t(userStatusLabelKey(value as UserStatus)) : '—' }
 function changeStatusFilter(value: unknown) { statusFilter.value = String(value); void loadRows(1) }
+function filterOptions(field: ResourceManifest['fields'][number]) {
+  return field.type === 'boolean' ? [{ value: 'all', label: t('resource.filterAll') }, { value: 'true', label: t('resource.trueValue') }, { value: 'false', label: t('resource.falseValue') }] : [{ value: 'all', label: t('resource.filterAll') }, ...(field.options || [])]
+}
+function changeResourceFilter(name: string, value: unknown) {
+  filterValues.value = { ...filterValues.value, [name]: String(value) }
+  void loadRows(1)
+}
 function toggleRow(id: unknown, checked: boolean | 'indeterminate') {
   const value = String(id)
   selectedIds.value = checked === true ? [...new Set([...selectedIds.value, value])] : selectedIds.value.filter((item) => item !== value)
@@ -161,14 +174,14 @@ onMounted(async () => {
     loading.value = false
   }
 })
-watch(resourceName, () => { statusFilter.value = 'all'; void loadRows(1) })
+watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {}; void loadRows(1) })
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-semibold tracking-tight">{{ t('resource.title') }}</h1>
+        <h1 class="text-2xl font-semibold tracking-tight">{{ currentManifest?.label || t('resource.title') }}</h1>
         <p class="text-sm text-muted-foreground">{{ t('resource.description') }}</p>
       </div>
       <div class="flex gap-2"><Button v-if="canCreate" variant="default" @click="router.push(resourceName === 'users' ? '/users/new' : resourceName === 'roles' ? '/roles/new' : `/${resourceName}/new`)">{{ resourceName === 'users' ? t('resource.createUser') : resourceName === 'roles' ? t('rbac.createRole') : t('resource.create') }}</Button><Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
@@ -190,7 +203,7 @@ watch(resourceName, () => { statusFilter.value = 'all'; void loadRows(1) })
     <Card>
       <CardHeader class="gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div><CardTitle>{{ currentManifest?.label || t('resource.resourceNotFound') }}</CardTitle><CardDescription>{{ t('resource.total', { count: meta.total }) }}</CardDescription></div>
-        <form class="flex w-full flex-wrap gap-2 sm:w-auto" @submit.prevent="submitSearch"><Select v-if="resourceName === 'users'" :model-value="statusFilter" @update:model-value="changeStatusFilter"><SelectTrigger class="w-32" :aria-label="t('resource.statusFilter')"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{{ t('resource.statusAll') }}</SelectItem><SelectItem v-for="status in USER_STATUSES" :key="status" :value="status">{{ t(userStatusLabelKey(status)) }}</SelectItem></SelectContent></Select><Input v-model="search" class="sm:w-64" :placeholder="t('resource.searchPlaceholder')" :aria-label="t('resource.search')" /><Button type="submit" size="icon" :aria-label="t('resource.search')"><Search /></Button></form>
+        <form class="flex w-full flex-wrap gap-2 sm:w-auto" @submit.prevent="submitSearch"><Select v-if="resourceName === 'users'" :model-value="statusFilter" @update:model-value="changeStatusFilter"><SelectTrigger class="w-32" :aria-label="t('resource.statusFilter')"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{{ t('resource.statusAll') }}</SelectItem><SelectItem v-for="status in USER_STATUSES" :key="status" :value="status">{{ t(userStatusLabelKey(status)) }}</SelectItem></SelectContent></Select><Select v-for="field in filterFields" :key="field.name" :model-value="filterValues[field.name] || 'all'" @update:model-value="changeResourceFilter(field.name, $event)"><SelectTrigger class="w-36" :aria-label="field.label"><SelectValue :placeholder="field.label" /></SelectTrigger><SelectContent><SelectItem v-for="option in filterOptions(field)" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select><Input v-model="search" class="sm:w-64" :placeholder="t('resource.searchPlaceholder')" :aria-label="t('resource.search')" /><Button type="submit" size="icon" :aria-label="t('resource.search')"><Search /></Button></form>
       </CardHeader>
       <CardContent>
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
