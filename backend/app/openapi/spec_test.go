@@ -8,7 +8,7 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		t.Fatalf("unexpected OpenAPI version: %v", spec["openapi"])
 	}
 	paths := spec["paths"].(map[string]any)
-	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/{resource}", "/admin/{resource}/export", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/settings", "/admin/settings/{key}", "/admin/users/status"} {
+	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/search", "/admin/{resource}", "/admin/{resource}/export", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/settings", "/admin/settings/{key}", "/admin/users/status"} {
 		if _, ok := paths[path]; !ok {
 			t.Fatalf("missing contract path %s", path)
 		}
@@ -34,7 +34,7 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		}
 	}
 	schemas := spec["components"].(map[string]any)["schemas"].(map[string]any)
-	for _, schema := range []string{"ResourceManifest", "ResourceField", "ResourceOption", "ResourceAction"} {
+	for _, schema := range []string{"ResourceManifest", "ResourceField", "ResourceOption", "ResourceAction", "GlobalSearchResult", "GlobalSearchResponse"} {
 		if _, ok := schemas[schema]; !ok {
 			t.Fatalf("missing resource schema %s", schema)
 		}

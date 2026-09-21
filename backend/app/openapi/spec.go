@@ -9,13 +9,15 @@ func Spec() map[string]any {
 		"components": map[string]any{
 			"securitySchemes": map[string]any{"bearerAuth": map[string]any{"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}},
 			"schemas": map[string]any{
-				"UserStatus":       map[string]any{"type": "string", "enum": []string{"active", "disabled", "locked"}},
-				"Error":            map[string]any{"type": "object", "required": []string{"code"}, "properties": map[string]any{"code": map[string]any{"type": "string"}}},
-				"ResourceOption":   resourceOptionSchema(),
-				"ResourceField":    resourceFieldSchema(),
-				"ResourceColumn":   resourceColumnSchema(),
-				"ResourceAction":   resourceActionSchema(),
-				"ResourceManifest": resourceManifestSchema(),
+				"UserStatus":           map[string]any{"type": "string", "enum": []string{"active", "disabled", "locked"}},
+				"Error":                map[string]any{"type": "object", "required": []string{"code"}, "properties": map[string]any{"code": map[string]any{"type": "string"}}},
+				"ResourceOption":       resourceOptionSchema(),
+				"ResourceField":        resourceFieldSchema(),
+				"ResourceColumn":       resourceColumnSchema(),
+				"ResourceAction":       resourceActionSchema(),
+				"ResourceManifest":     resourceManifestSchema(),
+				"GlobalSearchResult":   globalSearchResultSchema(),
+				"GlobalSearchResponse": globalSearchResponseSchema(),
 			},
 		},
 		"paths": map[string]any{
@@ -29,11 +31,12 @@ func Spec() map[string]any {
 			"/auth/logout-all": map[string]any{"post": operation("logoutAll")},
 			"/auth/me":         map[string]any{"get": operation("currentUser")},
 			"/admin/registry":  map[string]any{"get": operation("listResources")},
+			"/admin/search":    map[string]any{"get": globalSearchOperation()},
 			"/admin/{resource}": map[string]any{
 				"get":  listOperation("listResourceRows", []map[string]any{pathParameter("resource"), queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("search", "string"), queryParameter("sort", "string"), queryParameter("dir", "string")}),
 				"post": resourceWriteOperation("createResource", "201"),
 			},
-			"/admin/{resource}/export":         exportOperation(),
+			"/admin/{resource}/export": exportOperation(),
 			"/admin/{resource}/{id}": map[string]any{
 				"get":    resourceItemOperation("showResource"),
 				"put":    resourceWriteOperation("updateResource", "200", true),
@@ -68,7 +71,19 @@ func resourceActionSchema() map[string]any {
 }
 
 func resourceManifestSchema() map[string]any {
-	return map[string]any{"type": "object", "required": []string{"name", "label", "route", "fields", "columns"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "route": map[string]any{"type": "string"}, "fields": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceField"}}, "columns": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceColumn"}}, "actions": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceAction"}}}}
+	return map[string]any{"type": "object", "required": []string{"name", "label", "route", "permissions", "fields", "columns"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "route": map[string]any{"type": "string"}, "permissions": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}, "fields": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceField"}}, "columns": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceColumn"}}, "actions": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceAction"}}}}
+}
+
+func globalSearchResultSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"resource", "label", "id", "title", "route"}, "properties": map[string]any{
+		"resource": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "id": map[string]any{"oneOf": []map[string]any{{"type": "string"}, {"type": "integer"}}}, "title": map[string]any{"type": "string"}, "subtitle": map[string]any{"type": "string"}, "route": map[string]any{"type": "string"},
+	}}
+}
+
+func globalSearchResponseSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"data"}, "properties": map[string]any{
+		"data": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/GlobalSearchResult"}},
+	}}
 }
 
 func jsonBody(name string, schema map[string]any) map[string]any {
@@ -91,6 +106,17 @@ func listOperation(operationID string, parameters []map[string]any) map[string]a
 	result := operation(operationID)
 	result["parameters"] = parameters
 	return result
+}
+
+func globalSearchOperation() map[string]any {
+	return map[string]any{
+		"operationId": "globalSearch",
+		"parameters":  []map[string]any{queryParameter("q", "string")},
+		"responses": map[string]any{
+			"200": map[string]any{"description": "Search results", "content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"$ref": "#/components/schemas/GlobalSearchResponse"}}}},
+			"401": errorResponse(), "403": errorResponse(),
+		},
+	}
 }
 
 func exportOperation() map[string]any {

@@ -28,6 +28,7 @@ export interface ResourceList<T = Record<string, unknown>> { data: T[]; meta: Re
 export interface BulkUserStatusRequest { user_ids: number[]; status: UserStatus }
 export interface AdminOverview { users: number; roles: number; permissions: number }
 export interface AuditLog { id: number; user_id: number; action: string; metadata: Record<string, unknown> | null; created_at: string }
+export interface GlobalSearchResult { resource: string; label: string; id: string | number; title: string; subtitle?: string; route: string }
 
 export const generatedApi = {
   login(request: LoginRequest) { return apiFetch<LoginResponse>('/api/v1/auth/login', { method: 'POST', body: JSON.stringify(request) }) },
@@ -40,6 +41,9 @@ export const generatedApi = {
       if (!Array.isArray(payload)) throw new ApiError('Invalid resource registry response', 502, 'INTERNAL_ERROR')
       return payload as ResourceManifest[]
     })
+  },
+  globalSearch(query: string, token: string) {
+    return apiFetch<GlobalSearchResult[]>('/api/v1/admin/search?q=' + encodeURIComponent(query), {}, token)
   },
   overview(token: string) { return apiFetch<AdminOverview>('/api/v1/admin/overview', {}, token) },
   auditLogs(token: string, query: URLSearchParams) { return apiFetchEnvelope<AuditLog[]>('/api/v1/admin/audit-logs?' + query, {}, token) as unknown as Promise<ResourceList<AuditLog>> },

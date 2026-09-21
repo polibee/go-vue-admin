@@ -15,7 +15,7 @@ function Assert-Contract([bool]$Condition, [string]$Message) {
 
 $spec = Invoke-RestMethod -Uri "$BaseUrl/api/openapi.json"
 Assert-Contract ($spec.openapi -eq "3.0.3") "OpenAPI version is 3.0.3"
-foreach ($path in @("/auth/login", "/auth/refresh", "/auth/logout-all", "/auth/me", "/admin/registry", "/admin/{resource}", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/users/status")) {
+foreach ($path in @("/auth/login", "/auth/refresh", "/auth/logout-all", "/auth/me", "/admin/registry", "/admin/search", "/admin/{resource}", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/users/status")) {
     Assert-Contract ($null -ne $spec.paths.$path) "contract path exists: $path"
 }
 

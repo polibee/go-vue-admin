@@ -4,5 +4,6 @@
   "environmentDescription": "Vue 3, TypeScript, Pinia, Vue Router, Vue I18n, and official shadcn-vue components are configured.",
   "navigation": "Navigation",
   "searchResources": "Search resources",
-  "noSearchResults": "No matching resources"
+  "noSearchResults": "No matching resources or data",
+  "searchData": "Data results"
 }

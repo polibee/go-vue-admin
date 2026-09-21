@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/auth'
 import { generatedResourceDefinitions } from '@/core/resource/generated'
-import { generatedApi, type ResourceManifest } from '@/generated/api'
+import { generatedApi, type GlobalSearchResult, type ResourceManifest } from '@/generated/api'
 import { dashboardResourceRoute, visibleDashboardResources } from '@/lib/dashboard-resources'
 
 const { t, locale } = useI18n()
@@ -22,6 +22,10 @@ const auth = useAuthStore()
 const resourceManifests = ref<ResourceManifest[]>([])
 const searchOpen = ref(false)
 const searchResults = computed(() => visibleDashboardResources(resourceManifests.value, auth.user?.permissions || []))
+const globalSearchResults = ref<GlobalSearchResult[]>([])
+const globalSearchLoading = ref(false)
+let globalSearchTimer: ReturnType<typeof setTimeout> | undefined
+let globalSearchRequest = 0
 const breadcrumbResource = computed(() => {
   const routeResource = typeof route.params.resource === 'string' ? route.params.resource : ''
   if (routeResource) return routeResource
@@ -60,6 +64,34 @@ function openResource(resource: { name: string; route: string }) {
   void router.push(dashboardResourceRoute(resource))
 }
 
+function openSearchResult(result: GlobalSearchResult) {
+  searchOpen.value = false
+  void router.push(result.route)
+}
+
+function handleSearchInput(value: string) {
+  const query = value.trim()
+  globalSearchRequest += 1
+  const request = globalSearchRequest
+  if (globalSearchTimer) clearTimeout(globalSearchTimer)
+  if (query.length < 2 || !auth.token) {
+    globalSearchResults.value = []
+    globalSearchLoading.value = false
+    return
+  }
+  globalSearchLoading.value = true
+  globalSearchTimer = setTimeout(async () => {
+    try {
+      const results = await generatedApi.globalSearch(query, auth.token as string)
+      if (request === globalSearchRequest) globalSearchResults.value = results
+    } catch {
+      if (request === globalSearchRequest) globalSearchResults.value = []
+    } finally {
+      if (request === globalSearchRequest) globalSearchLoading.value = false
+    }
+  }, 250)
+}
+
 function handleSearchShortcut(event: KeyboardEvent) {
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
     event.preventDefault()
@@ -73,7 +105,10 @@ onMounted(async () => {
   try { resourceManifests.value = await generatedApi.resourceRegistry(auth.token) } catch { resourceManifests.value = [] }
 })
 
-onBeforeUnmount(() => window.removeEventListener('keydown', handleSearchShortcut))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleSearchShortcut)
+  if (globalSearchTimer) clearTimeout(globalSearchTimer)
+})
 </script>
 
 <template>
@@ -192,10 +227,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleSearchShortcut
         <Button variant="ghost" size="sm" @click="toggleLocale"><Languages />{{ locale === 'zh-CN' ? 'EN' : '中文' }}</Button>
       </header>
       <CommandDialog v-model:open="searchOpen" :title="t('core.searchResources')" :description="t('core.searchResources')">
-        <CommandInput :placeholder="t('core.searchResources')" />
+        <CommandInput :placeholder="t('core.searchResources')" @update:model-value="handleSearchInput" />
         <CommandList>
-          <CommandEmpty>{{ t('core.noSearchResults') }}</CommandEmpty>
-          <CommandGroup>
+          <CommandEmpty v-if="!globalSearchLoading">{{ t('core.noSearchResults') }}</CommandEmpty>
+          <CommandGroup v-if="globalSearchResults.length" :heading="t('core.searchData')">
+            <CommandItem v-for="result in globalSearchResults" :key="result.resource + ':' + result.id" :value="result.title + ' ' + (result.subtitle || '')" @select="openSearchResult(result)">
+              <span>{{ result.title }}</span>
+              <span v-if="result.subtitle" class="truncate text-xs text-muted-foreground">{{ result.subtitle }}</span>
+              <span class="ml-auto text-xs text-muted-foreground">{{ result.label }}</span>
+            </CommandItem>
+          </CommandGroup>
+          <CommandGroup :heading="t('core.searchResources')">
             <CommandItem v-for="resource in searchResults" :key="resource.name" :value="resource.name + ' ' + resource.label" @select="openResource(resource)">
               <span>{{ resource.label }}</span>
               <span class="ml-auto text-xs text-muted-foreground">{{ resource.name }}</span>
