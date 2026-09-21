@@ -22,7 +22,7 @@ Resource Registry、字段、列、标准列表查询（分页、搜索、排序
 
 ## Phase 5：Generator
 
-第一阶段已完成：`admin:make-resource` 可确定性生成后端 Resource 基础骨架、迁移文件和 Manifest Golden File 测试；生成前完整检查冲突，默认不覆盖人工文件，不自动注册路由/Registry，也不自动执行迁移。Module、CRUD、权限、菜单和前端页面生成仍待后续阶段。
+第一阶段已完成：`admin:make-resource` 可确定性生成后端 Resource 基础骨架、迁移文件和 Manifest Golden File 测试；`admin:make-module` 可生成编译期模块边界和测试骨架。生成前完整检查冲突，默认不覆盖人工文件，不自动注册路由/Registry，也不自动执行迁移。CRUD、权限、菜单和前端页面生成仍待后续阶段。
 
 ## Phase 6：可选扩展
 

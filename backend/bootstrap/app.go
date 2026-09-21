@@ -16,7 +16,10 @@ func Boot() contractsfoundation.Application {
 		WithSeeders(Seeders).
 		WithMigrations(Migrations).
 		WithCommands(func() []contractsconsole.Command {
-			return []contractsconsole.Command{adminconsole.ResourceGeneratorCommand{}}
+			return []contractsconsole.Command{
+				adminconsole.ResourceGeneratorCommand{},
+				adminconsole.ModuleGeneratorCommand{},
+			}
 		}).
 		WithRouting(func() {
 			routes.Web()

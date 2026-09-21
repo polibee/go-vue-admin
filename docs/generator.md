@@ -26,6 +26,16 @@ go run . artisan admin:make-resource posts \
 3. 手动注册需要暴露的 Routes 和权限；
 4. 手动执行已审阅的数据库迁移。
 
+## 已实现：`admin:make-module`
+
+模块生成器只创建编译期模块边界，不改变应用启动注册表：
+
+```text
+go run . artisan admin:make-module billing
+```
+
+命令会在 `backend/app/modules/billing/` 下生成 `module.go`、`model.go`、`request.go`、`repository.go`、`service.go`、`controller.go`、`routes.go`、`resource.go`、`permissions.go`、`events.go` 和 `tests/module_test.go`。它不生成迁移，也不自动注册 Provider、Routes、Permissions、菜单或 Resource Registry。
+
 ## 第一阶段命令
 
 ```text

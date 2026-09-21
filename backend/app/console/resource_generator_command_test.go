@@ -14,3 +14,13 @@ func TestResourceGeneratorCommandMetadata(t *testing.T) {
 		t.Fatalf("flag count = %d, want 4", len(command.Extend().Flags))
 	}
 }
+
+func TestModuleGeneratorCommandMetadata(t *testing.T) {
+	command := ModuleGeneratorCommand{}
+	if command.Signature() != "admin:make-module" {
+		t.Fatalf("signature = %q", command.Signature())
+	}
+	if len(command.Extend().Arguments) != 1 {
+		t.Fatalf("argument count = %d, want 1", len(command.Extend().Arguments))
+	}
+}
