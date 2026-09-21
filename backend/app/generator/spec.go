@@ -43,12 +43,18 @@ type FieldSpec struct {
 	GoName   string
 	Type     string
 	Required bool
+	Options  []FieldOption
+}
+
+type FieldOption struct {
+	Value string
+	Label string
 }
 
 func ParseField(value string) (FieldSpec, error) {
 	parts := strings.Split(value, ":")
-	if len(parts) < 2 || len(parts) > 3 || !fieldNamePattern.MatchString(parts[0]) {
-		return FieldSpec{}, fmt.Errorf("invalid field %q: expected name:type[:required]", value)
+	if len(parts) < 2 || len(parts) > 4 || !fieldNamePattern.MatchString(parts[0]) {
+		return FieldSpec{}, fmt.Errorf("invalid field %q: expected name:type[:required[:value=Label|value=Label]]", value)
 	}
 	if _, ok := supportedFieldTypes[parts[1]]; !ok {
 		return FieldSpec{}, fmt.Errorf("unsupported field type %q", parts[1])
@@ -60,7 +66,38 @@ func ParseField(value string) (FieldSpec, error) {
 		}
 		field.Required = true
 	}
+	if len(parts) == 4 {
+		if parts[2] != "required" || field.Type != "select" {
+			return FieldSpec{}, fmt.Errorf("field options require a required select field")
+		}
+		field.Required = true
+		options, err := parseFieldOptions(parts[3])
+		if err != nil {
+			return FieldSpec{}, fmt.Errorf("invalid field options: %w", err)
+		}
+		field.Options = options
+	}
 	return field, nil
+}
+
+func parseFieldOptions(value string) ([]FieldOption, error) {
+	if value == "" {
+		return nil, fmt.Errorf("options cannot be empty")
+	}
+	seen := make(map[string]struct{})
+	options := make([]FieldOption, 0)
+	for _, raw := range strings.Split(value, "|") {
+		parts := strings.SplitN(raw, "=", 2)
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			return nil, fmt.Errorf("expected value=Label pairs")
+		}
+		if _, exists := seen[parts[0]]; exists {
+			return nil, fmt.Errorf("duplicate option %q", parts[0])
+		}
+		seen[parts[0]] = struct{}{}
+		options = append(options, FieldOption{Value: parts[0], Label: parts[1]})
+	}
+	return options, nil
 }
 
 func Normalize(input Input) (Spec, error) {

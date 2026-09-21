@@ -31,7 +31,7 @@ func (ResourceGeneratorCommand) Extend() command.Extend {
 			&command.StringFlag{Name: "route", Usage: "admin route"},
 			&command.StringFlag{Name: "permission", Usage: "view permission"},
 			&command.StringFlag{Name: "icon", Usage: "menu icon"},
-			&command.StringSliceFlag{Name: "field", Usage: "field definition name:type[:required]", Required: true},
+			&command.StringSliceFlag{Name: "field", Usage: "field definition name:type[:required[:value=Label|value=Label]]", Required: true},
 		},
 	}
 }

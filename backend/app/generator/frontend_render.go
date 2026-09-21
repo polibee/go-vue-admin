@@ -157,7 +157,15 @@ describe('%s resource metadata', () => {
 func frontendFields(spec Spec) string {
 	parts := make([]string, 0, len(spec.Fields))
 	for _, field := range spec.Fields {
-		parts = append(parts, fmt.Sprintf("{ name: %q, label: %q, type: %q, required: %t }", field.Name, humanize(field.Name), field.Type, field.Required))
+		options := ""
+		if len(field.Options) > 0 {
+			values := make([]string, 0, len(field.Options))
+			for _, option := range field.Options {
+				values = append(values, fmt.Sprintf("{ value: %q, label: %q }", option.Value, option.Label))
+			}
+			options = ", options: [" + strings.Join(values, ", ") + "]"
+		}
+		parts = append(parts, fmt.Sprintf("{ name: %q, label: %q, type: %q, required: %t%s }", field.Name, humanize(field.Name), field.Type, field.Required, options))
 	}
 	return "[" + strings.Join(parts, ", ") + "]"
 }

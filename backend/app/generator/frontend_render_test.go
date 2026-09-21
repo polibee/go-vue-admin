@@ -6,7 +6,7 @@ import (
 )
 
 func TestRenderFrontendArtifactsFromResourceSpec(t *testing.T) {
-	spec, err := Normalize(Input{Name: "orders", Label: "Orders", Route: "/admin/orders", Icon: "shopping-cart", Fields: []string{"number:text:required", "paid:boolean"}})
+	spec, err := Normalize(Input{Name: "orders", Label: "Orders", Route: "/admin/orders", Icon: "shopping-cart", Fields: []string{"number:text:required", "paid:boolean", "state:select:required:open=Open|closed=Closed"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,6 +53,14 @@ func TestRenderFrontendArtifactsFromResourceSpec(t *testing.T) {
 		}
 		if artifact.Path == "admin/src/modules/orders/pages/OrdersFormPage.vue" && !strings.Contains(string(artifact.Content), "ResourceFormView") {
 			t.Fatal("generated form page does not use ResourceFormView")
+		}
+		if artifact.Path == "admin/src/modules/orders/resource.ts" {
+			content := string(artifact.Content)
+			for _, fragment := range []string{"name: \"state\"", "value: \"open\"", "label: \"Closed\""} {
+				if !strings.Contains(content, fragment) {
+					t.Fatalf("generated resource metadata missing %q", fragment)
+				}
+			}
 		}
 	}
 }

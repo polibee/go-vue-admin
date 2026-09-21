@@ -15,6 +15,16 @@ func TestParseFieldAcceptsRequiredSuffix(t *testing.T) {
 	}
 }
 
+func TestParseFieldAcceptsSelectOptions(t *testing.T) {
+	field, err := ParseField("status:select:required:active=Active|disabled=Disabled")
+	if err != nil {
+		t.Fatalf("parse select field: %v", err)
+	}
+	if len(field.Options) != 2 || field.Options[0].Value != "active" || field.Options[0].Label != "Active" || !field.Required {
+		t.Fatalf("field = %+v, want required select options", field)
+	}
+}
+
 func TestNormalizeRejectsUnsafeResourceName(t *testing.T) {
 	_, err := Normalize(Input{Name: "../posts", Fields: []string{"title:text"}})
 	if err == nil {
