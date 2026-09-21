@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowDownUp, RefreshCw, Search } from '@lucide/vue'
+import { ArrowDownUp, Pencil, RefreshCw, Search, Trash2 } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
@@ -12,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
+import { canDeleteResource, resourceActionPath } from '@/lib/resource-actions'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 
@@ -33,6 +35,9 @@ const direction = ref<'asc' | 'desc'>('desc')
 const pageSize = ref('10')
 const loading = ref(true)
 const error = ref('')
+const deleteDialogOpen = ref(false)
+const deleting = ref(false)
+const deleteTarget = ref<Record<string, unknown>>()
 
 const resourceName = computed(() => String(route.params.resource || 'users'))
 const currentManifest = computed(() => manifests.value.find((item) => item.name === resourceName.value))
@@ -81,6 +86,22 @@ function sortBy(column: ResourceColumn) {
 }
 function selectResource(name: string) { void router.push(`/${name}`) }
 function displayValue(value: unknown) { return value === null || value === undefined ? '—' : String(value) }
+function editPath(row: Record<string, unknown>) { return `/${resourceName.value}/${row.id}/edit` }
+function openDelete(row: Record<string, unknown>) { deleteTarget.value = row; deleteDialogOpen.value = true }
+async function deleteRow() {
+  if (!auth.token || !deleteTarget.value?.id) return
+  deleting.value = true
+  error.value = ''
+  try {
+    await apiFetch(resourceActionPath(resourceName.value, String(deleteTarget.value.id), 'delete'), { method: 'DELETE' }, auth.token)
+    deleteDialogOpen.value = false
+    await loadRows(meta.value.page)
+  } catch (value) {
+    error.value = localizedError(value)
+  } finally {
+    deleting.value = false
+  }
+}
 
 onMounted(async () => {
   try {
@@ -119,9 +140,10 @@ watch(resourceName, () => { void loadRows(1) })
       <CardContent>
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
         <Empty v-else-if="!rows.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
-        <Table v-else><TableHeader><TableRow><TableHead v-for="column in currentManifest?.columns || []" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-for="column in currentManifest?.columns || []" :key="column.name">{{ displayValue(row[column.name]) }}</TableCell></TableRow></TableBody></Table>
+        <Table v-else><TableHeader><TableRow><TableHead v-for="column in currentManifest?.columns || []" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead><TableHead class="w-36 text-right">{{ t('resource.actions') }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-for="column in currentManifest?.columns || []" :key="column.name">{{ displayValue(row[column.name]) }}</TableCell><TableCell class="text-right"><div v-if="row.id && (resourceName === 'users' || resourceName === 'roles')" class="flex justify-end gap-1" @click.stop><Button variant="ghost" size="sm" :aria-label="t('resource.edit')" @click="router.push(editPath(row))"><Pencil data-icon="inline-start" />{{ t('resource.edit') }}</Button><Button variant="ghost" size="sm" :disabled="!canDeleteResource(resourceName, row)" :aria-label="t('resource.delete')" @click="openDelete(row)"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div></TableCell></TableRow></TableBody></Table>
         <div v-if="!loading && meta.total > 0" class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between"><p class="text-sm text-muted-foreground">{{ t('resource.page', { page: meta.page }) }}</p><div class="flex items-center gap-2"><Select :model-value="pageSize" @update:model-value="changePageSize"><SelectTrigger class="w-24"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="10">{{ t('resource.perPage', { count: 10 }) }}</SelectItem><SelectItem value="20">{{ t('resource.perPage', { count: 20 }) }}</SelectItem><SelectItem value="50">{{ t('resource.perPage', { count: 50 }) }}</SelectItem></SelectContent></Select></div><Pagination v-model:page="meta.page" :items-per-page="meta.per_page" :total="meta.total" @update:page="loadRows"><PaginationContent v-slot="{ items }"><PaginationPrevious /><template v-for="(item, index) in items" :key="index"><PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === meta.page">{{ item.value }}</PaginationItem></template><PaginationNext /></PaginationContent></Pagination></div>
       </CardContent>
     </Card>
+    <AlertDialog v-model:open="deleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.deleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.deleteDescription') }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="deleting" @click="deleteRow">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>
 </template>

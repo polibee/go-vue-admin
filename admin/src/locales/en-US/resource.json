@@ -28,6 +28,11 @@
   "saving": "Saving…",
   "save": "Save",
   "cancel": "Cancel"
+  ,"actions": "Actions"
+  ,"edit": "Edit"
+  ,"delete": "Delete"
+  ,"deleteTitle": "Delete this item?"
+  ,"deleteDescription": "This action cannot be undone. Please confirm."
   ,"deleteUser": "Delete user",
   "deleteUserTitle": "Delete this user?",
   "deleteUserDescription": "The user's role links will be removed and this action cannot be undone."
