@@ -91,11 +91,15 @@ func (r *AuthController) Logout(ctx http.Context) http.Response {
 	if err := r.parseToken(ctx); err != nil {
 		return ctx.Response().WithoutCookie(services.RefreshTokenCookieName).Status(204).Json(nil)
 	}
+	response := ctx.Response().WithoutCookie(services.RefreshTokenCookieName)
 	if err := facades.Auth(ctx).Logout(); err != nil {
-		return unauthorized(ctx)
+		return response.Status(503).Json(http.Json{
+			"code":    "AUTH_SESSION_STORE_UNAVAILABLE",
+			"message": "authentication session storage is unavailable",
+		})
 	}
 
-	return ctx.Response().WithoutCookie(services.RefreshTokenCookieName).NoContent(204)
+	return response.NoContent(204)
 }
 
 func (r *AuthController) Refresh(ctx http.Context) http.Response {
