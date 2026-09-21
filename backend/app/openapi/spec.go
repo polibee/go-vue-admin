@@ -26,7 +26,7 @@ func Spec() map[string]any {
 			"/admin/resources":            map[string]any{"get": operation("listResources")},
 			"/admin/resources/{resource}": map[string]any{"get": operation("listResourceRows")},
 			"/admin/overview":             map[string]any{"get": operation("adminOverview")},
-			"/admin/audit-logs":           map[string]any{"get": operation("auditLogs")},
+			"/admin/audit-logs":           map[string]any{"get": listOperation("auditLogs", []map[string]any{queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("action", "string"), queryParameter("user_id", "integer")})},
 			"/admin/users/status": map[string]any{"put": map[string]any{
 				"operationId": "bulkSetUserStatus", "requestBody": jsonBody("BulkUserStatusRequest", map[string]any{"type": "object", "required": []string{"user_ids", "status"}, "properties": map[string]any{"user_ids": map[string]any{"type": "array", "items": map[string]any{"type": "integer", "format": "int64"}}, "status": map[string]any{"$ref": "#/components/schemas/UserStatus"}}}),
 				"responses": map[string]any{"204": map[string]any{"description": "Status updated"}, "409": errorResponse(), "422": errorResponse()},
@@ -49,4 +49,14 @@ func errorResponse() map[string]any {
 
 func operation(operationID string) map[string]any {
 	return map[string]any{"operationId": operationID, "responses": map[string]any{"200": jsonResponse(operationID + "Response"), "401": errorResponse(), "403": errorResponse()}}
+}
+
+func listOperation(operationID string, parameters []map[string]any) map[string]any {
+	result := operation(operationID)
+	result["parameters"] = parameters
+	return result
+}
+
+func queryParameter(name string, valueType string) map[string]any {
+	return map[string]any{"name": name, "in": "query", "required": false, "schema": map[string]any{"type": valueType}}
 }

@@ -37,7 +37,7 @@ export const generatedApi = {
   logoutAll(token: string) { return apiFetch<void>('/api/v1/auth/logout-all', { method: 'POST' }, token) },
   resourceManifests(token: string) { return apiFetch<ResourceManifest[]>('/api/v1/admin/resources', {}, token) },
   overview(token: string) { return apiFetch<AdminOverview>('/api/v1/admin/overview', {}, token) },
-  auditLogs(token: string) { return apiFetch<AuditLog[]>('/api/v1/admin/audit-logs', {}, token) },
+  auditLogs(token: string, query: URLSearchParams) { return apiFetchEnvelope<AuditLog[]>('/api/v1/admin/audit-logs?' + query, {}, token) as unknown as Promise<ResourceList<AuditLog>> },
   resourceList<T = Record<string, unknown>>(resource: string, query: URLSearchParams, token: string) { return apiFetchEnvelope<T[]>('/api/v1/admin/resources/' + resource + '?' + query, {}, token) as unknown as Promise<ResourceList<T>> },
   bulkSetUserStatus(request: BulkUserStatusRequest, token: string) { return apiFetch<void>('/api/v1/admin/users/status', { method: 'PUT', body: JSON.stringify(request) }, token) },
 }
