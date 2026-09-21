@@ -44,6 +44,21 @@ go run . artisan admin:check-module billing
 
 检查命令只读取文件，不创建、修改或删除文件，也不连接数据库。检查通过后仍需人工注册运行时边界；当前版本没有默认开启的自动注册选项。
 
+## 已实现：`admin:make-crud`
+
+CRUD 生成器组合模块和 Resource 生成器，生成完整的后端边界：
+
+```text
+go run . artisan admin:make-crud orders \
+  --label="Orders" \
+  --route="/admin/orders" \
+  --permission="admin.orders.view" \
+  --field=number:text:required \
+  --field=paid:boolean
+```
+
+它会一次性生成模块骨架、Resource 骨架、两个 README、测试骨架和迁移文件。所有目标文件会统一预检，任一文件冲突时不会写入任何文件。生成结果仍需人工注册运行时边界，迁移仍需人工审阅和执行。
+
 ## 第一阶段命令
 
 ```text
