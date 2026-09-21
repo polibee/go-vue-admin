@@ -22,6 +22,7 @@ type refreshTokenStore interface {
 	Put(key string, value any, ttl time.Duration) error
 	GetString(key string, def ...string) string
 	Forget(key string) bool
+	Probe() error
 }
 
 type RefreshTokenService struct {
@@ -65,11 +66,9 @@ func (s *RefreshTokenService) Consume(raw string) (uint, error) {
 }
 
 func (s *RefreshTokenService) probe() error {
-	const key = "auth:refresh:availability-probe"
-	if err := s.store.Put(key, "ok", time.Second); err != nil {
+	if err := s.store.Probe(); err != nil {
 		return fmt.Errorf("%w: %v", ErrRefreshTokenStoreUnavailable, err)
 	}
-	s.store.Forget(key)
 	return nil
 }
 

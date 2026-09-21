@@ -28,6 +28,13 @@ func (f *fakeRefreshTokenStore) Forget(key string) bool {
 	return true
 }
 
+func (f *fakeRefreshTokenStore) Probe() error {
+	if f.fail {
+		return errors.New("cache offline")
+	}
+	return nil
+}
+
 func TestRefreshTokenIssueAndConsumeRotatesOpaqueToken(t *testing.T) {
 	store := &fakeRefreshTokenStore{values: map[string]string{}}
 	service := NewRefreshTokenService(store)
@@ -60,5 +67,15 @@ func TestRefreshTokenStoreFailureIsReportedSeparately(t *testing.T) {
 	}
 	if _, err := service.Consume("opaque-token"); !errors.Is(err, ErrRefreshTokenStoreUnavailable) {
 		t.Fatalf("expected store unavailable on consume, got %v", err)
+	}
+}
+
+func TestDurableStoreFallsBackToPostgresWhenRedisProbeFails(t *testing.T) {
+	database := &fakeRefreshTokenStore{values: map[string]string{"auth:refresh:hash": "42"}}
+	redis := &fakeRefreshTokenStore{values: map[string]string{}, fail: true}
+	store := durableRefreshTokenStore{database: database, cache: redis}
+
+	if got := store.GetString("auth:refresh:hash"); got != "42" {
+		t.Fatalf("expected PostgreSQL fallback user 42, got %q", got)
 	}
 }

@@ -52,7 +52,7 @@ func (r *AuthController) Login(ctx http.Context) http.Response {
 			"message": "could not create access token",
 		})
 	}
-	refreshToken, err := services.NewRefreshTokenService(facades.Cache()).Issue(user.ID)
+	refreshToken, err := services.NewDurableRefreshTokenService().Issue(user.ID)
 	if err != nil {
 		if errors.Is(err, services.ErrRefreshTokenStoreUnavailable) {
 			return sessionStoreUnavailable(ctx)
@@ -87,7 +87,7 @@ func (r *AuthController) Me(ctx http.Context) http.Response {
 }
 
 func (r *AuthController) Logout(ctx http.Context) http.Response {
-	services.NewRefreshTokenService(facades.Cache()).Revoke(ctx.Request().Cookie(services.RefreshTokenCookieName))
+	services.NewDurableRefreshTokenService().Revoke(ctx.Request().Cookie(services.RefreshTokenCookieName))
 	if err := r.parseToken(ctx); err != nil {
 		return ctx.Response().WithoutCookie(services.RefreshTokenCookieName).Status(204).Json(nil)
 	}
@@ -103,7 +103,7 @@ func (r *AuthController) Logout(ctx http.Context) http.Response {
 }
 
 func (r *AuthController) Refresh(ctx http.Context) http.Response {
-	refreshService := services.NewRefreshTokenService(facades.Cache())
+	refreshService := services.NewDurableRefreshTokenService()
 	userID, err := refreshService.Consume(ctx.Request().Cookie(services.RefreshTokenCookieName))
 	if err != nil {
 		if errors.Is(err, services.ErrRefreshTokenStoreUnavailable) {

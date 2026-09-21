@@ -67,7 +67,8 @@ POST /api/v1/auth/refresh
 
 Redis 用于：
 
-- Refresh Token 会话；
+- PostgreSQL 权威 Refresh Token 会话；
+- Redis 镜像和高速读取；
 - Token 撤销；
 - 轮换重放检测；
 - 登录限流；
@@ -115,7 +116,7 @@ GET  /api/v1/auth/me
 - 基于 `admin.users.view`、`admin.roles.manage`、`admin.permissions.manage` 的后端细粒度授权；
 - API 错误统一返回稳定 `code`，前端按模块语言包渲染中文或英文。
 
-当前实现已接入独立的随机 Refresh Token：登录写入 HttpOnly Cookie，Redis 只保存 Token 哈希和用户 ID，刷新时一次性消费并轮换，重放返回 401，登出会撤销并清除 Cookie。生产环境仍需按部署拓扑配置 HTTPS、SameSite 和跨来源 Cookie 策略；`logout-all`、审计和登录限流仍属于后续增强。系统角色 `super-admin` 受到保护，最后一个具备管理权限的管理员不能被移除。
+当前实现已接入独立的随机 Refresh Token：登录写入 HttpOnly Cookie，PostgreSQL 保存权威会话，Redis 保存镜像和高速副本；刷新时一次性消费并轮换，Redis 不可用时自动查询 PostgreSQL，重放返回 401，登出会撤销并清除 Cookie。生产环境仍需按部署拓扑配置 HTTPS、SameSite 和跨来源 Cookie 策略；`logout-all`、审计和登录限流仍属于后续增强。系统角色 `super-admin` 受到保护，最后一个具备管理权限的管理员不能被移除。
 
 ## 测试
 
