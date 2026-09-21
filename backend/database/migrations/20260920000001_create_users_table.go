@@ -22,7 +22,7 @@ func (m *M20260920000001CreateUsersTable) Up() error {
 		table.String("name")
 		table.String("email")
 		table.String("password")
-		table.Boolean("is_active").Default(true)
+		table.String("status").Default("active")
 		table.String("locale").Default("zh-CN")
 		table.DateTimeTz("created_at").Nullable()
 		table.DateTimeTz("updated_at").Nullable()
