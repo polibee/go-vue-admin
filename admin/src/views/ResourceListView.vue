@@ -14,16 +14,16 @@ import { Pagination, PaginationContent, PaginationItem, PaginationNext, Paginati
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ApiError, apiFetch, apiFetchEnvelope, errorMessageKey } from '@/lib/api'
+import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
+import { generatedApi, type ResourceManifest as GeneratedResourceManifest, type ResourceListMeta } from '@/generated/api'
 import { canDeleteResource, resourceActionPath } from '@/lib/resource-actions'
 import { useAuthStore } from '@/stores/auth'
 import { USER_STATUSES, userStatusLabelKey, type UserStatus } from '@/lib/user-status'
 import { useI18n } from 'vue-i18n'
 
 interface ResourceColumn { name: string; label: string; sortable: boolean }
-interface ResourceAction { name: string; label: string; kind: string; permission: string }
-interface ResourceManifest { name: string; label: string; route: string; columns: ResourceColumn[]; actions?: ResourceAction[] }
-interface ResourceMeta { page: number; per_page: number; total: number; last_page: number }
+interface ResourceManifest extends GeneratedResourceManifest {}
+type ResourceMeta = ResourceListMeta
 
 const { t } = useI18n()
 const route = useRoute()
@@ -57,7 +57,7 @@ function localizedError(value: unknown) {
 
 async function loadManifests() {
   if (!auth.token) return
-  manifests.value = await apiFetch<ResourceManifest[]>('/api/v1/admin/resources', {}, auth.token)
+  manifests.value = await generatedApi.resourceManifests(auth.token)
   if (!currentManifest.value && manifests.value.length) {
     await router.replace(`/${manifests.value[0].name}`)
   }
@@ -71,7 +71,7 @@ async function loadRows(page = 1) {
     const params = new URLSearchParams({ page: String(page), per_page: pageSize.value, sort: sort.value, dir: direction.value })
     if (search.value.trim()) params.set('search', search.value.trim())
     if (resourceName.value === 'users' && statusFilter.value !== 'all') params.set('status', statusFilter.value)
-    const response = await apiFetchEnvelope<Record<string, unknown>[]>(`/api/v1/admin/resources/${resourceName.value}?${params}`, {}, auth.token)
+    const response = await generatedApi.resourceList<Record<string, unknown>>(resourceName.value, params, auth.token)
     rows.value = response.data
     meta.value = response.meta as unknown as ResourceMeta
     selectedIds.value = []
@@ -118,7 +118,7 @@ async function applyBulkStatus() {
   bulkUpdating.value = true
   error.value = ''
   try {
-    await apiFetch('/api/v1/admin/users/status', { method: 'PUT', body: JSON.stringify({ user_ids: selectedIds.value.map(Number), status: bulkStatus.value }) }, auth.token)
+    await generatedApi.bulkSetUserStatus({ user_ids: selectedIds.value.map(Number), status: bulkStatus.value }, auth.token)
     bulkStatusDialogOpen.value = false
     clearSelection()
     await loadRows(meta.value.page)

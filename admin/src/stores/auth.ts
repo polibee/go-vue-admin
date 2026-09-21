@@ -1,49 +1,53 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { apiFetch } from '@/lib/api'
-import type { UserStatus } from '@/lib/user-status'
+import { generatedApi, type AuthUser, type LoginResponse } from '@/generated/api'
 
-export interface AuthUser {
-  id: number
-  name: string
-  email: string
-  status: UserStatus
-  locale: string
-}
-
-interface LoginResponse {
-  access_token: string
-  token_type: string
-  user: AuthUser
-}
+const STORAGE_KEY = 'go-vue-admin.access-token'
+function readStoredToken() { return typeof window === 'undefined' ? undefined : sessionStorage.getItem(STORAGE_KEY) ?? undefined }
+function writeStoredToken(value: string | undefined) { if (typeof window === 'undefined') return; if (value) sessionStorage.setItem(STORAGE_KEY, value); else sessionStorage.removeItem(STORAGE_KEY) }
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref<string>()
+  const token = ref<string | undefined>(readStoredToken())
   const user = ref<AuthUser>()
+  const restored = ref(false)
 
   const isAuthenticated = computed(() => Boolean(token.value && user.value))
 
   async function login(email: string, password: string) {
-    const response = await apiFetch<LoginResponse>('/api/v1/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    })
+    const response: LoginResponse = await generatedApi.login({ email, password })
     token.value = response.access_token
+    writeStoredToken(token.value)
     user.value = response.user
   }
 
   async function fetchCurrentUser() {
+    const tokenValue = token.value
+    if (!tokenValue) return
+    user.value = await generatedApi.currentUser(tokenValue)
+  }
+
+  async function restore() {
+    if (restored.value) return
+    restored.value = true
     if (!token.value) return
-    user.value = await apiFetch<AuthUser>('/api/v1/auth/me', {}, token.value)
+    try {
+      await fetchCurrentUser()
+    } catch {
+      token.value = undefined
+      user.value = undefined
+      writeStoredToken(undefined)
+    }
   }
 
   async function logout() {
-    if (token.value) {
-      await apiFetch<void>('/api/v1/auth/logout', { method: 'POST' }, token.value)
+    const tokenValue = token.value
+    if (tokenValue) {
+      await generatedApi.logout(tokenValue)
     }
     token.value = undefined
     user.value = undefined
+    writeStoredToken(undefined)
   }
 
-  return { token, user, isAuthenticated, login, fetchCurrentUser, logout }
+  return { token, user, isAuthenticated, login, fetchCurrentUser, restore, logout }
 })
