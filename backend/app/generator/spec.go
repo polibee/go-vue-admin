@@ -1,0 +1,128 @@
+package generator
+
+import (
+	"fmt"
+	"regexp"
+	"strings"
+	"unicode"
+)
+
+var (
+	resourceNamePattern = regexp.MustCompile(`^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$`)
+	fieldNamePattern    = regexp.MustCompile(`^[a-z][a-z0-9_]*$`)
+)
+
+var supportedFieldTypes = map[string]struct{}{
+	"text": {}, "email": {}, "password": {}, "integer": {}, "boolean": {}, "select": {},
+}
+
+type Input struct {
+	Name       string
+	Label      string
+	Route      string
+	Permission string
+	Fields     []string
+}
+
+type Spec struct {
+	Name       string
+	GoName     string
+	Label      string
+	Route      string
+	Permission string
+	Fields     []FieldSpec
+}
+
+type FieldSpec struct {
+	Name     string
+	GoName   string
+	Type     string
+	Required bool
+}
+
+func ParseField(value string) (FieldSpec, error) {
+	parts := strings.Split(value, ":")
+	if len(parts) < 2 || len(parts) > 3 || !fieldNamePattern.MatchString(parts[0]) {
+		return FieldSpec{}, fmt.Errorf("invalid field %q: expected name:type[:required]", value)
+	}
+	if _, ok := supportedFieldTypes[parts[1]]; !ok {
+		return FieldSpec{}, fmt.Errorf("unsupported field type %q", parts[1])
+	}
+	field := FieldSpec{Name: parts[0], GoName: pascal(parts[0]), Type: parts[1]}
+	if len(parts) == 3 {
+		if parts[2] != "required" {
+			return FieldSpec{}, fmt.Errorf("invalid field modifier %q", parts[2])
+		}
+		field.Required = true
+	}
+	return field, nil
+}
+
+func Normalize(input Input) (Spec, error) {
+	if !resourceNamePattern.MatchString(input.Name) {
+		return Spec{}, fmt.Errorf("invalid resource name %q", input.Name)
+	}
+	if len(input.Fields) == 0 {
+		return Spec{}, fmt.Errorf("resource %q requires at least one field", input.Name)
+	}
+
+	spec := Spec{
+		Name:       input.Name,
+		GoName:     pascal(input.Name),
+		Label:      input.Label,
+		Route:      input.Route,
+		Permission: input.Permission,
+	}
+	if spec.Label == "" {
+		spec.Label = humanize(input.Name)
+	}
+	if spec.Route == "" {
+		spec.Route = "/admin/" + input.Name
+	}
+	if spec.Permission == "" {
+		spec.Permission = "admin." + input.Name + ".view"
+	}
+
+	seen := make(map[string]struct{}, len(input.Fields))
+	for _, raw := range input.Fields {
+		field, err := ParseField(raw)
+		if err != nil {
+			return Spec{}, err
+		}
+		if _, exists := seen[field.Name]; exists {
+			return Spec{}, fmt.Errorf("duplicate field %q", field.Name)
+		}
+		seen[field.Name] = struct{}{}
+		spec.Fields = append(spec.Fields, field)
+	}
+	return spec, nil
+}
+
+func pascal(value string) string {
+	var builder strings.Builder
+	upper := true
+	for _, r := range value {
+		if r == '-' || r == '_' {
+			upper = true
+			continue
+		}
+		if upper {
+			builder.WriteRune(unicode.ToUpper(r))
+			upper = false
+			continue
+		}
+		builder.WriteRune(r)
+	}
+	return builder.String()
+}
+
+func humanize(value string) string {
+	words := strings.Split(value, "-")
+	for index, word := range words {
+		if word == "" {
+			continue
+		}
+		words[index] = strings.ToUpper(word[:1]) + word[1:]
+	}
+	return strings.Join(words, " ")
+}
