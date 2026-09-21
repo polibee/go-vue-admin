@@ -18,7 +18,7 @@ Resource Registry、字段、列、标准列表查询（分页、搜索、排序
 
 ## Phase 4：OpenAPI 与 SDK
 
-API 文档、TypeScript Client、Scalar 开发浏览和 Contract Test。
+已完成第一步：检查入库的 OpenAPI 3.0.3 契约源和开发访问入口，覆盖当前认证、资源和用户状态接口，并提供契约单元测试。TypeScript Client、Scalar 开发浏览和完整 Contract Test 待继续实现。
 
 ## Phase 5：Generator
 

@@ -33,3 +33,5 @@ DELETE /api/v1/users/{id}
 Scalar 只作为开发和受控环境的 API 浏览器，不是 API Contract Source。生产环境默认关闭或通过鉴权、网关和内网策略限制访问。
 
 生成 Client 存放在 `admin/src/generated/`，标记为 `DO NOT EDIT`。后端相关 OpenAPI 适配代码位于 `backend/app/core/openapi/`。
+
+当前已落地开发契约入口：`GET /api/openapi.json`。契约源位于 `backend/app/openapi/spec.go`，并由 `spec_test.go` 校验已实现的认证、资源和用户状态接口。该入口暂不代表生产公开文档；生产暴露前仍需增加鉴权或网关限制。

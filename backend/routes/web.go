@@ -7,6 +7,7 @@ import (
 	"goravel/app/facades"
 	"goravel/app/http/controllers"
 	adminmiddleware "goravel/app/http/middleware"
+	"goravel/app/openapi"
 )
 
 func Web() {
@@ -17,6 +18,9 @@ func Web() {
 	})
 
 	facades.Route().Static("public", "./public")
+	facades.Route().Get("/api/openapi.json", func(ctx http.Context) http.Response {
+		return ctx.Response().Json(200, http.Json(openapi.Spec()))
+	})
 
 	userController := controllers.NewUserController()
 	facades.Route().Get("/users", userController.Index)
