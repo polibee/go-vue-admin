@@ -15,7 +15,7 @@ go run . artisan admin:make-resource posts \
   --field=published:boolean
 ```
 
-命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、Manifest Test 和 Migration 文件。迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
+命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、Manifest Test、README 和 Migration 文件。README 会列出生成文件、Registry/Routes/权限的手动接入步骤以及 `go test ./...` 验证命令。迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
 
 生成文件写入 `backend/app/generated/resources/<name>/` 和 `backend/database/migrations/`。如果任一目标文件已经存在，命令会在写入前失败，不会覆盖人工文件，也不会留下半套输出。
 

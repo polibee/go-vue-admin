@@ -33,6 +33,7 @@ func TestRenderPostsGolden(t *testing.T) {
 		"app/generated/resources/posts/permissions.go",
 		"app/generated/resources/posts/manifest_test.go",
 		"database/migrations/20260921000000_create_posts_table.go",
+		"app/generated/resources/posts/README.md",
 	}
 	if got := artifactPaths(artifacts); !reflect.DeepEqual(got, wantPaths) {
 		t.Fatalf("artifact paths = %v, want %v", got, wantPaths)
