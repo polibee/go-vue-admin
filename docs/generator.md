@@ -41,7 +41,7 @@ go run . artisan admin:make-resource posts \
 go run . artisan admin:check-module billing
 ```
 
-检查命令只读取文件，不创建、修改或删除文件，也不连接数据库。检查通过后资源已经由 discovery 文件自动进入运行时。
+检查命令只读取文件，不创建、修改或删除文件，也不连接数据库；除资源骨架外，还会检查后端 Registry 和前端 router/Shell 使用的生成专属 discovery 文件。检查通过后资源已经由 discovery 文件自动进入运行时。
 
 ## 当前命令
 

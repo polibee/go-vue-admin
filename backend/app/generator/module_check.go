@@ -30,6 +30,13 @@ func CheckModule(root, name string) (ModuleCheckReport, error) {
 		}
 		expected = append(expected, path)
 	}
+	runtimeArtifacts, err := RenderRuntimeRegistration(root, spec)
+	if err != nil {
+		return ModuleCheckReport{}, err
+	}
+	for _, artifact := range runtimeArtifacts {
+		expected = append(expected, filepath.ToSlash(artifact.Path))
+	}
 	report := ModuleCheckReport{Name: spec.Name, Expected: expected}
 	for _, relative := range expected {
 		if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(relative))); err != nil {
