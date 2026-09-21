@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:api": "node scripts/generate-api-client.mjs"
   },
   "dependencies": {
     "@internationalized/date": "^3.12.4",

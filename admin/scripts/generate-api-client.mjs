@@ -1,10 +1,23 @@
-/* eslint-disable */
-/* Generated from http://127.0.0.1:3000/api/openapi.json. DO NOT EDIT. */
-/* Contract paths: /admin/resources, /admin/resources/{resource}, /admin/users/status, /auth/login, /auth/me */
+import { mkdir, writeFile } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const baseUrl = process.env.OPENAPI_BASE_URL ?? 'http://127.0.0.1:3000'
+const response = await fetch(`${baseUrl}/api/openapi.json`)
+if (!response.ok) throw new Error(`OpenAPI request failed: ${response.status}`)
+const spec = await response.json()
+const statuses = spec.components?.schemas?.UserStatus?.enum
+if (!Array.isArray(statuses) || statuses.length === 0) throw new Error('UserStatus enum is missing from the OpenAPI contract')
+const paths = Object.keys(spec.paths ?? {})
+const outputPath = resolve(dirname(fileURLToPath(import.meta.url)), '../src/generated/api.ts')
+
+const content = `/* eslint-disable */
+/* Generated from ${baseUrl}/api/openapi.json. DO NOT EDIT. */
+/* Contract paths: ${paths.join(', ')} */
 
 import { apiFetch, apiFetchEnvelope } from '@/lib/api'
 
-export type UserStatus = "active" | "disabled" | "locked"
+export type UserStatus = ${statuses.map((status) => JSON.stringify(status)).join(' | ')}
 export interface AuthUser { id: number; name: string; email: string; status: UserStatus; locale: string }
 export interface LoginRequest { email: string; password: string }
 export interface LoginResponse { access_token: string; token_type: string; user: AuthUser }
@@ -21,3 +34,8 @@ export const generatedApi = {
   resourceList<T = Record<string, unknown>>(resource: string, query: URLSearchParams, token: string) { return apiFetchEnvelope<T[]>('/api/v1/admin/resources/' + resource + '?' + query, {}, token) as unknown as Promise<ResourceList<T>> },
   bulkSetUserStatus(request: BulkUserStatusRequest, token: string) { return apiFetch<void>('/api/v1/admin/users/status', { method: 'PUT', body: JSON.stringify(request) }, token) },
 }
+`
+
+await mkdir(dirname(outputPath), { recursive: true })
+await writeFile(outputPath, content, 'utf8')
+console.log(`Generated ${outputPath} from ${paths.length} OpenAPI paths.`)
