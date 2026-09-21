@@ -12,5 +12,6 @@ func Migrations() []schema.Migration {
 		&migrations.M20260920000001CreateUsersTable{},
 		&migrations.M20260920000002CreateRBACTables{},
 		&migrations.M20260920000003AddRBACTimestamps{},
+		&migrations.M20260921000001ReplaceUserActiveWithStatus{},
 	}
 }
