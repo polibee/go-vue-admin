@@ -54,6 +54,7 @@ backend/app/generated/resources/<name>/README.md
 backend/database/migrations/<timestamp>_create_<name>_table.go
 
 admin/src/generated/resources/<name>/resource.ts
+admin/src/generated/resources/<name>/api.ts
 admin/src/generated/resources/<name>/menu.ts
 admin/src/generated/resources/<name>/routes.ts
 admin/src/generated/resources/<name>/pages/<Name>ListPage.vue
@@ -69,6 +70,7 @@ admin/src/generated/resources/<name>/<name>.test.ts
 - 权限常量由 `admin.<name>.<action>` 派生；
 - 菜单配置包含 label、route、icon 和 permission；
 - 路由描述包含列表、新建、编辑和详情入口；
+- API 契约包含 list、show、create、update、delete 五类操作，并明确对应的 `/api/v1/admin/<name>` 路径；
 - 所有这些文件只写入生成目录，不自动修改现有 Registry、Sidebar 或 router 文件。
 
 ## 安全边界
@@ -105,6 +107,7 @@ Input
 - 冲突测试证明任一目标文件冲突时所有目录都不写入。
 - 真实 smoke 测试执行 `admin:make-resource`，确认生成全链路文件但不执行迁移、不修改注册文件。
 - 生成产物必须通过后端 `go test ./... -count=1` 和前端 `vue-tsc`、构建及测试。
+- 表单页面统一复用共享 `ResourceFormView`，不复制用户或角色专用表单实现。
 
 ## 后续边界
 

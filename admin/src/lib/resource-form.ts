@@ -12,11 +12,11 @@ function valueForField(field: ResourceFormField, value: unknown) {
 	return value === null || value === undefined ? '' : String(value)
 }
 
-export function createResourceForm(fields: ResourceFormField[], record: Record<string, unknown> = {}) {
+export function createResourceForm(fields: readonly ResourceFormField[], record: Record<string, unknown> = {}) {
   return Object.fromEntries(fields.map((field) => [field.name, valueForField(field, record[field.name])]))
 }
 
-export function serializeResourceForm(fields: ResourceFormField[], form: Record<string, unknown>) {
+export function serializeResourceForm(fields: readonly ResourceFormField[], form: Record<string, unknown>) {
   return Object.fromEntries(fields.map((field) => {
     const value = form[field.name]
     if (field.type === 'number') return [field.name, value === '' || value === null || value === undefined ? null : Number(value)]

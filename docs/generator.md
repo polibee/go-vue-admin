@@ -19,7 +19,7 @@ go run . artisan admin:make-resource posts \
   --field=published:boolean
 ```
 
-命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、菜单、前端列表/表单/详情页、路由描述、测试、README 和 Migration 文件。迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
+命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、菜单、前端列表/表单/详情页、路由描述、统一 API 契约、测试、README 和 Migration 文件。表单页复用共享 `ResourceFormView`，API 契约包含 list/show/create/update/delete 五类操作；后端路由仍需人工注册和授权审阅。迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
 
 生成文件写入 `backend/app/generated/resources/<name>/` 和 `backend/database/migrations/`。如果任一目标文件已经存在，命令会在写入前失败，不会覆盖人工文件，也不会留下半套输出。
 
