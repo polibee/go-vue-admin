@@ -16,7 +16,7 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 `backend/app/core/resource`。注册表拒绝空标识和重复资源，并按资源名稳定排序。
 
 - `GET /api/v1/admin/registry` 返回当前 Admin 资源清单；
-- 清单接口要求 `admin.users.view` 权限；
+- 清单接口要求当前用户至少拥有一个已注册资源的 view 权限，结果中的每个资源仍按自身权限过滤；
 - 当前登记 `users`、`roles`、`permissions` 三个基础资源；
 - 列表、详情、新增、编辑、删除和 CSV 导出统一使用 `/api/v1/admin/{resource}` 与
   `/api/v1/admin/{resource}/{id}`；

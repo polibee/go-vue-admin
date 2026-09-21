@@ -29,13 +29,12 @@ const error = ref('')
 const deleteDialogOpen = ref(false)
 const deleting = ref(false)
 const resourceName = computed(() => props.resource || String(route.params.resource || 'users'))
-const canManageBuiltIn = computed(() => resourceName.value === 'users' ? auth.can('admin.users.manage') : resourceName.value === 'roles' ? auth.can('admin.roles.manage') : false)
 const hasAction = (name: string) => {
   const action = manifest.value?.actions?.find((item) => item.name === name)
   return Boolean(action && auth.can(action.permission))
 }
-const canEdit = computed(() => canManageBuiltIn.value || hasAction('update'))
-const canDelete = computed(() => canManageBuiltIn.value || hasAction('delete'))
+const canEdit = computed(() => hasAction('update'))
+const canDelete = computed(() => hasAction('delete'))
 
 function localizedError(value: unknown) {
   return value instanceof ApiError ? t(errorMessageKey(value.code)) : t('errors.unknown')
@@ -81,7 +80,7 @@ async function deleteRecord() {
   <div class="flex flex-col gap-6">
     <div class="flex items-center gap-3">
       <Button variant="ghost" size="icon" :aria-label="t('resource.back')" @click="router.back()"><ArrowLeft /></Button>
-      <div class="flex-1"><h1 class="text-2xl font-semibold tracking-tight">{{ t('resource.detail') }}</h1><p class="text-sm text-muted-foreground">{{ resourceName }} #{{ route.params.id }}</p></div><div v-if="canEdit || canDelete" class="flex gap-2"><Button v-if="canEdit" variant="outline" @click="router.push(resourceName === 'roles' ? `/roles/${route.params.id}/edit` : resourceName === 'users' ? `/users/${route.params.id}/edit` : `/${resourceName}/${route.params.id}/edit`)"><Pencil data-icon="inline-start" />{{ resourceName === 'roles' ? t('rbac.editRole') : resourceName === 'users' ? t('resource.editUser') : t('resource.edit') }}</Button><Button v-if="canDelete && canDeleteResource(resourceName, data)" variant="destructive" @click="deleteDialogOpen = true"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div>
+      <div class="flex-1"><h1 class="text-2xl font-semibold tracking-tight">{{ t('resource.detail') }}</h1><p class="text-sm text-muted-foreground">{{ resourceName }} #{{ route.params.id }}</p></div><div v-if="canEdit || canDelete" class="flex gap-2"><Button v-if="canEdit" variant="outline" @click="router.push(`/${resourceName}/${route.params.id}/edit`)"><Pencil data-icon="inline-start" />{{ resourceName === 'roles' ? t('rbac.editRole') : resourceName === 'users' ? t('resource.editUser') : t('resource.edit') }}</Button><Button v-if="canDelete && canDeleteResource(resourceName, data)" variant="destructive" @click="deleteDialogOpen = true"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div>
     </div>
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Card v-if="loading"><CardHeader><Skeleton class="h-6 w-40" /><Skeleton class="h-4 w-64" /></CardHeader><CardContent class="flex flex-col gap-3"><Skeleton v-for="item in 4" :key="item" class="h-10" /></CardContent></Card>
