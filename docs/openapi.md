@@ -38,7 +38,7 @@ Scalar 只作为开发和受控环境的 API 浏览器，不是 API Contract Sou
 
 本地环境另提供 `GET /api/docs` Scalar 浏览页；该路由仅在 `APP_ENV` 非 `production` 时注册，并始终从本地 `/api/openapi.json` 读取契约。
 
-前端已接入首版契约 Client：`admin/src/generated/api.ts`。该文件标记为生成产物，当前覆盖登录、当前用户、资源清单、资源列表和批量用户状态操作；后续生成器稳定后替换其生成实现。
+前端已接入首版契约 Client：`admin/src/generated/api.ts`。该文件标记为生成产物，当前覆盖登录、当前用户、资源清单、资源列表、资源详情、资源新增/更新/删除和批量用户状态操作；通用资源的字段、选项、列和动作元数据也在 OpenAPI Schema 中声明。
 
 Client 现在可通过 `pnpm generate:api` 从本地运行服务的 `/api/openapi.json` 重新生成；可用 `OPENAPI_BASE_URL` 指定契约服务地址。生成脚本为仓库内置无依赖脚本，不修改依赖锁文件。
 

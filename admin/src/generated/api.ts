@@ -26,5 +26,9 @@ export const generatedApi = {
   overview(token: string) { return apiFetch<AdminOverview>('/api/v1/admin/overview', {}, token) },
   auditLogs(token: string, query: URLSearchParams) { return apiFetchEnvelope<AuditLog[]>('/api/v1/admin/audit-logs?' + query, {}, token) as unknown as Promise<ResourceList<AuditLog>> },
   resourceList<T = Record<string, unknown>>(resource: string, query: URLSearchParams, token: string) { return apiFetchEnvelope<T[]>('/api/v1/admin/resources/' + resource + '?' + query, {}, token) as unknown as Promise<ResourceList<T>> },
+  resourceShow<T = Record<string, unknown>>(resource: string, id: string | number, token: string) { return apiFetch<T>('/api/v1/admin/resources/' + resource + '/' + id, {}, token) },
+  resourceCreate<T = Record<string, unknown>>(resource: string, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/resources/' + resource, { method: 'POST', body: JSON.stringify(payload) }, token) },
+  resourceUpdate<T = Record<string, unknown>>(resource: string, id: string | number, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/resources/' + resource + '/' + id, { method: 'PUT', body: JSON.stringify(payload) }, token) },
+  resourceDelete(resource: string, id: string | number, token: string) { return apiFetch<void>('/api/v1/admin/resources/' + resource + '/' + id, { method: 'DELETE' }, token) },
   bulkSetUserStatus(request: BulkUserStatusRequest, token: string) { return apiFetch<void>('/api/v1/admin/users/status', { method: 'PUT', body: JSON.stringify(request) }, token) },
 }
