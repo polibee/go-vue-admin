@@ -27,7 +27,8 @@
   "userActive": "用户已启用",
   "saving": "保存中…",
   "save": "保存",
-  "cancel": "取消"
+  "cancel": "取消",
+  "create": "新建资源"
   ,"actions": "操作"
   ,"edit": "编辑"
   ,"delete": "删除"
