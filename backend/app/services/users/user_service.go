@@ -1,4 +1,4 @@
-package services
+package userservices
 
 import (
 	"errors"
@@ -8,6 +8,7 @@ import (
 
 	"goravel/app/facades"
 	"goravel/app/models"
+	rbacservices "goravel/app/services/rbac"
 )
 
 var (
@@ -125,7 +126,7 @@ func (s *UserService) Delete(id int64) error {
 	if err := facades.Orm().Query().Where("id", id).First(&user); err != nil {
 		return ErrUserNotFound
 	}
-	last, err := NewRBACService().IsLastActiveAdmin(id)
+	last, err := rbacservices.NewRBACService().IsLastActiveAdmin(id)
 	if err != nil {
 		return err
 	}
@@ -159,7 +160,7 @@ func (s *UserService) BulkSetStatus(ids []int64, status string) error {
 			return ErrUserNotFound
 		}
 		if status != userStatusActive && user.Status == userStatusActive {
-			last, err := NewRBACService().IsLastActiveAdmin(id)
+			last, err := rbacservices.NewRBACService().IsLastActiveAdmin(id)
 			if err != nil {
 				return err
 			}

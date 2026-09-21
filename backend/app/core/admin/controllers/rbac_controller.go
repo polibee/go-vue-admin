@@ -9,11 +9,12 @@ import (
 	"goravel/app/facades"
 	"goravel/app/models"
 	"goravel/app/rbac"
-	"goravel/app/services"
+	auditservices "goravel/app/services/audit"
+	rbacservices "goravel/app/services/rbac"
+	userservices "goravel/app/services/users"
 )
 
 var errMissingToken = errors.New("missing authorization token")
-
 
 func unauthorized(ctx http.Context) http.Response {
 	return ctx.Response().Status(401).Json(http.Json{
@@ -23,7 +24,7 @@ func unauthorized(ctx http.Context) http.Response {
 }
 
 func recordAudit(userID uint, action string, metadata map[string]any) {
-	if err := services.NewAuditService().Record(userID, action, metadata); err != nil {
+	if err := auditservices.NewAuditService().Record(userID, action, metadata); err != nil {
 		facades.Log().Errorf("audit record failed action=%s user_id=%d error=%v", action, userID, err)
 	}
 }
@@ -78,7 +79,7 @@ func (r *RBACController) CreateUser(ctx http.Context) http.Response {
 	if err := ctx.Request().Bind(&payload); err != nil {
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	}
-	user, err := services.NewUserService().Create(payload.Name, payload.Email, payload.Password, payload.Locale, payload.Status)
+	user, err := userservices.NewUserService().Create(payload.Name, payload.Email, payload.Password, payload.Locale, payload.Status)
 	if err != nil {
 		return userServiceError(ctx, err)
 	}
@@ -91,7 +92,7 @@ func (r *RBACController) UpdateUser(ctx http.Context) http.Response {
 	if err := ctx.Request().Bind(&payload); err != nil {
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	}
-	user, err := services.NewUserService().Update(ctx.Request().RouteInt64("id"), payload.Name, payload.Email, payload.Password, payload.Locale, payload.Status)
+	user, err := userservices.NewUserService().Update(ctx.Request().RouteInt64("id"), payload.Name, payload.Email, payload.Password, payload.Locale, payload.Status)
 	if err != nil {
 		return userServiceError(ctx, err)
 	}
@@ -101,7 +102,7 @@ func (r *RBACController) UpdateUser(ctx http.Context) http.Response {
 
 func (r *RBACController) DeleteUser(ctx http.Context) http.Response {
 	targetID := ctx.Request().RouteInt64("id")
-	if err := services.NewUserService().Delete(targetID); err != nil {
+	if err := userservices.NewUserService().Delete(targetID); err != nil {
 		return userServiceError(ctx, err)
 	}
 	recordManagementAudit(ctx, "user.delete", map[string]any{"target_user_id": targetID})
@@ -113,7 +114,7 @@ func (r *RBACController) BulkSetUserStatus(ctx http.Context) http.Response {
 	if err := ctx.Request().Bind(&payload); err != nil {
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	}
-	if err := services.NewUserService().BulkSetStatus(payload.UserIDs, payload.Status); err != nil {
+	if err := userservices.NewUserService().BulkSetStatus(payload.UserIDs, payload.Status); err != nil {
 		return userServiceError(ctx, err)
 	}
 	recordManagementAudit(ctx, "user.status.bulk", map[string]any{"target_user_ids": payload.UserIDs, "status": payload.Status})
@@ -147,7 +148,7 @@ func (r *RBACController) CreateRole(ctx http.Context) http.Response {
 	if err := ctx.Request().Bind(&payload); err != nil {
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	}
-	role, err := services.NewRoleService().Create(payload.Name, payload.DisplayName)
+	role, err := rbacservices.NewRoleService().Create(payload.Name, payload.DisplayName)
 	if err != nil {
 		return roleServiceError(ctx, err)
 	}
@@ -156,11 +157,11 @@ func (r *RBACController) CreateRole(ctx http.Context) http.Response {
 }
 
 func (r *RBACController) ShowRole(ctx http.Context) http.Response {
-	role, err := services.NewRoleService().Find(ctx.Request().RouteInt64("id"))
+	role, err := rbacservices.NewRoleService().Find(ctx.Request().RouteInt64("id"))
 	if err != nil {
 		return roleServiceError(ctx, err)
 	}
-	permissions, err := services.NewRoleService().Permissions(int64(role.ID))
+	permissions, err := rbacservices.NewRoleService().Permissions(int64(role.ID))
 	if err != nil {
 		return rbacError(ctx, 500, "INTERNAL_ERROR")
 	}
@@ -174,7 +175,7 @@ func (r *RBACController) UpdateRole(ctx http.Context) http.Response {
 	if err := ctx.Request().Bind(&payload); err != nil {
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	}
-	role, err := services.NewRoleService().Update(ctx.Request().RouteInt64("id"), payload.Name, payload.DisplayName)
+	role, err := rbacservices.NewRoleService().Update(ctx.Request().RouteInt64("id"), payload.Name, payload.DisplayName)
 	if err != nil {
 		return roleServiceError(ctx, err)
 	}
@@ -184,7 +185,7 @@ func (r *RBACController) UpdateRole(ctx http.Context) http.Response {
 
 func (r *RBACController) DeleteRole(ctx http.Context) http.Response {
 	targetID := ctx.Request().RouteInt64("id")
-	if err := services.NewRoleService().Delete(targetID); err != nil {
+	if err := rbacservices.NewRoleService().Delete(targetID); err != nil {
 		return roleServiceError(ctx, err)
 	}
 	recordManagementAudit(ctx, "role.delete", map[string]any{"target_role_id": targetID})
@@ -197,7 +198,7 @@ func (r *RBACController) ReplaceRolePermissions(ctx http.Context) http.Response 
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	}
 	targetID := ctx.Request().RouteInt64("id")
-	if err := services.NewRoleService().ReplacePermissions(targetID, payload.PermissionIDs); err != nil {
+	if err := rbacservices.NewRoleService().ReplacePermissions(targetID, payload.PermissionIDs); err != nil {
 		return roleServiceError(ctx, err)
 	}
 	recordManagementAudit(ctx, "role.permissions.replace", map[string]any{"target_role_id": targetID, "permission_ids": payload.PermissionIDs})
@@ -205,7 +206,7 @@ func (r *RBACController) ReplaceRolePermissions(ctx http.Context) http.Response 
 }
 
 func (r *RBACController) UserRoles(ctx http.Context) http.Response {
-	roles, err := services.NewUserRoleService().Roles(ctx.Request().RouteInt64("id"))
+	roles, err := userservices.NewUserRoleService().Roles(ctx.Request().RouteInt64("id"))
 	if err != nil {
 		return userRoleServiceError(ctx, err)
 	}
@@ -226,7 +227,7 @@ func (r *RBACController) ReplaceUserRoles(ctx http.Context) http.Response {
 		return unauthorized(ctx)
 	}
 	targetID := ctx.Request().RouteInt64("id")
-	if err := services.NewUserRoleService().ReplaceRoles(operatorID, targetID, payload.RoleIDs); err != nil {
+	if err := userservices.NewUserRoleService().ReplaceRoles(operatorID, targetID, payload.RoleIDs); err != nil {
 		return userRoleServiceError(ctx, err)
 	}
 	recordManagementAudit(ctx, "user.roles.replace", map[string]any{"target_user_id": targetID, "role_ids": payload.RoleIDs})
@@ -247,13 +248,13 @@ func recordManagementAudit(ctx http.Context, action string, metadata map[string]
 
 func roleServiceError(ctx http.Context, err error) http.Response {
 	switch {
-	case errors.Is(err, services.ErrRoleNotFound):
+	case errors.Is(err, rbacservices.ErrRoleNotFound):
 		return rbacError(ctx, 404, "RBAC_ROLE_NOT_FOUND")
-	case errors.Is(err, services.ErrPermissionNotFound):
+	case errors.Is(err, rbacservices.ErrPermissionNotFound):
 		return rbacError(ctx, 404, "RBAC_PERMISSION_NOT_FOUND")
-	case errors.Is(err, services.ErrSystemRole):
+	case errors.Is(err, rbacservices.ErrSystemRole):
 		return rbacError(ctx, 409, "RBAC_SYSTEM_ROLE")
-	case errors.Is(err, rbac.ErrInvalidRoleInput), errors.Is(err, services.ErrDuplicateRole):
+	case errors.Is(err, rbac.ErrInvalidRoleInput), errors.Is(err, rbacservices.ErrDuplicateRole):
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	default:
 		return rbacError(ctx, 500, "INTERNAL_ERROR")
@@ -262,11 +263,11 @@ func roleServiceError(ctx http.Context, err error) http.Response {
 
 func userRoleServiceError(ctx http.Context, err error) http.Response {
 	switch {
-	case errors.Is(err, services.ErrUserNotFound):
+	case errors.Is(err, userservices.ErrUserNotFound):
 		return rbacError(ctx, 404, "RBAC_USER_NOT_FOUND")
-	case errors.Is(err, services.ErrRoleNotFound):
+	case errors.Is(err, rbacservices.ErrRoleNotFound):
 		return rbacError(ctx, 404, "RBAC_ROLE_NOT_FOUND")
-	case errors.Is(err, services.ErrLastAdmin):
+	case errors.Is(err, userservices.ErrLastAdmin):
 		return rbacError(ctx, 409, "RBAC_LAST_ADMIN")
 	case errors.Is(err, rbac.ErrInvalidRoleIDs):
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
@@ -277,11 +278,11 @@ func userRoleServiceError(ctx http.Context, err error) http.Response {
 
 func userServiceError(ctx http.Context, err error) http.Response {
 	switch {
-	case errors.Is(err, services.ErrUserNotFound):
+	case errors.Is(err, userservices.ErrUserNotFound):
 		return rbacError(ctx, 404, "RBAC_USER_NOT_FOUND")
-	case errors.Is(err, services.ErrLastAdmin):
+	case errors.Is(err, userservices.ErrLastAdmin):
 		return rbacError(ctx, 409, "RBAC_LAST_ADMIN")
-	case errors.Is(err, services.ErrUserExists), errors.Is(err, services.ErrInvalidUser):
+	case errors.Is(err, userservices.ErrUserExists), errors.Is(err, userservices.ErrInvalidUser):
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	default:
 		return rbacError(ctx, 500, "INTERNAL_ERROR")

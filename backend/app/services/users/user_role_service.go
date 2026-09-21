@@ -1,4 +1,4 @@
-package services
+package userservices
 
 import (
 	"errors"
@@ -8,6 +8,7 @@ import (
 	"goravel/app/facades"
 	"goravel/app/models"
 	"goravel/app/rbac"
+	rbacservices "goravel/app/services/rbac"
 )
 
 var (
@@ -51,7 +52,7 @@ func (s *UserRoleService) ReplaceRoles(operatorID, userID int64, roleIDs []int64
 	for _, roleID := range roleIDs {
 		var role models.Role
 		if err := facades.Orm().Query().Where("id = ?", roleID).First(&role); err != nil {
-			return ErrRoleNotFound
+			return rbacservices.ErrRoleNotFound
 		}
 		roles = append(roles, role)
 	}
@@ -60,7 +61,7 @@ func (s *UserRoleService) ReplaceRoles(operatorID, userID int64, roleIDs []int64
 		return ErrLastAdmin
 	}
 	if user.Status == userStatusActive && !adminRole {
-		lastAdmin, err := NewRBACService().IsLastActiveAdmin(userID)
+		lastAdmin, err := rbacservices.NewRBACService().IsLastActiveAdmin(userID)
 		if err != nil {
 			return err
 		}

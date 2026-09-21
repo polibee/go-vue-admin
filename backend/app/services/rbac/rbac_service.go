@@ -1,4 +1,4 @@
-package services
+package rbacservices
 
 import (
 	"errors"
@@ -10,6 +10,8 @@ import (
 )
 
 var ErrInvalidIdentity = errors.New("invalid authenticated user identity")
+
+const activeUserStatus = "active"
 
 type RBACService struct{}
 
@@ -76,7 +78,7 @@ func (s *RBACService) IsLastActiveAdmin(userID int64) (bool, error) {
 		Join("JOIN users ON users.id = role_user.user_id").
 		Join("JOIN permission_role ON permission_role.role_id = role_user.role_id").
 		Join("JOIN permissions ON permissions.id = permission_role.permission_id").
-		Where("users.status = ? AND permissions.name IN (?, ?, ?)", userStatusActive, "admin.users.view", "admin.roles.manage", "admin.permissions.manage").
+		Where("users.status = ? AND permissions.name IN (?, ?, ?)", activeUserStatus, "admin.users.view", "admin.roles.manage", "admin.permissions.manage").
 		Get(&activeAdmins); err != nil {
 		return false, err
 	}

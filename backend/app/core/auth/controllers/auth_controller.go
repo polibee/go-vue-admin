@@ -8,7 +8,9 @@ import (
 
 	"goravel/app/facades"
 	"goravel/app/models"
-	"goravel/app/services"
+	auditservices "goravel/app/services/audit"
+	authservices "goravel/app/services/auth"
+	rbacservices "goravel/app/services/rbac"
 )
 
 type AuthController struct{}
@@ -30,7 +32,7 @@ func (r *AuthController) Login(ctx http.Context) http.Response {
 			"message": "email and password are required",
 		})
 	}
-	rateLimiter := services.NewLoginRateLimiter()
+	rateLimiter := authservices.NewLoginRateLimiter()
 	allowed, err := rateLimiter.Allow(email, ctx.Request().Ip())
 	if err != nil {
 		return ctx.Response().Status(503).Json(http.Json{"code": "AUTH_RATE_LIMIT_STORE_UNAVAILABLE"})
@@ -60,9 +62,9 @@ func (r *AuthController) Login(ctx http.Context) http.Response {
 			"message": "could not create access token",
 		})
 	}
-	refreshToken, err := services.NewDurableRefreshTokenService().Issue(user.ID)
+	refreshToken, err := authservices.NewDurableRefreshTokenService().Issue(user.ID)
 	if err != nil {
-		if errors.Is(err, services.ErrRefreshTokenStoreUnavailable) {
+		if errors.Is(err, authservices.ErrRefreshTokenStoreUnavailable) {
 			return sessionStoreUnavailable(ctx)
 		}
 		return ctx.Response().Status(500).Json(http.Json{
@@ -105,15 +107,15 @@ func (r *AuthController) Me(ctx http.Context) http.Response {
 }
 
 func (r *AuthController) Logout(ctx http.Context) http.Response {
-	services.NewDurableRefreshTokenService().Revoke(ctx.Request().Cookie(services.RefreshTokenCookieName))
+	authservices.NewDurableRefreshTokenService().Revoke(ctx.Request().Cookie(authservices.RefreshTokenCookieName))
 	if err := r.parseToken(ctx); err != nil {
-		return ctx.Response().WithoutCookie(services.RefreshTokenCookieName).Status(204).Json(nil)
+		return ctx.Response().WithoutCookie(authservices.RefreshTokenCookieName).Status(204).Json(nil)
 	}
 	var user models.User
 	if err := facades.Auth(ctx).User(&user); err != nil {
 		return unauthorized(ctx)
 	}
-	response := ctx.Response().WithoutCookie(services.RefreshTokenCookieName)
+	response := ctx.Response().WithoutCookie(authservices.RefreshTokenCookieName)
 	if err := facades.Auth(ctx).Logout(); err != nil {
 		return response.Status(503).Json(http.Json{
 			"code":    "AUTH_SESSION_STORE_UNAVAILABLE",
@@ -133,8 +135,8 @@ func (r *AuthController) LogoutAll(ctx http.Context) http.Response {
 	if err := facades.Auth(ctx).User(&user); err != nil {
 		return unauthorized(ctx)
 	}
-	response := ctx.Response().WithoutCookie(services.RefreshTokenCookieName)
-	if err := services.NewDurableRefreshTokenService().RevokeAll(user.ID); err != nil {
+	response := ctx.Response().WithoutCookie(authservices.RefreshTokenCookieName)
+	if err := authservices.NewDurableRefreshTokenService().RevokeAll(user.ID); err != nil {
 		return response.Status(503).Json(http.Json{
 			"code":    "AUTH_SESSION_STORE_UNAVAILABLE",
 			"message": "authentication session storage is unavailable",
@@ -151,10 +153,10 @@ func (r *AuthController) LogoutAll(ctx http.Context) http.Response {
 }
 
 func (r *AuthController) Refresh(ctx http.Context) http.Response {
-	refreshService := services.NewDurableRefreshTokenService()
-	userID, err := refreshService.Consume(ctx.Request().Cookie(services.RefreshTokenCookieName))
+	refreshService := authservices.NewDurableRefreshTokenService()
+	userID, err := refreshService.Consume(ctx.Request().Cookie(authservices.RefreshTokenCookieName))
 	if err != nil {
-		if errors.Is(err, services.ErrRefreshTokenStoreUnavailable) {
+		if errors.Is(err, authservices.ErrRefreshTokenStoreUnavailable) {
 			return sessionStoreUnavailable(ctx)
 		}
 		return unauthorized(ctx)
@@ -170,7 +172,7 @@ func (r *AuthController) Refresh(ctx http.Context) http.Response {
 	}
 	rotatedToken, err := refreshService.Issue(user.ID)
 	if err != nil {
-		if errors.Is(err, services.ErrRefreshTokenStoreUnavailable) {
+		if errors.Is(err, authservices.ErrRefreshTokenStoreUnavailable) {
 			return sessionStoreUnavailable(ctx)
 		}
 		return ctx.Response().Status(500).Json(http.Json{
@@ -190,7 +192,7 @@ func (r *AuthController) Refresh(ctx http.Context) http.Response {
 
 func refreshTokenCookie(token string) http.Cookie {
 	return http.Cookie{
-		Name:     services.RefreshTokenCookieName,
+		Name:     authservices.RefreshTokenCookieName,
 		Value:    token,
 		Path:     "/api/v1/auth",
 		MaxAge:   30 * 24 * 60 * 60,
@@ -212,14 +214,14 @@ func unauthorized(ctx http.Context) http.Response {
 }
 
 func recordAudit(userID uint, action string, metadata map[string]any) {
-	if err := services.NewAuditService().Record(userID, action, metadata); err != nil {
+	if err := auditservices.NewAuditService().Record(userID, action, metadata); err != nil {
 		facades.Log().Errorf("audit record failed action=%s user_id=%d error=%v", action, userID, err)
 	}
 }
 
 func authUserPublic(user *models.User) (map[string]any, error) {
 	publicUser := user.Public()
-	permissions, err := services.NewRBACService().PermissionsForUser(user.ID)
+	permissions, err := rbacservices.NewRBACService().PermissionsForUser(user.ID)
 	if err != nil {
 		return nil, err
 	}

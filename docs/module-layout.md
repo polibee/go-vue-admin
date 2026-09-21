@@ -34,6 +34,20 @@ backend/app/
 
 迁移仍统一放在 `backend/database/migrations/`，因为迁移属于数据库边界，不属于单个 Go 包。运行时 Registry、Provider、Routes、权限和菜单不会自动修改。
 
+## Backend services
+
+Service 保留在统一的 `backend/app/services/` 根目录下，但按领域拆分：
+
+```text
+backend/app/services/
+├── auth/       # 登录限流、Refresh Token、Redis/PostgreSQL 会话
+├── users/      # 用户和用户角色关系
+├── rbac/       # 角色、权限和 RBAC 判断
+└── audit/      # 审计记录
+```
+
+后续新增 Service 必须进入对应领域目录；不能把 Service 分散到 `core` 或业务模块目录，也不能继续堆放在 `app/services/` 根目录。
+
 ## Frontend
 
 ```text
@@ -61,3 +75,4 @@ admin/src/modules/<resource>/
 - `components` 位于前端 `src` 根目录，所有模块共享的 UI 和资源组件从这里导入。
 - `modules/<name>` 是业务边界；生成器的后端与前端产物必须使用同名模块目录。
 - `generated` 仅用于真正由工具维护的客户端产物，不作为业务模块目录。
+- Console 命令也按领域分类；未来交易、Gin 或其他运行入口不能与 Admin 命令混放在同一目录。

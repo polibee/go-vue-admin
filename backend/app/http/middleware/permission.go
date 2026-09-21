@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"goravel/app/facades"
-	"goravel/app/services"
+	rbacservices "goravel/app/services/rbac"
 
 	"github.com/goravel/framework/contracts/http"
 )
@@ -24,7 +24,7 @@ func (m permissionMiddleware) Handle(ctx http.Context) {
 		return
 	}
 
-	allowed, err := services.NewRBACService().UserHasPermission(ctx, m.permission)
+	allowed, err := rbacservices.NewRBACService().UserHasPermission(ctx, m.permission)
 	if err != nil {
 		ctx.Response().Status(401).Json(http.Json{"code": "AUTH_UNAUTHORIZED"}).Abort()
 		return
