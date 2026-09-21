@@ -9,9 +9,11 @@ func AdminRegistry() *resource.Registry {
 		Fields: []resource.Field{
 			{Name: "name", Label: "Name", Type: "text"}, {Name: "email", Label: "Email", Type: "email"},
 			{Name: "password", Label: "Password", Type: "password"}, {Name: "locale", Label: "Locale", Type: "text"},
-			{Name: "is_active", Label: "Active", Type: "boolean"},
+			{Name: "status", Label: "Status", Type: "select", Options: []resource.Option{
+				{Value: "active", Label: "Active"}, {Value: "disabled", Label: "Disabled"}, {Value: "locked", Label: "Locked"},
+			}},
 		},
-		Columns: []resource.Column{{Name: "name", Label: "Name", Sortable: true}, {Name: "email", Label: "Email", Sortable: true}, {Name: "is_active", Label: "Status", Sortable: true}},
+		Columns: []resource.Column{{Name: "name", Label: "Name", Sortable: true}, {Name: "email", Label: "Email", Sortable: true}, {Name: "status", Label: "Status", Sortable: true}},
 	})
 	_ = registry.Register(resource.Manifest{
 		Name: "roles", Label: "Roles", Route: "/admin/roles", Permissions: []string{"admin.roles.manage"},

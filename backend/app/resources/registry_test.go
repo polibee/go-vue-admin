@@ -15,7 +15,7 @@ func TestAdminRegistryExposesFormFields(t *testing.T) {
 		{"email", "email"},
 		{"password", "password"},
 		{"locale", "text"},
-		{"is_active", "boolean"},
+		{"status", "select"},
 	} {
 		field := manifest.Fields[index]
 		if field.Name != want.name || field.Type != want.fieldType {

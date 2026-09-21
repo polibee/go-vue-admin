@@ -15,6 +15,7 @@ type resourceListQuery struct {
 	Page    int
 	PerPage int
 	Search  string
+	Status  string
 	Sort    string
 	Dir     string
 }
@@ -24,6 +25,7 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		Page:    positiveInt(ctx.Request().Query("page", "1"), 1),
 		PerPage: positiveInt(ctx.Request().Query("per_page", "20"), 20),
 		Search:  strings.TrimSpace(ctx.Request().Query("search")),
+		Status:  normalizeUserStatusFilter(ctx.Request().Query("status")),
 		Sort:    ctx.Request().Query("sort", "id"),
 		Dir:     strings.ToLower(ctx.Request().Query("dir", "desc")),
 	}
@@ -41,7 +43,10 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		rows = &[]models.User{}
 		q = facades.Orm().Query()
 		q = applyResourceSearch(q, query.Search, "name", "email")
-		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "email": true, "is_active": true}, "id")
+		if query.Status != "" {
+			q = q.Where("status = ?", query.Status)
+		}
+		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "email": true, "status": true}, "id")
 	case "roles":
 		rows = &[]models.Role{}
 		q = facades.Orm().Query()
@@ -70,6 +75,15 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		return resourceListResponse(ctx, items, query, total)
 	}
 	return resourceListResponse(ctx, rows, query, total)
+}
+
+func normalizeUserStatusFilter(status string) string {
+	switch strings.TrimSpace(status) {
+	case "active", "disabled", "locked":
+		return strings.TrimSpace(status)
+	default:
+		return ""
+	}
 }
 
 func applyResourceSearch(query orm.Query, search string, columns ...string) orm.Query {

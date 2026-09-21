@@ -12,9 +12,15 @@ var (
 )
 
 type Field struct {
-	Name  string `json:"name"`
+	Name    string   `json:"name"`
+	Label   string   `json:"label"`
+	Type    string   `json:"type"`
+	Options []Option `json:"options,omitempty"`
+}
+
+type Option struct {
+	Value string `json:"value"`
 	Label string `json:"label"`
-	Type  string `json:"type"`
 }
 
 type Column struct {
