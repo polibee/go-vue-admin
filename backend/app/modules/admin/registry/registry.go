@@ -15,12 +15,13 @@ func AdminRegistry() *resource.Registry {
 			}},
 		},
 		Columns: []resource.Column{{Name: "name", Label: "Name", Sortable: true}, {Name: "email", Label: "Email", Sortable: true}, {Name: "status", Label: "Status", Sortable: true}},
-		Actions: []resource.Action{{Name: "set-status", Label: "Set status", Kind: "user-status", Permission: "admin.users.manage"}},
+		Actions: append(standardActions("admin.users.manage"), resource.Action{Name: "set-status", Label: "Set status", Kind: "user-status", Permission: "admin.users.manage"}),
 	})
 	_ = registry.Register(resource.Manifest{
 		Name: "roles", Label: "Roles", Route: "/admin/roles", Table: "roles", Permissions: []string{"admin.roles.manage"},
 		Fields:  []resource.Field{{Name: "name", Label: "Name", Type: "text"}, {Name: "display_name", Label: "Display name", Type: "text"}},
 		Columns: []resource.Column{{Name: "name", Label: "Name", Sortable: true}, {Name: "display_name", Label: "Display name", Sortable: true}},
+		Actions: standardActions("admin.roles.manage"),
 	})
 	_ = registry.Register(resource.Manifest{
 		Name: "permissions", Label: "Permissions", Route: "/admin/permissions", Table: "permissions", Permissions: []string{"admin.permissions.manage"},
@@ -28,4 +29,13 @@ func AdminRegistry() *resource.Registry {
 		Columns: []resource.Column{{Name: "name", Label: "Name", Sortable: true}, {Name: "display_name", Label: "Display name", Sortable: true}},
 	})
 	return registry
+}
+
+func standardActions(permission string) []resource.Action {
+	return []resource.Action{
+		{Name: "view", Label: "View", Permission: permission},
+		{Name: "create", Label: "Create", Permission: permission},
+		{Name: "update", Label: "Update", Permission: permission},
+		{Name: "delete", Label: "Delete", Permission: permission},
+	}
 }

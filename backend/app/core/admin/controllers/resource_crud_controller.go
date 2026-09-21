@@ -10,6 +10,8 @@ import (
 	"goravel/app/core/resource"
 	"goravel/app/facades"
 	"goravel/app/modules/admin/registry"
+	rbacservices "goravel/app/services/rbac"
+	userservices "goravel/app/services/users"
 )
 
 func (r *ResourceController) Create(ctx http.Context) http.Response {
@@ -20,6 +22,30 @@ func (r *ResourceController) Create(ctx http.Context) http.Response {
 	values, err := bindGeneratedValues(ctx, manifest)
 	if err != nil {
 		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
+	}
+	if manifest.Name == "users" {
+		var payload userPayload
+		if err := ctx.Request().Bind(&payload); err != nil {
+			return rbacError(ctx, 422, "VALIDATION_ERROR")
+		}
+		user, err := userservices.NewUserService().Create(payload.Name, payload.Email, payload.Password, payload.Locale, payload.Status)
+		if err != nil {
+			return userServiceError(ctx, err)
+		}
+		recordManagementAudit(ctx, "user.create", map[string]any{"target_user_id": user.ID})
+		return ctx.Response().Status(201).Json(http.Json{"data": user.Public()})
+	}
+	if manifest.Name == "roles" {
+		var payload rolePayload
+		if err := ctx.Request().Bind(&payload); err != nil {
+			return rbacError(ctx, 422, "VALIDATION_ERROR")
+		}
+		role, err := rbacservices.NewRoleService().Create(payload.Name, payload.DisplayName)
+		if err != nil {
+			return roleServiceError(ctx, err)
+		}
+		recordManagementAudit(ctx, "role.create", map[string]any{"target_role_id": role.ID})
+		return ctx.Response().Status(201).Json(http.Json{"data": role})
 	}
 	if err := facades.Orm().Query().Table(manifest.Table).Create(&values); err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
@@ -40,6 +66,30 @@ func (r *ResourceController) Update(ctx http.Context) http.Response {
 	if err != nil {
 		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
 	}
+	if manifest.Name == "users" {
+		var payload userPayload
+		if err := ctx.Request().Bind(&payload); err != nil {
+			return rbacError(ctx, 422, "VALIDATION_ERROR")
+		}
+		user, err := userservices.NewUserService().Update(id, payload.Name, payload.Email, payload.Password, payload.Locale, payload.Status)
+		if err != nil {
+			return userServiceError(ctx, err)
+		}
+		recordManagementAudit(ctx, "user.update", map[string]any{"target_user_id": user.ID})
+		return ctx.Response().Success().Json(http.Json{"data": user.Public()})
+	}
+	if manifest.Name == "roles" {
+		var payload rolePayload
+		if err := ctx.Request().Bind(&payload); err != nil {
+			return rbacError(ctx, 422, "VALIDATION_ERROR")
+		}
+		role, err := rbacservices.NewRoleService().Update(id, payload.Name, payload.DisplayName)
+		if err != nil {
+			return roleServiceError(ctx, err)
+		}
+		recordManagementAudit(ctx, "role.update", map[string]any{"target_role_id": role.ID})
+		return ctx.Response().Success().Json(http.Json{"data": role})
+	}
 	if _, err := facades.Orm().Query().Table(manifest.Table).Where("id = ?", id).Update(values); err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 	}
@@ -56,10 +106,35 @@ func (r *ResourceController) Delete(ctx http.Context) http.Response {
 	if err != nil || id < 1 {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
+	switch resourceDeleteStrategy(manifest) {
+	case "users-service":
+		if err := userservices.NewUserService().Delete(id); err != nil {
+			return userServiceError(ctx, err)
+		}
+		recordManagementAudit(ctx, "user.delete", map[string]any{"target_user_id": id})
+		return ctx.Response().NoContent(204)
+	case "roles-service":
+		if err := rbacservices.NewRoleService().Delete(id); err != nil {
+			return roleServiceError(ctx, err)
+		}
+		recordManagementAudit(ctx, "role.delete", map[string]any{"target_role_id": id})
+		return ctx.Response().NoContent(204)
+	}
 	if _, err := facades.Orm().Query().Table(manifest.Table).Where("id = ?", id).Delete(); err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 	}
 	return ctx.Response().NoContent(204)
+}
+
+func resourceDeleteStrategy(manifest resource.Manifest) string {
+	switch manifest.Name {
+	case "users":
+		return "users-service"
+	case "roles":
+		return "roles-service"
+	default:
+		return "generic-table"
+	}
 }
 
 func generatedManifest(ctx http.Context) (resource.Manifest, bool) {
