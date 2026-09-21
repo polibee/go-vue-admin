@@ -4,6 +4,7 @@
   "search": "搜索资源",
   "searchPlaceholder": "输入关键词后回车",
   "refresh": "刷新",
+  "export": "导出 CSV",
   "loading": "正在加载资源",
   "total": "共 {count} 条",
   "noData": "暂无数据",

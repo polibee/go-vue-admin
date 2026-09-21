@@ -18,8 +18,9 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 - `GET /api/v1/admin/registry` 返回当前 Admin 资源清单；
 - 清单接口要求 `admin.users.view` 权限；
 - 当前登记 `users`、`roles`、`permissions` 三个基础资源；
-- 列表、详情、新增、编辑和删除统一使用 `/api/v1/admin/{resource}` 与
+- 列表、详情、新增、编辑、删除和 CSV 导出统一使用 `/api/v1/admin/{resource}` 与
   `/api/v1/admin/{resource}/{id}`；
+- 导出接口为 `/api/v1/admin/{resource}/export`，复用搜索、筛选和排序参数；
 - 列表支持 `page`、`per_page`、`search`、`sort`、`dir` 参数，返回 `data` 与 `meta`；
 - 排序字段按资源白名单限制，搜索使用参数绑定。
 
@@ -53,7 +54,7 @@ actions
 navigation
 ```
 
-标准能力：分页、搜索、排序、筛选、新增、编辑、查看、删除、行操作、批量操作、字段权限和审计钩子。
+标准能力：分页、搜索、排序、筛选、CSV 导出、新增、编辑、查看、删除、行操作、批量操作、字段权限和审计钩子。
 
 多步骤流程、审批和状态机、实时数据、图表分析、复杂联动表单和高度定制详情页直接使用 Custom Page。
 

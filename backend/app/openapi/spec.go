@@ -33,6 +33,7 @@ func Spec() map[string]any {
 				"get":  listOperation("listResourceRows", []map[string]any{pathParameter("resource"), queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("search", "string"), queryParameter("sort", "string"), queryParameter("dir", "string")}),
 				"post": resourceWriteOperation("createResource", "201"),
 			},
+			"/admin/{resource}/export": exportOperation(),
 			"/admin/{resource}/{id}": map[string]any{
 				"get":    resourceItemOperation("showResource"),
 				"put":    resourceWriteOperation("updateResource", "200", true),
@@ -90,6 +91,17 @@ func listOperation(operationID string, parameters []map[string]any) map[string]a
 	result := operation(operationID)
 	result["parameters"] = parameters
 	return result
+}
+
+func exportOperation() map[string]any {
+	return map[string]any{
+		"operationId": "exportResource",
+		"parameters":  []map[string]any{pathParameter("resource"), queryParameter("search", "string"), queryParameter("status", "string"), queryParameter("sort", "string"), queryParameter("dir", "string")},
+		"responses": map[string]any{
+			"200": map[string]any{"description": "CSV export", "content": map[string]any{"text/csv": map[string]any{"schema": map[string]any{"type": "string", "format": "binary"}}}},
+			"401": errorResponse(), "403": errorResponse(), "404": errorResponse(),
+		},
+	}
 }
 
 func queryParameter(name string, valueType string) map[string]any {

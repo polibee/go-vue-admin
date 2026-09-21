@@ -8,7 +8,7 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		t.Fatalf("unexpected OpenAPI version: %v", spec["openapi"])
 	}
 	paths := spec["paths"].(map[string]any)
-	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/{resource}", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/settings", "/admin/settings/{key}", "/admin/users/status"} {
+	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/{resource}", "/admin/{resource}/export", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/settings", "/admin/settings/{key}", "/admin/users/status"} {
 		if _, ok := paths[path]; !ok {
 			t.Fatalf("missing contract path %s", path)
 		}
@@ -21,6 +21,11 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		if _, ok := resourceCollection[method]; !ok {
 			t.Fatalf("missing resource collection method %s", method)
 		}
+	}
+	exportContract := paths["/admin/{resource}/export"].(map[string]any)
+	exportResponse := exportContract["responses"].(map[string]any)["200"].(map[string]any)
+	if _, ok := exportResponse["content"].(map[string]any)["text/csv"]; !ok {
+		t.Fatal("resource export must return text/csv")
 	}
 	resourceItem := paths["/admin/{resource}/{id}"].(map[string]any)
 	for _, method := range []string{"get", "put", "delete"} {

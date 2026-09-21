@@ -4,6 +4,7 @@
   "search": "Search resources",
   "searchPlaceholder": "Enter a keyword and press Enter",
   "refresh": "Refresh",
+  "export": "Export CSV",
   "loading": "Loading resource",
   "total": "{count} items",
   "noData": "No data",

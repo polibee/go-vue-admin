@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowDownUp, Pencil, RefreshCw, Search, Trash2 } from '@lucide/vue'
+import { ArrowDownUp, Download, Pencil, RefreshCw, Search, Trash2 } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
@@ -39,6 +39,7 @@ const sort = ref('id')
 const direction = ref<'asc' | 'desc'>('desc')
 const pageSize = ref('10')
 const loading = ref(true)
+const exporting = ref(false)
 const error = ref('')
 const deleteDialogOpen = ref(false)
 const deleting = ref(false)
@@ -74,13 +75,9 @@ async function loadRows(page = 1) {
   loading.value = true
   error.value = ''
   try {
-    const params = new URLSearchParams({ page: String(page), per_page: pageSize.value, sort: sort.value, dir: direction.value })
-    if (search.value.trim()) params.set('search', search.value.trim())
-    if (resourceName.value === 'users' && statusFilter.value !== 'all') params.set('status', statusFilter.value)
-    for (const field of filterFields.value) {
-      const value = filterValues.value[field.name]
-      if (value && value !== 'all') params.set(field.name, value)
-    }
+    const params = buildResourceQuery()
+    params.set('page', String(page))
+    params.set('per_page', pageSize.value)
     const response = await generatedApi.resourceList<Record<string, unknown>>(resourceName.value, params, auth.token)
     rows.value = response.data
     meta.value = response.meta as unknown as ResourceMeta
@@ -91,6 +88,17 @@ async function loadRows(page = 1) {
   } finally {
     loading.value = false
   }
+}
+
+function buildResourceQuery() {
+  const params = new URLSearchParams({ sort: sort.value, dir: direction.value })
+  if (search.value.trim()) params.set('search', search.value.trim())
+  if (resourceName.value === 'users' && statusFilter.value !== 'all') params.set('status', statusFilter.value)
+  for (const field of filterFields.value) {
+    const value = filterValues.value[field.name]
+    if (value && value !== 'all') params.set(field.name, value)
+  }
+  return params
 }
 
 function submitSearch() { void loadRows(1) }
@@ -165,6 +173,25 @@ async function deleteRow() {
   }
 }
 
+async function exportRows() {
+  if (!auth.token) return
+  exporting.value = true
+  error.value = ''
+  try {
+    const blob = await generatedApi.resourceExport(resourceName.value, buildResourceQuery(), auth.token)
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `${resourceName.value}-export.csv`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  } catch (value) {
+    error.value = localizedError(value)
+  } finally {
+    exporting.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     await loadManifests()
@@ -184,7 +211,7 @@ watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {};
         <h1 class="text-2xl font-semibold tracking-tight">{{ currentManifest?.label || t('resource.title') }}</h1>
         <p class="text-sm text-muted-foreground">{{ t('resource.description') }}</p>
       </div>
-      <div class="flex gap-2"><Button v-if="canCreate" variant="default" @click="router.push(resourceName === 'users' ? '/users/new' : resourceName === 'roles' ? '/roles/new' : `/${resourceName}/new`)">{{ resourceName === 'users' ? t('resource.createUser') : resourceName === 'roles' ? t('rbac.createRole') : t('resource.create') }}</Button><Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
+      <div class="flex gap-2"><Button v-if="canCreate" variant="default" @click="router.push(resourceName === 'users' ? '/users/new' : resourceName === 'roles' ? '/roles/new' : `/${resourceName}/new`)">{{ resourceName === 'users' ? t('resource.createUser') : resourceName === 'roles' ? t('rbac.createRole') : t('resource.create') }}</Button><Button variant="outline" :disabled="loading || exporting" @click="exportRows"><Download data-icon="inline-start" />{{ t('resource.export') }}</Button><Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
         <RefreshCw data-icon="inline-start" />{{ t('resource.refresh') }}
       </Button></div>
     </div>

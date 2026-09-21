@@ -70,3 +70,14 @@ export async function apiFetchEnvelope<T>(path: string, init: RequestInit = {}, 
 
   return { data: (payload?.data ?? payload) as T, meta: payload?.meta }
 }
+
+export async function apiDownload(path: string, init: RequestInit = {}, token?: string): Promise<Blob> {
+  const headers = new Headers(init.headers)
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers, credentials: 'include' })
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { code?: string; message?: string } | null
+    throw new ApiError(payload?.message ?? 'Download failed', response.status, payload?.code)
+  }
+  return response.blob()
+}
