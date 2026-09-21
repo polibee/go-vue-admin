@@ -14,7 +14,7 @@
 
 - Resource is the primary input and single source of truth for fields, permissions, menu metadata, routes, and pages.
 - `admin:make-resource` and `admin:make-crud` are the primary user-facing workflows.
-- Permission and menu generation must reuse the ResourceSpec and shared renderers.
+- Permission and menu generation must be internal renderers invoked by the resource pipeline; they must not have standalone Artisan commands.
 - Frontend output must reuse existing Admin Shell and generic resource views; do not create duplicate UI primitives.
 - All artifacts are preflighted together; any conflict prevents every write.
 - Generate migration files but never execute migrations or connect to PostgreSQL.
@@ -84,7 +84,7 @@
 - [ ] Add a failing composition test asserting one ResourceSpec produces backend, migration, permission, menu, frontend, README, and test artifacts with no duplicate paths.
 - [ ] Run the focused test and confirm failure.
 - [ ] Make `admin:make-resource` call the full pipeline; make `admin:make-crud` call the same pipeline without a second parser or renderer set.
-- [ ] Keep `admin:make-permission` and `admin:make-menu` as thin compatibility adapters over shared renderers.
+- [ ] Remove standalone permission/menu Artisan commands; keep only shared renderers invoked by the resource pipeline.
 - [ ] Run command tests and commit `feat: compose resource-driven generator pipeline`.
 
 ### Task 5: Add all-artifact conflict safety and smoke coverage

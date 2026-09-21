@@ -21,8 +21,6 @@ func Boot() contractsfoundation.Application {
 				adminconsole.ModuleGeneratorCommand{},
 				adminconsole.ModuleCheckCommand{},
 				adminconsole.CRUDGeneratorCommand{},
-				adminconsole.PermissionGeneratorCommand{},
-				adminconsole.MenuGeneratorCommand{},
 			}
 		}).
 		WithRouting(func() {

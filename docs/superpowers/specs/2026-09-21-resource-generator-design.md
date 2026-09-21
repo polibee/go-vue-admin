@@ -20,7 +20,7 @@ go run . artisan admin:make-resource posts \
 
 `admin:make-crud` 是同一流水线的显式扩展入口，适用于明确要求生成完整 CRUD 边界的场景。两者不能各自维护一套字段、权限或页面模板。
 
-独立的 `admin:make-permission` 和 `admin:make-menu` 只保留为内部渲染器或兼容性命令，不再作为资源开发的主流程；它们不得产生与资源流水线不一致的命名和目录结构。
+权限和菜单只保留为 Resource Generator 内部渲染器，不再提供独立 Artisan 命令；它们不得产生与资源流水线不一致的命名和目录结构。
 
 ## 输入定义
 
@@ -96,7 +96,7 @@ Input
   -> ConflictAwareWriter
 ```
 
-每个 Renderer 只消费同一份 `ResourceSpec` 并返回内存中的 Artifact；Writer 最后统一处理冲突和写入。`admin:make-permission`、`admin:make-menu` 只能调用对应 Renderer，不得自行解析另一套输入。
+每个 Renderer 只消费同一份 `ResourceSpec` 并返回内存中的 Artifact；Writer 最后统一处理冲突和写入。权限和菜单 Renderer 不提供独立命令，不得自行解析另一套输入。
 
 ## 测试与验收
 

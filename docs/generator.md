@@ -65,42 +65,12 @@ go run . artisan admin:make-crud orders \
 
 它会一次性生成模块骨架、Resource 骨架、两个 README、测试骨架和迁移文件。所有目标文件会统一预检，任一文件冲突时不会写入任何文件。生成结果仍需人工注册运行时边界，迁移仍需人工审阅和执行。
 
-## 已实现：`admin:make-permission`
-
-权限生成器只生成权限常量和说明，不写入权限表或角色绑定：
-
-```text
-go run . artisan admin:make-permission orders \
-  --action=view \
-  --action=create \
-  --action=update \
-  --action=delete
-```
-
-它会生成权限常量、README 和 Golden File 测试所需的稳定输出。权限数据和角色分配仍需通过人工审阅后的 RBAC 流程完成。
-
-## 已实现：`admin:make-menu`
-
-菜单生成器只生成菜单配置骨架和接入说明：
-
-```text
-go run . artisan admin:make-menu orders \
-  --label="Orders" \
-  --route="/orders" \
-  --permission="admin.orders.view" \
-  --icon="shopping-cart"
-```
-
-它会生成菜单常量、README 和 Golden File 稳定输出。菜单与权限会被记录在生成配置中，但不会自动修改前端路由、Sidebar、数据库或现有菜单注册。
-
 ## 第一阶段命令
 
 ```text
 admin:make-module
 admin:make-resource
 admin:make-crud
-admin:make-permission
-admin:make-menu
 admin:api
 ```
 
