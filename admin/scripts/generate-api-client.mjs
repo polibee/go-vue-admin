@@ -15,7 +15,7 @@ const content = `/* eslint-disable */
 /* Generated from ${baseUrl}/api/openapi.json. DO NOT EDIT. */
 /* Contract paths: ${paths.join(', ')} */
 
-import { apiFetch, apiFetchEnvelope } from '@/lib/api'
+import { ApiError, apiFetch, apiFetchEnvelope } from '@/lib/api'
 
 export type UserStatus = ${statuses.map((status) => JSON.stringify(status)).join(' | ')}
 export interface AuthUser { id: number; name: string; email: string; status: UserStatus; locale: string; permissions: string[] }
@@ -35,7 +35,12 @@ export const generatedApi = {
   currentUser(token: string) { return apiFetch<AuthUser>('/api/v1/auth/me', {}, token) },
   logout(token: string) { return apiFetch<void>('/api/v1/auth/logout', { method: 'POST' }, token) },
   logoutAll(token: string) { return apiFetch<void>('/api/v1/auth/logout-all', { method: 'POST' }, token) },
-  resourceRegistry(token: string) { return apiFetch<ResourceManifest[]>('/api/v1/admin/registry', {}, token) },
+  resourceRegistry(token: string) {
+    return apiFetch<unknown>('/api/v1/admin/registry', {}, token).then((payload) => {
+      if (!Array.isArray(payload)) throw new ApiError('Invalid resource registry response', 502, 'INTERNAL_ERROR')
+      return payload as ResourceManifest[]
+    })
+  },
   overview(token: string) { return apiFetch<AdminOverview>('/api/v1/admin/overview', {}, token) },
   auditLogs(token: string, query: URLSearchParams) { return apiFetchEnvelope<AuditLog[]>('/api/v1/admin/audit-logs?' + query, {}, token) as unknown as Promise<ResourceList<AuditLog>> },
   resourceList<T = Record<string, unknown>>(resource: string, query: URLSearchParams, token: string) { return apiFetchEnvelope<T[]>('/api/v1/admin/' + resource + '?' + query, {}, token) as unknown as Promise<ResourceList<T>> },
