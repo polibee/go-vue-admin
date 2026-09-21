@@ -36,6 +36,14 @@ go run . artisan admin:make-module billing
 
 命令会在 `backend/app/modules/billing/` 下生成 `module.go`、`model.go`、`request.go`、`repository.go`、`service.go`、`controller.go`、`routes.go`、`resource.go`、`permissions.go`、`events.go` 和 `tests/module_test.go`。它不生成迁移，也不自动注册 Provider、Routes、Permissions、菜单或 Resource Registry。
 
+模块目录同时包含 `README.md`，列出人工接入顺序和检查命令。可以使用只读检查命令确认生成文件是否完整：
+
+```text
+go run . artisan admin:check-module billing
+```
+
+检查命令只读取文件，不创建、修改或删除文件，也不连接数据库。检查通过后仍需人工注册运行时边界；当前版本没有默认开启的自动注册选项。
+
 ## 第一阶段命令
 
 ```text

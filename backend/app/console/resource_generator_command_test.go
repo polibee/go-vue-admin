@@ -24,3 +24,13 @@ func TestModuleGeneratorCommandMetadata(t *testing.T) {
 		t.Fatalf("argument count = %d, want 1", len(command.Extend().Arguments))
 	}
 }
+
+func TestModuleCheckCommandMetadata(t *testing.T) {
+	command := ModuleCheckCommand{}
+	if command.Signature() != "admin:check-module" {
+		t.Fatalf("signature = %q", command.Signature())
+	}
+	if len(command.Extend().Arguments) != 1 {
+		t.Fatalf("argument count = %d, want 1", len(command.Extend().Arguments))
+	}
+}

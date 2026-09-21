@@ -34,6 +34,7 @@ func TestRenderModuleGolden(t *testing.T) {
 		"app/modules/billing/permissions.go",
 		"app/modules/billing/events.go",
 		"app/modules/billing/tests/module_test.go",
+		"app/modules/billing/README.md",
 	}
 	if got := artifactPaths(artifacts); !reflect.DeepEqual(got, wantPaths) {
 		t.Fatalf("paths = %v, want %v", got, wantPaths)
