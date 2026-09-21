@@ -73,6 +73,20 @@ go run . artisan admin:make-permission orders \
 
 它会生成权限常量、README 和 Golden File 测试所需的稳定输出。权限数据和角色分配仍需通过人工审阅后的 RBAC 流程完成。
 
+## 已实现：`admin:make-menu`
+
+菜单生成器只生成菜单配置骨架和接入说明：
+
+```text
+go run . artisan admin:make-menu orders \
+  --label="Orders" \
+  --route="/orders" \
+  --permission="admin.orders.view" \
+  --icon="shopping-cart"
+```
+
+它会生成菜单常量、README 和 Golden File 稳定输出。菜单与权限会被记录在生成配置中，但不会自动修改前端路由、Sidebar、数据库或现有菜单注册。
+
 ## 第一阶段命令
 
 ```text
