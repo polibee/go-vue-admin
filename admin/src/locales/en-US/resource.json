@@ -33,6 +33,11 @@
   ,"delete": "Delete"
   ,"deleteTitle": "Delete this item?"
   ,"deleteDescription": "This action cannot be undone. Please confirm."
+  ,"generatePassword": "Generate password"
+  ,"showPassword": "Show password"
+  ,"hidePassword": "Hide password"
+  ,"copyPassword": "Copy password"
+  ,"copiedPassword": "Password copied"
   ,"deleteUser": "Delete user",
   "deleteUserTitle": "Delete this user?",
   "deleteUserDescription": "The user's role links will be removed and this action cannot be undone."
