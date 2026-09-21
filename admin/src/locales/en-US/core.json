@@ -2,5 +2,7 @@
   "appName": "Go Vue Admin",
   "environmentReady": "Admin environment is ready",
   "environmentDescription": "Vue 3, TypeScript, Pinia, Vue Router, Vue I18n, and official shadcn-vue components are configured.",
-  "navigation": "Navigation"
+  "navigation": "Navigation",
+  "searchResources": "Search resources",
+  "noSearchResults": "No matching resources"
 }

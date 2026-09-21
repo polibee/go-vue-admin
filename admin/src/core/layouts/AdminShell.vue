@@ -1,19 +1,30 @@
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ClipboardList, Languages, LayoutDashboard, LogOut, ShieldCheck, Unplug } from '@lucide/vue'
+import { ClipboardList, Languages, LayoutDashboard, LogOut, Search, ShieldCheck, Unplug } from '@lucide/vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/auth'
 import { generatedResourceDefinitions } from '@/core/resource/generated'
+import { generatedApi, type ResourceManifest } from '@/generated/api'
+import { dashboardResourceRoute, visibleDashboardResources } from '@/lib/dashboard-resources'
 
 const { t, locale } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
+const resourceManifests = ref<ResourceManifest[]>([])
+const resourceSearch = ref('')
+const searchOpen = ref(false)
+const searchResults = computed(() => {
+  const query = resourceSearch.value.trim().toLowerCase()
+  return visibleDashboardResources(resourceManifests.value, auth.user?.permissions || []).filter((resource) => !query || resource.label.toLowerCase().includes(query) || resource.name.toLowerCase().includes(query))
+})
 
 function toggleLocale() {
   locale.value = locale.value === 'zh-CN' ? 'en-US' : 'zh-CN'
@@ -29,6 +40,17 @@ async function logoutAll() {
   await auth.logoutAll()
   await router.replace({ name: 'login' })
 }
+
+function openResource(resource: Pick<ResourceManifest, 'name' | 'route'>) {
+  searchOpen.value = false
+  resourceSearch.value = ''
+  void router.push(dashboardResourceRoute(resource))
+}
+
+onMounted(async () => {
+  if (!auth.token) return
+  try { resourceManifests.value = await generatedApi.resourceRegistry(auth.token) } catch { resourceManifests.value = [] }
+})
 </script>
 
 <template>
@@ -119,6 +141,19 @@ async function logoutAll() {
       <header class="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <SidebarTrigger class="-ml-1" />
         <Separator orientation="vertical" class="mr-2 h-4" />
+        <div class="relative hidden w-72 lg:block">
+          <div class="relative">
+            <Search class="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+            <Input v-model="resourceSearch" class="h-9 pl-9" :placeholder="t('core.searchResources')" :aria-label="t('core.searchResources')" @focus="searchOpen = true" @keydown.esc="searchOpen = false" />
+          </div>
+          <div v-if="searchOpen" class="absolute left-0 right-0 top-11 z-50 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+            <button v-for="resource in searchResults" :key="resource.name" type="button" class="flex w-full items-center rounded-sm px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground" @click="openResource(resource)">
+              <span class="font-medium">{{ resource.label }}</span>
+              <span class="ml-auto text-xs text-muted-foreground">{{ resource.name }}</span>
+            </button>
+            <p v-if="!searchResults.length" class="px-3 py-2 text-sm text-muted-foreground">{{ t('core.noSearchResults') }}</p>
+          </div>
+        </div>
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem class="hidden md:block">
