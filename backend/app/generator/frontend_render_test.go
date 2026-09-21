@@ -45,7 +45,7 @@ func TestRenderFrontendArtifactsFromResourceSpec(t *testing.T) {
 	for _, artifact := range artifacts {
 		if artifact.Path == "admin/src/modules/orders/api.ts" {
 			content := string(artifact.Content)
-			for _, fragment := range []string{"list", "show", "create", "update", "remove", "/api/v1/admin/resources/orders"} {
+			for _, fragment := range []string{"generatedApi", "list", "show", "create", "update", "remove"} {
 				if !strings.Contains(content, fragment) {
 					t.Fatalf("api contract missing %q", fragment)
 				}
