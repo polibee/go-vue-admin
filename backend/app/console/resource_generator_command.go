@@ -45,24 +45,12 @@ func (ResourceGeneratorCommand) Handle(ctx console.Context) error {
 		Icon:       ctx.Option("icon"),
 		Fields:     ctx.OptionSlice("field"),
 	}
-	spec, err := generator.Normalize(input)
-	if err != nil {
-		return err
-	}
-	artifacts, err := generator.RenderResourcePipeline(spec, time.Now().UTC().Format("20060102150405"))
-	if err != nil {
-		return err
-	}
 	root, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get working directory: %w", err)
 	}
-	runtimeArtifacts, err := generator.RenderRuntimeRegistration(root, spec)
+	artifacts, err := generator.GenerateResource(root, input, time.Now().UTC().Format("20060102150405"))
 	if err != nil {
-		return err
-	}
-	artifacts = append(artifacts, runtimeArtifacts...)
-	if err := generator.WriteAll(root, artifacts); err != nil {
 		return err
 	}
 
