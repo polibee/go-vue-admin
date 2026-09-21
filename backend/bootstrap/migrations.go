@@ -14,5 +14,6 @@ func Migrations() []schema.Migration {
 		&migrations.M20260920000003AddRBACTimestamps{},
 		&migrations.M20260921000001ReplaceUserActiveWithStatus{},
 		&migrations.M20260921000002CreateAuthRefreshTokensTable{},
+		&migrations.M20260921000003CreateAuditLogsTable{},
 	}
 }

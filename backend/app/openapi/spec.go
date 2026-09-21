@@ -26,6 +26,7 @@ func Spec() map[string]any {
 			"/admin/resources":            map[string]any{"get": operation("listResources")},
 			"/admin/resources/{resource}": map[string]any{"get": operation("listResourceRows")},
 			"/admin/overview":             map[string]any{"get": operation("adminOverview")},
+			"/admin/audit-logs":           map[string]any{"get": operation("auditLogs")},
 			"/admin/users/status": map[string]any{"put": map[string]any{
 				"operationId": "bulkSetUserStatus", "requestBody": jsonBody("BulkUserStatusRequest", map[string]any{"type": "object", "required": []string{"user_ids", "status"}, "properties": map[string]any{"user_ids": map[string]any{"type": "array", "items": map[string]any{"type": "integer", "format": "int64"}}, "status": map[string]any{"$ref": "#/components/schemas/UserStatus"}}}),
 				"responses": map[string]any{"204": map[string]any{"description": "Status updated"}, "409": errorResponse(), "422": errorResponse()},

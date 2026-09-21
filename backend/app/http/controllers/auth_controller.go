@@ -62,6 +62,7 @@ func (r *AuthController) Login(ctx http.Context) http.Response {
 			"message": "could not create refresh token",
 		})
 	}
+	recordAudit(user.ID, "auth.login", map[string]any{"method": "password"})
 
 	response := ctx.Response().Cookie(refreshTokenCookie(refreshToken))
 	return response.Success().Json(http.Json{
@@ -91,6 +92,10 @@ func (r *AuthController) Logout(ctx http.Context) http.Response {
 	if err := r.parseToken(ctx); err != nil {
 		return ctx.Response().WithoutCookie(services.RefreshTokenCookieName).Status(204).Json(nil)
 	}
+	var user models.User
+	if err := facades.Auth(ctx).User(&user); err != nil {
+		return unauthorized(ctx)
+	}
 	response := ctx.Response().WithoutCookie(services.RefreshTokenCookieName)
 	if err := facades.Auth(ctx).Logout(); err != nil {
 		return response.Status(503).Json(http.Json{
@@ -98,6 +103,7 @@ func (r *AuthController) Logout(ctx http.Context) http.Response {
 			"message": "authentication session storage is unavailable",
 		})
 	}
+	recordAudit(user.ID, "auth.logout", nil)
 
 	return response.NoContent(204)
 }
@@ -123,6 +129,7 @@ func (r *AuthController) LogoutAll(ctx http.Context) http.Response {
 			"message": "authentication session storage is unavailable",
 		})
 	}
+	recordAudit(user.ID, "auth.logout_all", nil)
 	return response.NoContent(204)
 }
 
@@ -154,6 +161,7 @@ func (r *AuthController) Refresh(ctx http.Context) http.Response {
 			"message": "could not rotate refresh token",
 		})
 	}
+	recordAudit(user.ID, "auth.refresh", nil)
 
 	return ctx.Response().Cookie(refreshTokenCookie(rotatedToken)).Success().Json(http.Json{
 		"data": http.Json{
@@ -184,6 +192,12 @@ func unauthorized(ctx http.Context) http.Response {
 		"code":    "AUTH_UNAUTHORIZED",
 		"message": "authentication required",
 	})
+}
+
+func recordAudit(userID uint, action string, metadata map[string]any) {
+	if err := services.NewAuditService().Record(userID, action, metadata); err != nil {
+		facades.Log().Errorf("audit record failed action=%s user_id=%d error=%v", action, userID, err)
+	}
 }
 
 func sessionStoreUnavailable(ctx http.Context) http.Response {
