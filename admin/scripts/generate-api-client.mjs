@@ -25,12 +25,14 @@ export interface ResourceManifest { name: string; label: string; route: string; 
 export interface ResourceListMeta { page: number; per_page: number; total: number; last_page: number }
 export interface ResourceList<T = Record<string, unknown>> { data: T[]; meta: ResourceListMeta }
 export interface BulkUserStatusRequest { user_ids: number[]; status: UserStatus }
+export interface AdminOverview { users: number; roles: number; permissions: number }
 
 export const generatedApi = {
   login(request: LoginRequest) { return apiFetch<LoginResponse>('/api/v1/auth/login', { method: 'POST', body: JSON.stringify(request) }) },
   currentUser(token: string) { return apiFetch<AuthUser>('/api/v1/auth/me', {}, token) },
   logout(token: string) { return apiFetch<void>('/api/v1/auth/logout', { method: 'POST' }, token) },
   resourceManifests(token: string) { return apiFetch<ResourceManifest[]>('/api/v1/admin/resources', {}, token) },
+  overview(token: string) { return apiFetch<AdminOverview>('/api/v1/admin/overview', {}, token) },
   resourceList<T = Record<string, unknown>>(resource: string, query: URLSearchParams, token: string) { return apiFetchEnvelope<T[]>('/api/v1/admin/resources/' + resource + '?' + query, {}, token) as unknown as Promise<ResourceList<T>> },
   bulkSetUserStatus(request: BulkUserStatusRequest, token: string) { return apiFetch<void>('/api/v1/admin/users/status', { method: 'PUT', body: JSON.stringify(request) }, token) },
 }

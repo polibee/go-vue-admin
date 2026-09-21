@@ -32,7 +32,7 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 
 用户资源 Manifest 通过 `actions` 声明 `set-status` Custom Action；列表页根据清单渲染单行状态操作，并复用批量状态接口。Manifest 只描述动作名称、类型和权限，不包含可执行代码。
 
-Admin 前端提供 `/users/new`、`/users/:id/edit`、用户详情删除确认和批量状态设置流程。roles、permissions 的通用写表单仍沿用 RBAC 专用页面。
+Admin 前端提供 `/users/new`、`/users/:id/edit`、用户详情删除确认和批量状态设置流程。系统概览作为独立 Custom Page，通过 Overview Controller/Service 提供统计卡片和资源快捷入口；roles、permissions 的通用写表单仍沿用 RBAC 专用页面。
 
 ## Resource Definition
 

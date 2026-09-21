@@ -37,8 +37,10 @@ func Web() {
 	facades.Route().Post("/api/v1/auth/logout", authController.Logout)
 
 	rbacController := controllers.NewRBACController()
+	overviewController := controllers.NewOverviewController()
 	resourceController := controllers.NewResourceController()
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/resources", resourceController.Index)
+	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/overview", overviewController.Index)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/resources/:resource", resourceController.List)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/resources/:resource/:id", resourceController.Show)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/users", rbacController.Users)
