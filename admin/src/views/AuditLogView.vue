@@ -4,6 +4,7 @@ import { RefreshCw } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
@@ -12,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ApiError, errorMessageKey } from '@/lib/api'
 import { generatedApi, type AuditLog, type ResourceListMeta } from '@/generated/api'
+import { formatAuditMetadata } from '@/lib/audit-log'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 
@@ -22,6 +24,7 @@ const meta = ref<ResourceListMeta>({ page: 1, per_page: 20, total: 0, last_page:
 const pageSize = ref('20')
 const actionFilter = ref('all')
 const userFilter = ref('')
+const selectedEntry = ref<AuditLog | null>(null)
 const loading = ref(true)
 const error = ref('')
 
@@ -83,9 +86,10 @@ onMounted(load)
       <CardContent>
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
         <Empty v-else-if="!entries.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('auth.auditEmpty') }}</EmptyDescription></EmptyHeader></Empty>
-        <Table v-else><TableHeader><TableRow><TableHead>{{ t('auth.auditAction') }}</TableHead><TableHead>{{ t('auth.auditUser') }}</TableHead><TableHead>{{ t('auth.auditTime') }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="entry in entries" :key="entry.id"><TableCell class="font-medium">{{ entry.action }}</TableCell><TableCell>{{ entry.user_id }}</TableCell><TableCell>{{ formatDate(entry.created_at) }}</TableCell></TableRow></TableBody></Table>
+        <Table v-else><TableHeader><TableRow><TableHead>{{ t('auth.auditAction') }}</TableHead><TableHead>{{ t('auth.auditUser') }}</TableHead><TableHead>{{ t('auth.auditTime') }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="entry in entries" :key="entry.id" class="cursor-pointer" @click="selectedEntry = entry"><TableCell class="font-medium">{{ entry.action }}</TableCell><TableCell>{{ entry.user_id }}</TableCell><TableCell>{{ formatDate(entry.created_at) }}</TableCell></TableRow></TableBody></Table>
         <div v-if="!loading && meta.total > 0" class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between"><p class="text-sm text-muted-foreground">{{ t('resource.page', { page: meta.page }) }}</p><div class="flex items-center gap-2"><Select :model-value="pageSize" @update:model-value="changePageSize"><SelectTrigger class="w-24"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="10">{{ t('resource.perPage', { count: 10 }) }}</SelectItem><SelectItem value="20">{{ t('resource.perPage', { count: 20 }) }}</SelectItem><SelectItem value="50">{{ t('resource.perPage', { count: 50 }) }}</SelectItem></SelectContent></Select></div><Pagination v-model:page="meta.page" :items-per-page="meta.per_page" :total="meta.total" @update:page="load"><PaginationContent v-slot="{ items }"><PaginationPrevious /><template v-for="(item, index) in items" :key="index"><PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === meta.page">{{ item.value }}</PaginationItem></template><PaginationNext /></PaginationContent></Pagination></div>
       </CardContent>
     </Card>
+    <Dialog :open="selectedEntry !== null" @update:open="(open) => { if (!open) selectedEntry = null }"><DialogContent><DialogHeader><DialogTitle>{{ t('auth.auditDetail') }}</DialogTitle><DialogDescription>{{ selectedEntry?.action }} · {{ selectedEntry ? formatDate(selectedEntry.created_at) : '' }}</DialogDescription></DialogHeader><dl v-if="selectedEntry" class="grid gap-3 text-sm"><div class="flex justify-between gap-4"><dt class="text-muted-foreground">{{ t('auth.auditUser') }}</dt><dd>{{ selectedEntry.user_id }}</dd></div><div><dt class="mb-2 text-muted-foreground">{{ t('auth.auditMetadata') }}</dt><dd v-if="formatAuditMetadata(selectedEntry.metadata)" class="overflow-auto rounded-md bg-muted p-3"><pre class="whitespace-pre-wrap break-words text-xs">{{ formatAuditMetadata(selectedEntry.metadata) }}</pre></dd><dd v-else class="text-muted-foreground">{{ t('auth.auditNoMetadata') }}</dd></div></dl></DialogContent></Dialog>
   </div>
 </template>
