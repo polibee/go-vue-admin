@@ -20,6 +20,7 @@ const router = createRouter({
           component: () => import('@/views/AdminHomeView.vue'),
         },
         { path: 'rbac', name: 'rbac', component: () => import('@/views/RBACView.vue') },
+        { path: 'audit-logs', name: 'audit-logs', component: () => import('@/views/AuditLogView.vue') },
         { path: ':resource(users|roles|permissions)', name: 'resource-list', component: () => import('@/views/ResourceListView.vue') },
         { path: 'users/new', name: 'user-create', component: () => import('@/views/UserFormView.vue') },
         { path: 'users/:id/edit', name: 'user-edit', component: () => import('@/views/UserFormView.vue') },
