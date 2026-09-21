@@ -26,9 +26,9 @@ Resource Registry、字段、列、标准列表查询（分页、搜索、排序
 
 ## Phase 6：可选扩展
 
-已完成第一步：ResourceList 支持按当前搜索、筛选和排序条件导出 CSV，并支持 CSV 导入预览与确认提交；导入导出复用 Registry
-列/字段白名单，并排除 password、secret、token 和 credential 字段，不新增依赖或数据库变化。
-后续再评估文件管理、导入、Dashboard 增强、全局搜索、插件 SDK 和 AI 辅助生成。
+已完成第一步：ResourceList 支持按当前搜索、筛选和排序条件导出 CSV；导出复用 Registry
+列白名单，不新增依赖或数据库变化。当前不实现通用 CSV 导入，避免把批量写入、敏感字段和领域校验混入通用资源层；后续如有明确业务需求，再按独立业务流程评估。
+后续再评估文件管理、Dashboard 增强、全局搜索、插件 SDK 和 AI 辅助生成。
 
 ## Phase 7：插件系统
 

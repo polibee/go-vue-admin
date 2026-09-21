@@ -13,11 +13,6 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 			t.Fatalf("missing contract path %s", path)
 		}
 	}
-	for _, path := range []string{"/admin/{resource}/import/preview", "/admin/{resource}/import"} {
-		if _, ok := paths[path]; !ok {
-			t.Fatalf("missing resource import path %s", path)
-		}
-	}
 	if _, ok := paths["/admin/resources/{resource}"]; ok {
 		t.Fatal("legacy resources route remains in contract")
 	}

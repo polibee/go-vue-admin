@@ -16,11 +16,5 @@
   "RESOURCE_NOT_FOUND": "资源不存在",
   "SETTINGS_INVALID": "系统设置参数无效",
   "SETTINGS_ERROR": "系统设置暂时无法加载",
-  "INTERNAL_ERROR": "服务暂时不可用，请稍后重试",
-  "IMPORT_SENSITIVE_FIELD": "包含敏感字段的资源不支持导入",
-  "IMPORT_FILE_REQUIRED": "请选择 CSV 文件",
-  "IMPORT_FILE_TOO_LARGE": "CSV 文件不能超过 5 MB",
-  "IMPORT_FILE_INVALID": "CSV 文件无法读取",
-  "IMPORT_VALIDATION_ERROR": "CSV 内容校验失败",
-  "IMPORT_PERSIST_FAILED": "CSV 数据写入失败"
+  "INTERNAL_ERROR": "服务暂时不可用，请稍后重试"
 }

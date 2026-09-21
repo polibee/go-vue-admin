@@ -21,8 +21,6 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 - 列表、详情、新增、编辑、删除和 CSV 导出统一使用 `/api/v1/admin/{resource}` 与
   `/api/v1/admin/{resource}/{id}`；
 - 导出接口为 `/api/v1/admin/{resource}/export`，复用搜索、筛选和排序参数；
-- 导入接口为 `/api/v1/admin/{resource}/import/preview` 与 `/api/v1/admin/{resource}/import`，先预览校验再确认提交；
-- 含密码、secret、token 或 credential 字段的资源默认禁止 CSV 导入，避免绕过领域安全规则；
 - 列表支持 `page`、`per_page`、`search`、`sort`、`dir` 参数，返回 `data` 与 `meta`；
 - 排序字段按资源白名单限制，搜索使用参数绑定。
 

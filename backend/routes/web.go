@@ -55,8 +55,6 @@ func Web() {
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.roles.manage")).Put("/api/v1/admin/users/:id/roles", rbacController.ReplaceUserRoles)
 	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("view")).Get("/api/v1/admin/:resource", resourceController.List)
 	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("view")).Get("/api/v1/admin/:resource/export", resourceController.Export)
-	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("create")).Post("/api/v1/admin/:resource/import/preview", resourceController.ImportPreview)
-	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("create")).Post("/api/v1/admin/:resource/import", resourceController.Import)
 	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("view")).Get("/api/v1/admin/:resource/:id", resourceController.Show)
 	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("create")).Post("/api/v1/admin/:resource", resourceController.Create)
 	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("update")).Put("/api/v1/admin/:resource/:id", resourceController.Update)

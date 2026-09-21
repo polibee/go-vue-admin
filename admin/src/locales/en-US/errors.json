@@ -16,11 +16,5 @@
   "RESOURCE_NOT_FOUND": "The resource was not found.",
   "SETTINGS_INVALID": "The system setting parameters are invalid.",
   "SETTINGS_ERROR": "System settings are temporarily unavailable.",
-  "INTERNAL_ERROR": "The service is temporarily unavailable. Please try again later.",
-  "IMPORT_SENSITIVE_FIELD": "Resources with sensitive fields cannot be imported.",
-  "IMPORT_FILE_REQUIRED": "Please select a CSV file.",
-  "IMPORT_FILE_TOO_LARGE": "CSV files must be 5 MB or smaller.",
-  "IMPORT_FILE_INVALID": "The CSV file could not be read.",
-  "IMPORT_VALIDATION_ERROR": "The CSV content failed validation.",
-  "IMPORT_PERSIST_FAILED": "The CSV data could not be saved."
+  "INTERNAL_ERROR": "The service is temporarily unavailable. Please try again later."
 }
