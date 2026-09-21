@@ -51,6 +51,7 @@
   ,"clearSelection": "清除选择"
   ,"bulkStatusTitle": "确认批量设置状态？"
   ,"bulkStatusDescription": "将把已选择的 {count} 个用户设置为“{status}”。"
+  ,"setStatus": "设置状态"
   ,"deleteUser": "删除用户",
   "deleteUserTitle": "确认删除用户？",
   "deleteUserDescription": "删除后将解除该用户的角色关联，且无法恢复。"

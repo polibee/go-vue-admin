@@ -51,6 +51,7 @@
   ,"clearSelection": "Clear selection"
   ,"bulkStatusTitle": "Apply status to selected users?"
   ,"bulkStatusDescription": "This will set {count} selected users to {status}."
+  ,"setStatus": "Set status"
   ,"deleteUser": "Delete user",
   "deleteUserTitle": "Delete this user?",
   "deleteUserDescription": "The user's role links will be removed and this action cannot be undone."

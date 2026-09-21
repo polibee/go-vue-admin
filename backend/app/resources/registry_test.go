@@ -22,4 +22,7 @@ func TestAdminRegistryExposesFormFields(t *testing.T) {
 			t.Fatalf("field %d = %+v, want %s/%s", index, field, want.name, want.fieldType)
 		}
 	}
+	if len(manifest.Actions) != 1 || manifest.Actions[0].Name != "set-status" || manifest.Actions[0].Kind != "user-status" {
+		t.Fatalf("expected declarative user status action, got %+v", manifest.Actions)
+	}
 }

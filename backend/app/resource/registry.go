@@ -29,6 +29,13 @@ type Column struct {
 	Sortable bool   `json:"sortable"`
 }
 
+type Action struct {
+	Name       string `json:"name"`
+	Label      string `json:"label"`
+	Kind       string `json:"kind"`
+	Permission string `json:"permission"`
+}
+
 type Manifest struct {
 	Name        string   `json:"name"`
 	Label       string   `json:"label"`
@@ -36,6 +43,7 @@ type Manifest struct {
 	Permissions []string `json:"permissions"`
 	Fields      []Field  `json:"fields"`
 	Columns     []Column `json:"columns"`
+	Actions     []Action `json:"actions,omitempty"`
 }
 
 type Registry struct{ manifests map[string]Manifest }

@@ -14,7 +14,7 @@
 
 ## Phase 3：Resource Engine
 
-Resource Registry、字段、列、标准列表查询（分页、搜索、排序、用户状态筛选）和用户批量设置状态已完成；users 资源已补齐创建、编辑、详情和删除闭环，metadata-driven 用户/角色表单已接入。Custom Action 和 Custom Page 出口仍待实现。
+Resource Registry、字段、列、标准列表查询（分页、搜索、排序、用户状态筛选）、用户批量设置状态和声明式用户 Custom Action 已完成；users 资源已补齐创建、编辑、详情和删除闭环，metadata-driven 用户/角色表单已接入。Custom Page 出口仍待实现。
 
 ## Phase 4：OpenAPI 与 SDK
 

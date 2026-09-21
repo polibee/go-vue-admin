@@ -30,6 +30,8 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 - `PUT /api/v1/admin/users/status` 批量设置用户状态，复用状态校验和最后管理员保护；
 - 最后一个具备管理权限的活动管理员不能被删除。
 
+用户资源 Manifest 通过 `actions` 声明 `set-status` Custom Action；列表页根据清单渲染单行状态操作，并复用批量状态接口。Manifest 只描述动作名称、类型和权限，不包含可执行代码。
+
 Admin 前端提供 `/users/new`、`/users/:id/edit`、用户详情删除确认和批量状态设置流程。roles、permissions 的通用写表单仍沿用 RBAC 专用页面。
 
 ## Resource Definition
