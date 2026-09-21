@@ -21,6 +21,11 @@ func Web() {
 	facades.Route().Get("/api/openapi.json", func(ctx http.Context) http.Response {
 		return ctx.Response().Json(200, http.Json(openapi.Spec()))
 	})
+	if facades.Config().GetString("app.env", "production") != "production" {
+		facades.Route().Get("/api/docs", func(ctx http.Context) http.Response {
+			return ctx.Response().Header("Content-Type", "text/html; charset=utf-8").String(200, openapi.DocsHTML())
+		})
+	}
 
 	userController := controllers.NewUserController()
 	facades.Route().Get("/users", userController.Index)

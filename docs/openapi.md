@@ -36,4 +36,6 @@ Scalar 只作为开发和受控环境的 API 浏览器，不是 API Contract Sou
 
 当前已落地开发契约入口：`GET /api/openapi.json`。契约源位于 `backend/app/openapi/spec.go`，并由 `spec_test.go` 校验已实现的认证、资源和用户状态接口。该入口暂不代表生产公开文档；生产暴露前仍需增加鉴权或网关限制。
 
+本地环境另提供 `GET /api/docs` Scalar 浏览页；该路由仅在 `APP_ENV` 非 `production` 时注册，并始终从本地 `/api/openapi.json` 读取契约。
+
 前端已接入首版契约 Client：`admin/src/generated/api.ts`。该文件标记为生成产物，当前覆盖登录、当前用户、资源清单、资源列表和批量用户状态操作；后续生成器稳定后替换其生成实现。
