@@ -20,7 +20,6 @@ func Boot() contractsfoundation.Application {
 				adminconsole.ResourceGeneratorCommand{},
 				adminconsole.ModuleGeneratorCommand{},
 				adminconsole.ModuleCheckCommand{},
-				adminconsole.CRUDGeneratorCommand{},
 			}
 		}).
 		WithRouting(func() {

@@ -18,7 +18,7 @@ func (ResourceGeneratorCommand) Signature() string {
 }
 
 func (ResourceGeneratorCommand) Description() string {
-	return "Generate a reviewable backend resource skeleton"
+	return "Generate the complete resource-driven backend and frontend skeleton"
 }
 
 func (ResourceGeneratorCommand) Extend() command.Extend {
@@ -49,7 +49,7 @@ func (ResourceGeneratorCommand) Handle(ctx console.Context) error {
 	if err != nil {
 		return err
 	}
-	artifacts, err := generator.Render(spec, time.Now().UTC().Format("20060102150405"))
+	artifacts, err := generator.RenderResourcePipeline(spec, time.Now().UTC().Format("20060102150405"))
 	if err != nil {
 		return err
 	}

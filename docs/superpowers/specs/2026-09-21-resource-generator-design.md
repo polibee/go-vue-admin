@@ -2,7 +2,7 @@
 
 ## 目标
 
-Generator 的主入口是资源，而不是彼此独立的代码片段。`admin:make-resource` 和 `admin:make-crud` 使用同一份资源定义，统一派生后端 Resource、CRUD 边界、权限、菜单、前端列表/表单/详情页面、路由描述、迁移和测试骨架。
+Generator 的唯一主入口是资源，而不是彼此独立的代码片段。`admin:make-resource` 使用一份资源定义，统一派生后端 Resource、CRUD 边界、权限、菜单、前端列表/表单/详情页面、路由描述、迁移和测试骨架。
 
 生成器负责产出完整、可审阅的代码集合；它不把新功能悄悄接入现有运行时。生成完成后，开发者根据 README 和只读检查结果，手动注册 Provider、路由、权限、菜单、Resource Registry，并手动审阅和执行迁移。
 
@@ -18,7 +18,7 @@ go run . artisan admin:make-resource posts \
   --field=published:boolean
 ```
 
-`admin:make-crud` 是同一流水线的显式扩展入口，适用于明确要求生成完整 CRUD 边界的场景。两者不能各自维护一套字段、权限或页面模板。
+不保留 `admin:make-crud`。资源生成已经包含完整 CRUD 所需的边界，避免用户在两个入口之间选择，也避免维护第二套解析和渲染流程。
 
 权限和菜单只保留为 Resource Generator 内部渲染器，不再提供独立 Artisan 命令；它们不得产生与资源流水线不一致的命名和目录结构。
 
@@ -103,7 +103,7 @@ Input
 - Spec 测试验证字段、权限、菜单、路由和页面路径的一致性。
 - Golden File 测试覆盖一份完整 `posts` 资源的后端、权限、菜单、前端页面、README 和迁移产物。
 - 冲突测试证明任一目标文件冲突时所有目录都不写入。
-- 真实 smoke 测试执行 `admin:make-resource` 和 `admin:make-crud`，确认生成全链路文件但不执行迁移、不修改注册文件。
+- 真实 smoke 测试执行 `admin:make-resource`，确认生成全链路文件但不执行迁移、不修改注册文件。
 - 生成产物必须通过后端 `go test ./... -count=1` 和前端 `vue-tsc`、构建及测试。
 
 ## 后续边界

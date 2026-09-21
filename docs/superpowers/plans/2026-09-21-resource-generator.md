@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Rework the generator so `admin:make-resource` and `admin:make-crud` are the primary resource-driven entry points that produce backend, permissions, menus, frontend list/form/detail pages, routes, README files, migrations, and tests from one ResourceSpec.
+**Goal:** Rework the generator so `admin:make-resource` is the single resource-driven entry point that produces backend, permissions, menus, frontend list/form/detail pages, routes, README files, migrations, and tests from one ResourceSpec.
 
 **Architecture:** Parse the input once into `ResourceSpec`; pass that spec through backend, permission, menu, frontend, test, and README renderers; then use one conflict-aware Writer for every artifact. Existing permission/menu commands become thin adapters over the shared renderers, not separate feature pipelines.
 
@@ -13,7 +13,8 @@
 ## Global Constraints
 
 - Resource is the primary input and single source of truth for fields, permissions, menu metadata, routes, and pages.
-- `admin:make-resource` and `admin:make-crud` are the primary user-facing workflows.
+- `admin:make-resource` is the only primary user-facing workflow.
+- `admin:make-crud` is removed; complete CRUD generation is part of `admin:make-resource`.
 - Permission and menu generation must be internal renderers invoked by the resource pipeline; they must not have standalone Artisan commands.
 - Frontend output must reuse existing Admin Shell and generic resource views; do not create duplicate UI primitives.
 - All artifacts are preflighted together; any conflict prevents every write.
@@ -76,14 +77,14 @@
 ### Task 4: Compose the full resource pipeline
 
 **Files:**
-- Modify: `backend/app/generator/crud.go`
 - Modify: `backend/app/console/resource_generator_command.go`
-- Modify: `backend/app/console/crud_generator_command.go`
-- Test: `backend/app/generator/crud_test.go`, `backend/app/console/*generator_command_test.go`
+- Delete: `backend/app/console/crud_generator_command.go`
+- Delete: `backend/app/console/crud_generator_command_test.go`
+- Test: `backend/app/console/resource_generator_command_test.go`
 
 - [ ] Add a failing composition test asserting one ResourceSpec produces backend, migration, permission, menu, frontend, README, and test artifacts with no duplicate paths.
 - [ ] Run the focused test and confirm failure.
-- [ ] Make `admin:make-resource` call the full pipeline; make `admin:make-crud` call the same pipeline without a second parser or renderer set.
+- [ ] Make `admin:make-resource` call the full pipeline and remove the CRUD command/orchestrator.
 - [ ] Remove standalone permission/menu Artisan commands; keep only shared renderers invoked by the resource pipeline.
 - [ ] Run command tests and commit `feat: compose resource-driven generator pipeline`.
 
@@ -95,7 +96,7 @@
 
 - [ ] Add a failing test with a conflict in a frontend file and assert no backend, migration, permission, or menu file exists afterward.
 - [ ] Implement/verify the existing preflight behavior across the complete artifact set.
-- [ ] Run a real temporary-directory smoke for both `admin:make-resource` and `admin:make-crud`; verify generated pages and README exist, migration is not executed, and existing registration files are unchanged.
+- [ ] Run a real temporary-directory smoke for `admin:make-resource`; verify generated pages and README exist, migration is not executed, and existing registration files are unchanged.
 - [ ] Run `go test ./... -count=1`, frontend `vue-tsc`, build, and tests.
 - [ ] Commit `test: verify resource-driven generator safety`.
 
@@ -105,7 +106,7 @@
 - Modify: `docs/generator.md`
 - Modify: `docs/roadmap.md`
 
-- [ ] Document `admin:make-resource` and `admin:make-crud` as the primary workflows and list the full artifact set.
+- [ ] Document `admin:make-resource` as the only primary workflow and list the full artifact set.
 - [ ] Mark standalone permission/menu commands as compatibility helpers.
 - [ ] Document manual activation: review generated files, register runtime boundaries, review migration, then execute migration manually.
 - [ ] Run `git diff --check` and commit `docs: document resource-driven generator workflow`.

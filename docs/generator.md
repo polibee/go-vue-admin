@@ -1,16 +1,14 @@
-# CRUD Generator
+# Resource Generator
 
 Generator 的目标是减少重复代码，不是替代架构设计。生成命令在 `backend/` Goravel 项目根目录执行，前端文件写入 `admin/`。
 
 ## 当前主流程方向
 
-现有 Resource、Module、Permission 和 Menu 命令已经提供可复用的基础渲染能力，但它们不是最终的业务入口。下一阶段以 `admin:make-resource` 和 `admin:make-crud` 为主入口，由同一份资源定义统一生成后端、权限、菜单、前端列表/表单/详情页面、路由描述、迁移和测试产物。独立 Permission/Menu 命令只保留为兼容性适配器。
+`admin:make-resource` 是唯一主入口，由同一份 ResourceSpec 统一生成后端、权限、菜单、前端列表/表单/详情页面、路由描述、迁移、测试和 README。Permission/Menu 只作为内部渲染器存在，不提供独立命令；`admin:make-crud` 已移除，避免形成第二套生成流程。
 
 当前生成器仍遵守安全边界：生成代码但不自动注册运行时、不修改现有路由或 Sidebar、不写权限/角色数据、不执行迁移。
 
-## 已实现：`admin:make-resource`
-
-当前第一阶段只生成后端 Resource 基础骨架，不自动接入路由、Resource Registry 或数据库迁移执行器。
+## `admin:make-resource`
 
 ```text
 go run . artisan admin:make-resource posts \
@@ -21,7 +19,7 @@ go run . artisan admin:make-resource posts \
   --field=published:boolean
 ```
 
-命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、Manifest Test、README 和 Migration 文件。README 会列出生成文件、Registry/Routes/权限的手动接入步骤以及 `go test ./...` 验证命令。迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
+命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、菜单、前端列表/表单/详情页、路由描述、测试、README 和 Migration 文件。迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
 
 生成文件写入 `backend/app/generated/resources/<name>/` 和 `backend/database/migrations/`。如果任一目标文件已经存在，命令会在写入前失败，不会覆盖人工文件，也不会留下半套输出。
 
@@ -50,27 +48,11 @@ go run . artisan admin:check-module billing
 
 检查命令只读取文件，不创建、修改或删除文件，也不连接数据库。检查通过后仍需人工注册运行时边界；当前版本没有默认开启的自动注册选项。
 
-## 已实现：`admin:make-crud`
-
-CRUD 生成器组合模块和 Resource 生成器，生成完整的后端边界：
-
-```text
-go run . artisan admin:make-crud orders \
-  --label="Orders" \
-  --route="/admin/orders" \
-  --permission="admin.orders.view" \
-  --field=number:text:required \
-  --field=paid:boolean
-```
-
-它会一次性生成模块骨架、Resource 骨架、两个 README、测试骨架和迁移文件。所有目标文件会统一预检，任一文件冲突时不会写入任何文件。生成结果仍需人工注册运行时边界，迁移仍需人工审阅和执行。
-
 ## 第一阶段命令
 
 ```text
 admin:make-module
 admin:make-resource
-admin:make-crud
 admin:api
 ```
 
