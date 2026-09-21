@@ -28,6 +28,7 @@ func (CRUDGeneratorCommand) Extend() command.Extend {
 			&command.StringFlag{Name: "label", Usage: "resource label"},
 			&command.StringFlag{Name: "route", Usage: "admin route"},
 			&command.StringFlag{Name: "permission", Usage: "view permission"},
+			&command.StringFlag{Name: "icon", Usage: "menu icon"},
 			&command.StringSliceFlag{Name: "field", Usage: "field definition name:type[:required]", Required: true},
 		},
 	}
@@ -39,6 +40,7 @@ func (CRUDGeneratorCommand) Handle(ctx console.Context) error {
 		Label:      ctx.Option("label"),
 		Route:      ctx.Option("route"),
 		Permission: ctx.Option("permission"),
+		Icon:       ctx.Option("icon"),
 		Fields:     ctx.OptionSlice("field"),
 	})
 	if err != nil {

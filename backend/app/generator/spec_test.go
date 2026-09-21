@@ -1,6 +1,9 @@
 package generator
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestParseFieldAcceptsRequiredSuffix(t *testing.T) {
 	field, err := ParseField("title:text:required")
@@ -33,5 +36,19 @@ func TestNormalizeAppliesResourceDefaults(t *testing.T) {
 	}
 	if spec.GoName != "BlogPosts" || spec.Label != "Blog Posts" || spec.Route != "/admin/blog-posts" || spec.Permission != "admin.blog-posts.view" {
 		t.Fatalf("spec defaults = %+v", spec)
+	}
+}
+
+func TestNormalizeBuildsSharedMenuAndPageMetadata(t *testing.T) {
+	spec, err := Normalize(Input{Name: "orders", Route: "/admin/orders", Icon: "shopping-cart", Fields: []string{"number:text"}})
+	if err != nil {
+		t.Fatalf("normalize: %v", err)
+	}
+	if spec.Icon != "shopping-cart" || spec.FrontendRoute != "/orders" {
+		t.Fatalf("shared navigation metadata = %+v", spec)
+	}
+	wantActions := []string{"view", "create", "update", "delete"}
+	if !reflect.DeepEqual(spec.Actions, wantActions) {
+		t.Fatalf("actions = %v, want %v", spec.Actions, wantActions)
 	}
 }

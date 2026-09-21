@@ -21,16 +21,21 @@ type Input struct {
 	Label      string
 	Route      string
 	Permission string
+	Icon       string
+	Actions    []string
 	Fields     []string
 }
 
 type Spec struct {
-	Name       string
-	GoName     string
-	Label      string
-	Route      string
-	Permission string
-	Fields     []FieldSpec
+	Name          string
+	GoName        string
+	Label         string
+	Route         string
+	FrontendRoute string
+	Permission    string
+	Icon          string
+	Actions       []string
+	Fields        []FieldSpec
 }
 
 type FieldSpec struct {
@@ -72,6 +77,7 @@ func Normalize(input Input) (Spec, error) {
 		Label:      input.Label,
 		Route:      input.Route,
 		Permission: input.Permission,
+		Icon:       input.Icon,
 	}
 	if spec.Label == "" {
 		spec.Label = humanize(input.Name)
@@ -79,9 +85,28 @@ func Normalize(input Input) (Spec, error) {
 	if spec.Route == "" {
 		spec.Route = "/admin/" + input.Name
 	}
+	spec.FrontendRoute = strings.TrimPrefix(spec.Route, "/admin")
+	if spec.FrontendRoute == "" {
+		spec.FrontendRoute = "/"
+	}
+	if !strings.HasPrefix(spec.FrontendRoute, "/") {
+		spec.FrontendRoute = "/" + strings.TrimPrefix(spec.FrontendRoute, "/")
+	}
 	if spec.Permission == "" {
 		spec.Permission = "admin." + input.Name + ".view"
 	}
+	if spec.Icon == "" {
+		spec.Icon = "box"
+	}
+	actions := input.Actions
+	if len(actions) == 0 {
+		actions = []string{"view", "create", "update", "delete"}
+	}
+	permissionSpec, err := NormalizePermission(PermissionInput{Name: input.Name, Actions: actions})
+	if err != nil {
+		return Spec{}, err
+	}
+	spec.Actions = permissionSpec.Actions
 
 	seen := make(map[string]struct{}, len(input.Fields))
 	for _, raw := range input.Fields {

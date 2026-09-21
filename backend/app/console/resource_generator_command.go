@@ -30,6 +30,7 @@ func (ResourceGeneratorCommand) Extend() command.Extend {
 			&command.StringFlag{Name: "label", Usage: "resource label"},
 			&command.StringFlag{Name: "route", Usage: "admin route"},
 			&command.StringFlag{Name: "permission", Usage: "view permission"},
+			&command.StringFlag{Name: "icon", Usage: "menu icon"},
 			&command.StringSliceFlag{Name: "field", Usage: "field definition name:type[:required]", Required: true},
 		},
 	}
@@ -41,6 +42,7 @@ func (ResourceGeneratorCommand) Handle(ctx console.Context) error {
 		Label:      ctx.Option("label"),
 		Route:      ctx.Option("route"),
 		Permission: ctx.Option("permission"),
+		Icon:       ctx.Option("icon"),
 		Fields:     ctx.OptionSlice("field"),
 	}
 	spec, err := generator.Normalize(input)
