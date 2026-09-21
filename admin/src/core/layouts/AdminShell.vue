@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ClipboardList, Languages, LayoutDashboard, LogOut, Search, ShieldCheck, Unplug } from '@lucide/vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -16,11 +16,29 @@ import { generatedApi, type ResourceManifest } from '@/generated/api'
 import { dashboardResourceRoute, visibleDashboardResources } from '@/lib/dashboard-resources'
 
 const { t, locale } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const resourceManifests = ref<ResourceManifest[]>([])
 const searchOpen = ref(false)
 const searchResults = computed(() => visibleDashboardResources(resourceManifests.value, auth.user?.permissions || []))
+const breadcrumbResource = computed(() => {
+  const routeResource = typeof route.params.resource === 'string' ? route.params.resource : ''
+  if (routeResource) return routeResource
+  const routeName = String(route.name || '')
+  if (routeName.includes('user')) return 'users'
+  if (routeName.includes('role')) return 'roles'
+  if (routeName.includes('permission')) return 'permissions'
+  const generatedResource = routeName.match(/^(.+)-resource-/)?.[1]
+  return generatedResource || ''
+})
+const breadcrumbLabel = computed(() => {
+  if (route.name === 'home') return t('auth.dashboard')
+  if (route.name === 'rbac') return t('rbac.title')
+  if (route.name === 'audit-logs') return t('auth.auditLogs')
+  const resource = resourceManifests.value.find((item) => item.name === breadcrumbResource.value)
+  return resource?.label || breadcrumbResource.value || t('auth.dashboard')
+})
 
 function toggleLocale() {
   locale.value = locale.value === 'zh-CN' ? 'en-US' : 'zh-CN'
@@ -153,7 +171,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleSearchShortcut
             </BreadcrumbItem>
             <BreadcrumbSeparator class="hidden md:block" />
             <BreadcrumbItem>
-              <BreadcrumbPage>{{ t('auth.dashboard') }}</BreadcrumbPage>
+              <BreadcrumbPage>{{ breadcrumbLabel }}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
