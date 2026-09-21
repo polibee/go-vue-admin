@@ -18,7 +18,6 @@ func Boot() contractsfoundation.Application {
 		WithCommands(func() []contractsconsole.Command {
 			return []contractsconsole.Command{
 				adminconsole.ResourceGeneratorCommand{},
-				adminconsole.ModuleGeneratorCommand{},
 				adminconsole.ModuleCheckCommand{},
 			}
 		}).

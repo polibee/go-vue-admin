@@ -14,11 +14,22 @@ type ModuleCheckReport struct {
 }
 
 func CheckModule(root, name string) (ModuleCheckReport, error) {
-	spec, err := NormalizeModule(name)
+	spec, err := Normalize(Input{Name: name, Fields: []string{"name:text"}})
 	if err != nil {
 		return ModuleCheckReport{}, err
 	}
-	expected := moduleArtifactPaths(spec)
+	artifacts, err := RenderResourcePipeline(spec, "00000000000000")
+	if err != nil {
+		return ModuleCheckReport{}, err
+	}
+	expected := make([]string, 0, len(artifacts))
+	for _, artifact := range artifacts {
+		path := filepath.ToSlash(artifact.Path)
+		if path == "database/migrations/00000000000000_create_"+name+"_table.go" {
+			continue
+		}
+		expected = append(expected, path)
+	}
 	report := ModuleCheckReport{Name: spec.Name, Expected: expected}
 	for _, relative := range expected {
 		if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(relative))); err != nil {
@@ -31,14 +42,4 @@ func CheckModule(root, name string) (ModuleCheckReport, error) {
 	}
 	report.Complete = len(report.Missing) == 0
 	return report, nil
-}
-
-func moduleArtifactPaths(spec ModuleSpec) []string {
-	base := filepath.ToSlash(filepath.Join("app", "modules", spec.Name))
-	paths := []string{"module.go", "model.go", "request.go", "repository.go", "service.go", "controller.go", "routes.go", "resource.go", "permissions.go", "events.go", "tests/module_test.go", "README.md"}
-	result := make([]string, 0, len(paths))
-	for _, path := range paths {
-		result = append(result, filepath.ToSlash(filepath.Join(base, path)))
-	}
-	return result
 }

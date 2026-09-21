@@ -26,11 +26,11 @@ func TestCheckModuleReportsMissingFilesWithoutWriting(t *testing.T) {
 
 func TestCheckModuleReportsCompleteGeneratedModule(t *testing.T) {
 	root := t.TempDir()
-	spec, err := NormalizeModule("billing")
+	spec, err := Normalize(Input{Name: "billing", Fields: []string{"name:text"}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	artifacts, err := RenderModule(spec)
+	artifacts, err := RenderResourcePipeline(spec, "00000000000000")
 	if err != nil {
 		t.Fatal(err)
 	}

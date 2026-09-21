@@ -15,7 +15,7 @@ type ModuleCheckCommand struct{}
 func (ModuleCheckCommand) Signature() string { return "admin:check-module" }
 
 func (ModuleCheckCommand) Description() string {
-	return "Check a generated module skeleton without changing the project"
+	return "Check a generated resource module without changing the project"
 }
 
 func (ModuleCheckCommand) Extend() command.Extend {
@@ -36,7 +36,7 @@ func (ModuleCheckCommand) Handle(ctx console.Context) error {
 		return err
 	}
 	if !report.Complete {
-		ctx.Warning("Module skeleton is incomplete:")
+		ctx.Warning("Resource module is incomplete:")
 		for _, missing := range report.Missing {
 			ctx.Line("- missing " + strings.ReplaceAll(missing, "\\", "/"))
 		}

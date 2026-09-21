@@ -2,7 +2,7 @@
 
 Generator 的目标是减少重复代码，不是替代架构设计。生成命令在 `backend/` Goravel 项目根目录执行，前端文件写入 `admin/`。
 
-新增资源按模块目录生成，目录约定见 [`docs/module-layout.md`](./module-layout.md)。前端不再使用平铺 `views/` 目录；后端现有控制器将按模块继续迁移。
+新增资源按模块目录生成，目录约定见 [`docs/module-layout.md`](./module-layout.md)。前端不再使用平铺 `views/` 目录；通用资源页面位于 `admin/src/core/resource/pages/`。
 
 ## 当前主流程方向
 
@@ -32,17 +32,9 @@ go run . artisan admin:make-resource posts \
 3. 手动注册需要暴露的 Routes 和权限；
 4. 手动执行已审阅的数据库迁移。
 
-## 已实现：`admin:make-module`
+## 模块检查
 
-模块生成器只创建编译期模块边界，不改变应用启动注册表：
-
-```text
-go run . artisan admin:make-module billing
-```
-
-命令会在 `backend/app/modules/billing/` 下生成 `module.go`、`model.go`、`request.go`、`repository.go`、`service.go`、`controller.go`、`routes.go`、`resource.go`、`permissions.go`、`events.go` 和 `tests/module_test.go`。它不生成迁移，也不自动注册 Provider、Routes、Permissions、菜单或 Resource Registry。
-
-模块目录同时包含 `README.md`，列出人工接入顺序和检查命令。可以使用只读检查命令确认生成文件是否完整：
+模块检查只读确认资源生成结果是否完整，不创建第二套模块生成流程：
 
 ```text
 go run . artisan admin:check-module billing
@@ -50,12 +42,12 @@ go run . artisan admin:check-module billing
 
 检查命令只读取文件，不创建、修改或删除文件，也不连接数据库。检查通过后仍需人工注册运行时边界；当前版本没有默认开启的自动注册选项。
 
-## 第一阶段命令
+## 当前命令
 
 ```text
-admin:make-module
 admin:make-resource
 admin:api
+admin:check-module
 ```
 
 ## 生成范围

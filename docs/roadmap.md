@@ -22,7 +22,7 @@ Resource Registry、字段、列、标准列表查询（分页、搜索、排序
 
 ## Phase 5：Generator
 
-当前已完成基础渲染能力：`admin:make-resource` 和 `admin:make-module` 具备确定性骨架、README、冲突预检和 Golden File 测试；权限和菜单渲染仅作为 Resource Generator 内部能力保留。下一阶段统一由唯一入口 `admin:make-resource` 生成后端、权限、菜单、前端列表/表单/详情页面、路由描述、迁移和测试。生成前完整检查冲突，默认不覆盖人工文件，不自动注册运行时，也不自动执行迁移。
+当前已完成基础渲染能力：`admin:make-resource` 具备确定性全链路骨架、README、冲突预检和 Golden File 测试；权限和菜单渲染仅作为 Resource Generator 内部能力保留，`admin:make-module` 不再作为公开流程。通用资源页面归入 `admin/src/core/resource/pages/`。生成前完整检查冲突，默认不覆盖人工文件，不自动注册运行时，也不自动执行迁移。
 
 ## Phase 6：可选扩展
 

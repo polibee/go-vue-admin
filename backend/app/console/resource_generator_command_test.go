@@ -15,16 +15,6 @@ func TestResourceGeneratorCommandMetadata(t *testing.T) {
 	}
 }
 
-func TestModuleGeneratorCommandMetadata(t *testing.T) {
-	command := ModuleGeneratorCommand{}
-	if command.Signature() != "admin:make-module" {
-		t.Fatalf("signature = %q", command.Signature())
-	}
-	if len(command.Extend().Arguments) != 1 {
-		t.Fatalf("argument count = %d, want 1", len(command.Extend().Arguments))
-	}
-}
-
 func TestModuleCheckCommandMetadata(t *testing.T) {
 	command := ModuleCheckCommand{}
 	if command.Signature() != "admin:check-module" {

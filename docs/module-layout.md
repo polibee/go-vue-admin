@@ -49,7 +49,7 @@ admin/src/modules/<resource>/
 └── <resource>.test.ts
 ```
 
-共享 UI 和字段渲染器放在 `admin/src/components/`（其中 `ui/` 是通用组件，`resource/` 是资源组件）；模块页面通过组合共享组件实现，复杂业务可以在模块目录内增加 `components/`，不再使用全局 `views/`。
+共享 UI 和字段渲染器放在 `admin/src/components/`（其中 `ui/` 是通用组件，`resource/` 是资源组件）；通用资源页面放在 `admin/src/core/resource/pages/`。模块页面通过组合共享组件实现，复杂业务可以在模块目录内增加 `components/`，不再使用全局 `views/`。
 
 ## Migration boundary
 
