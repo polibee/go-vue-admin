@@ -16,5 +16,6 @@ func Migrations() []schema.Migration {
 		&migrations.M20260921000002CreateAuthRefreshTokensTable{},
 		&migrations.M20260921000003CreateAuditLogsTable{},
 		&migrations.M20260921000004CreateAuthLoginAttemptsTable{},
+		&migrations.MannouncementsCreateAnnouncementsTable{},
 	}
 }

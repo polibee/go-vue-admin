@@ -2,7 +2,7 @@ export interface ResourceFormField {
   name: string
   label: string
   type: string
-  options?: Array<{ value: string; label: string }>
+  options?: readonly { value: string; label: string }[]
 }
 
 function valueForField(field: ResourceFormField, value: unknown) {

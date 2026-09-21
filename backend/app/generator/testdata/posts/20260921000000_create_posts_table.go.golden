@@ -5,6 +5,7 @@ import (
 	"github.com/goravel/framework/contracts/database/schema"
 
 	"goravel/app/facades"
+	"goravel/app/models"
 )
 
 type MpostsCreatePostsTable struct{}
@@ -14,15 +15,44 @@ func (m *MpostsCreatePostsTable) Signature() string {
 }
 
 func (m *MpostsCreatePostsTable) Up() error {
-	return facades.Schema().Create("posts", func(table schema.Blueprint) {
+	if err := facades.Schema().Create("posts", func(table schema.Blueprint) {
 		table.ID()
 		table.String("title")
 		table.Boolean("published")
 		table.DateTimeTz("created_at").Nullable()
 		table.DateTimeTz("updated_at").Nullable()
-	})
+	}); err != nil {
+		return err
+	}
+	for _, permission := range []models.Permission{
+		{Name: "admin.posts.view", DisplayName: "Posts.view"},
+		{Name: "admin.posts.create", DisplayName: "Posts.create"},
+		{Name: "admin.posts.update", DisplayName: "Posts.update"},
+		{Name: "admin.posts.delete", DisplayName: "Posts.delete"},
+	} {
+		exists, err := facades.Orm().Query().Model(&models.Permission{}).Where("name = ?", permission.Name).Exists()
+		if err != nil {
+			return err
+		}
+		if !exists {
+			if err := facades.Orm().Query().Create(&permission); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (m *MpostsCreatePostsTable) Down() error {
+	for _, permission := range []string{
+		"admin.posts.view",
+		"admin.posts.create",
+		"admin.posts.update",
+		"admin.posts.delete",
+	} {
+		if _, err := facades.Orm().Query().Model(&models.Permission{}).Where("name = ?", permission).Delete(); err != nil {
+			return err
+		}
+	}
 	return facades.Schema().DropIfExists("posts")
 }

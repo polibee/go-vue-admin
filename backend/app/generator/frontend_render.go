@@ -139,17 +139,14 @@ import ResourceDetailView from '@/core/resource/pages/ResourceDetailPage.vue';
 }
 
 func frontendTestSource(spec Spec) string {
-	return fmt.Sprintf(`import { describe, expect, it } from 'vitest';
-import { resourceDefinition } from './resource';
+	return fmt.Sprintf(`import { resourceDefinition } from './resource';
 
-describe('%s resource metadata', () => {
-  it('keeps the generated identity and actions', () => {
-    expect(resourceDefinition.name).toBe(%q);
-    expect(resourceDefinition.route).toBe(%q);
-    expect(resourceDefinition.actions).toEqual(%s);
-  });
-});
-`, spec.Name, spec.Name, spec.FrontendRoute, quoteList(spec.Actions))
+// This contract check uses the existing Node type/runtime surface; the generator
+// does not add a frontend test-runner dependency.
+if (resourceDefinition.name !== %q) throw new Error('generated resource name mismatch');
+if (resourceDefinition.route !== %q) throw new Error('generated resource route mismatch');
+if (JSON.stringify(resourceDefinition.actions) !== JSON.stringify(%s)) throw new Error('generated resource actions mismatch');
+`, spec.Name, spec.FrontendRoute, quoteList(spec.Actions))
 }
 
 func frontendFields(spec Spec) string {

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -18,10 +19,6 @@ func (r *ResourceController) Create(ctx http.Context) http.Response {
 	manifest, ok := generatedManifest(ctx)
 	if !ok {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
-	}
-	values, err := bindGeneratedValues(ctx, manifest)
-	if err != nil {
-		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
 	}
 	if manifest.Name == "users" {
 		var payload userPayload
@@ -47,10 +44,39 @@ func (r *ResourceController) Create(ctx http.Context) http.Response {
 		recordManagementAudit(ctx, "role.create", map[string]any{"target_role_id": role.ID})
 		return ctx.Response().Status(201).Json(http.Json{"data": role})
 	}
-	if err := facades.Orm().Query().Table(manifest.Table).Create(&values); err != nil {
+	values, err := bindGeneratedValues(ctx, manifest)
+	if err != nil {
+		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
+	}
+	createdID, err := insertGeneratedResource(manifest, values)
+	if err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 	}
+	values["id"] = createdID
 	return ctx.Response().Status(201).Json(http.Json{"data": values})
+}
+
+func insertGeneratedResource(manifest resource.Manifest, values map[string]any) (int64, error) {
+	columns := make([]string, 0, len(values))
+	for column := range values {
+		columns = append(columns, column)
+	}
+	sort.Strings(columns)
+	placeholders := make([]string, len(columns))
+	args := make([]any, len(columns))
+	for index, column := range columns {
+		placeholders[index] = "?"
+		args[index] = values[column]
+	}
+	// Manifest table and field names are generated from validated identifiers; values
+	// remain bound parameters. PostgreSQL RETURNING keeps the generic API response
+	// deterministic without a race-prone follow-up lookup.
+	statement := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s) RETURNING id", manifest.Table, strings.Join(columns, ", "), strings.Join(placeholders, ", "))
+	var id int64
+	if err := facades.Orm().Query().Raw(statement, args...).Scan(&id); err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 func (r *ResourceController) Update(ctx http.Context) http.Response {
@@ -61,10 +87,6 @@ func (r *ResourceController) Update(ctx http.Context) http.Response {
 	id, err := strconv.ParseInt(ctx.Request().Route("id"), 10, 64)
 	if err != nil || id < 1 {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
-	}
-	values, err := bindGeneratedValues(ctx, manifest)
-	if err != nil {
-		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
 	}
 	if manifest.Name == "users" {
 		var payload userPayload
@@ -89,6 +111,10 @@ func (r *ResourceController) Update(ctx http.Context) http.Response {
 		}
 		recordManagementAudit(ctx, "role.update", map[string]any{"target_role_id": role.ID})
 		return ctx.Response().Success().Json(http.Json{"data": role})
+	}
+	values, err := bindGeneratedValues(ctx, manifest)
+	if err != nil {
+		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
 	}
 	if _, err := facades.Orm().Query().Table(manifest.Table).Where("id = ?", id).Update(values); err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})

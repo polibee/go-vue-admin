@@ -23,7 +23,12 @@ func RenderRuntimeRegistration(root string, spec Spec) ([]Artifact, error) {
 	if err != nil {
 		return nil, err
 	}
-	frontendResources := discoverGeneratedResources(filepath.Join(root, "admin", "src", "modules"), spec.Name, "", "resource.ts")
+	frontendRoot := resolveFrontendRoot(root)
+	frontendModulesRoot := filepath.Join(frontendRoot, "src", "modules")
+	if frontendRoot == root {
+		frontendModulesRoot = filepath.Join(root, "admin", "src", "modules")
+	}
+	frontendResources := discoverGeneratedResources(frontendModulesRoot, spec.Name, "", "resource.ts")
 	frontend := generatedFrontendRegistry(frontendResources)
 	return []Artifact{
 		{Path: "app/modules/admin/registry/generated_resources.go", Content: backend, AllowOverwrite: true},
