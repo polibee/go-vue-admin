@@ -12,6 +12,22 @@ import (
 	"goravel/app/services"
 )
 
+var errMissingToken = errors.New("missing authorization token")
+
+
+func unauthorized(ctx http.Context) http.Response {
+	return ctx.Response().Status(401).Json(http.Json{
+		"code":    "AUTH_UNAUTHORIZED",
+		"message": "authentication required",
+	})
+}
+
+func recordAudit(userID uint, action string, metadata map[string]any) {
+	if err := services.NewAuditService().Record(userID, action, metadata); err != nil {
+		facades.Log().Errorf("audit record failed action=%s user_id=%d error=%v", action, userID, err)
+	}
+}
+
 type RBACController struct{}
 
 func NewRBACController() *RBACController { return &RBACController{} }

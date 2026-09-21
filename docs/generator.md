@@ -2,6 +2,8 @@
 
 Generator 的目标是减少重复代码，不是替代架构设计。生成命令在 `backend/` Goravel 项目根目录执行，前端文件写入 `admin/`。
 
+新增资源按模块目录生成，目录约定见 [`docs/module-layout.md`](./module-layout.md)。前端不再使用平铺 `views/` 目录；后端现有控制器将按模块继续迁移。
+
 ## 当前主流程方向
 
 `admin:make-resource` 是唯一主入口，由同一份 ResourceSpec 统一生成后端、权限、菜单、前端列表/表单/详情页面、路由描述、迁移、测试和 README。Permission/Menu 只作为内部渲染器存在，不提供独立命令；`admin:make-crud` 已移除，避免形成第二套生成流程。
@@ -21,7 +23,7 @@ go run . artisan admin:make-resource posts \
 
 命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、菜单、前端列表/表单/详情页、路由描述、统一 API 契约、测试、README 和 Migration 文件。表单页复用共享 `ResourceFormView`，API 契约包含 list/show/create/update/delete 五类操作；后端路由仍需人工注册和授权审阅。迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
 
-生成文件写入 `backend/app/generated/resources/<name>/` 和 `backend/database/migrations/`。如果任一目标文件已经存在，命令会在写入前失败，不会覆盖人工文件，也不会留下半套输出。
+生成文件写入 `backend/app/modules/<name>/`、`admin/src/modules/<name>/` 和 `backend/database/migrations/`。如果任一目标文件已经存在，命令会在写入前失败，不会覆盖人工文件，也不会留下半套输出。
 
 生成完成后的人工接入顺序：
 

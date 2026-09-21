@@ -21,7 +21,7 @@ func TestRenderPermissionGolden(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(artifacts) != 2 || artifacts[0].Path != "app/generated/permissions/orders/permissions.go" || artifacts[1].Path != "app/generated/permissions/orders/README.md" {
+	if len(artifacts) != 2 || artifacts[0].Path != "app/modules/orders/permissions/permissions.go" || artifacts[1].Path != "app/modules/orders/permissions/README.md" {
 		t.Fatalf("artifacts = %+v", artifactPaths(artifacts))
 	}
 	for _, artifact := range artifacts {

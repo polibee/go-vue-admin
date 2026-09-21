@@ -9,7 +9,7 @@ import (
 func TestWriteAllCreatesAllArtifacts(t *testing.T) {
 	root := t.TempDir()
 	artifacts := []Artifact{
-		{Path: "app/generated/resources/posts/manifest.go", Content: []byte("manifest")},
+		{Path: "app/modules/posts/resource/manifest.go", Content: []byte("manifest")},
 		{Path: "database/migrations/20260921000000_create_posts_table.go", Content: []byte("migration")},
 	}
 
@@ -29,7 +29,7 @@ func TestWriteAllCreatesAllArtifacts(t *testing.T) {
 
 func TestWriteAllDoesNotPartiallyWriteOnConflict(t *testing.T) {
 	root := t.TempDir()
-	conflict := filepath.Join(root, "app", "generated", "resources", "posts", "model.go")
+	conflict := filepath.Join(root, "app", "modules", "posts", "resource", "model.go")
 	if err := os.MkdirAll(filepath.Dir(conflict), 0o755); err != nil {
 		t.Fatalf("create conflict directory: %v", err)
 	}
@@ -38,13 +38,13 @@ func TestWriteAllDoesNotPartiallyWriteOnConflict(t *testing.T) {
 	}
 
 	err := WriteAll(root, []Artifact{
-		{Path: "app/generated/resources/posts/manifest.go", Content: []byte("manifest")},
-		{Path: "app/generated/resources/posts/model.go", Content: []byte("model")},
+		{Path: "app/modules/posts/resource/manifest.go", Content: []byte("manifest")},
+		{Path: "app/modules/posts/resource/model.go", Content: []byte("model")},
 	})
 	if err == nil {
 		t.Fatal("expected conflict error")
 	}
-	if _, statErr := os.Stat(filepath.Join(root, "app", "generated", "resources", "posts", "manifest.go")); !os.IsNotExist(statErr) {
+	if _, statErr := os.Stat(filepath.Join(root, "app", "modules", "posts", "resource", "manifest.go")); !os.IsNotExist(statErr) {
 		t.Fatalf("manifest was partially written, stat error = %v", statErr)
 	}
 	got, readErr := os.ReadFile(conflict)
@@ -63,7 +63,7 @@ func TestWriteAllFrontendConflictBlocksEntireResourcePipeline(t *testing.T) {
 	if err != nil {
 		t.Fatalf("render resource pipeline: %v", err)
 	}
-	conflict := filepath.Join(root, "admin", "src", "generated", "resources", "orders", "resource.ts")
+	conflict := filepath.Join(root, "admin", "src", "modules", "orders", "resource.ts")
 	if err := os.MkdirAll(filepath.Dir(conflict), 0o755); err != nil {
 		t.Fatalf("create conflict directory: %v", err)
 	}
@@ -75,9 +75,9 @@ func TestWriteAllFrontendConflictBlocksEntireResourcePipeline(t *testing.T) {
 		t.Fatal("expected frontend conflict error")
 	}
 	for _, path := range []string{
-		"app/generated/resources/orders/manifest.go",
-		"app/generated/permissions/orders/permissions.go",
-		"app/generated/menus/orders/menu.go",
+		"app/modules/orders/resource/manifest.go",
+		"app/modules/orders/permissions/permissions.go",
+		"app/modules/orders/menu/menu.go",
 		"database/migrations/20260921000000_create_orders_table.go",
 	} {
 		if _, statErr := os.Stat(filepath.Join(root, filepath.FromSlash(path))); !os.IsNotExist(statErr) {

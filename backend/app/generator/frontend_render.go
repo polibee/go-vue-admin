@@ -7,7 +7,7 @@ import (
 )
 
 func RenderFrontend(spec Spec) ([]Artifact, error) {
-	base := filepath.ToSlash(filepath.Join("admin", "src", "generated", "resources", spec.Name))
+	base := filepath.ToSlash(filepath.Join("admin", "src", "modules", spec.Name))
 	pageBase := filepath.ToSlash(filepath.Join(base, "pages"))
 	files := []struct {
 		path string
@@ -106,7 +106,7 @@ export const resourceRoutes: RouteRecordRaw[] = [
 
 func frontendListPageSource(spec Spec) string {
 	return `<script setup lang="ts">
-import ResourceListView from '@/views/ResourceListView.vue';
+import ResourceListView from '@/modules/resources/pages/ResourceListPage.vue';
 </script>
 
 <!-- Generated resource page. Register its route only after reviewing the resource contract. -->
@@ -132,7 +132,7 @@ import { resourceDefinition } from '../resource';
 
 func frontendDetailPageSource(spec Spec) string {
 	return `<script setup lang="ts">
-import ResourceDetailView from '@/views/ResourceDetailView.vue';
+import ResourceDetailView from '@/modules/resources/pages/ResourceDetailPage.vue';
 </script>
 
 <!-- Generated resource page. Register its route only after reviewing the resource contract. -->

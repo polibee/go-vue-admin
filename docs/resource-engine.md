@@ -14,7 +14,8 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 
 第一片已完成资源清单 Registry：
 
-- `backend/app/resource` 提供无执行代码的 `Manifest`、字段、列和注册表；
+- `backend/app/core/resource` 提供无执行代码的 `Manifest`、字段、列和注册表引擎；
+- `backend/app/modules/admin/registry` 保存管理端当前启用的业务资源注册表；
 - 注册表拒绝空标识和重复资源，并按资源名稳定排序；
 - `GET /api/v1/admin/resources` 返回当前 Admin 资源清单；
 - 资源清单接口要求 `admin.users.view` 权限；

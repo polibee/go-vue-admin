@@ -38,29 +38,35 @@ go run . artisan admin:make-resource posts \
 
 ## 生成产物
 
+所有新增产物必须归属于资源模块目录：后端使用 `backend/app/modules/<name>/`，前端使用 `admin/src/modules/<name>/`。共享组件不复制到资源目录，数据库迁移继续集中在 `backend/database/migrations/`。详细约定见 `docs/module-layout.md`。
+
 一次资源生成至少包含以下边界：
 
 ```text
-backend/app/generated/resources/<name>/manifest.go
-backend/app/generated/resources/<name>/model.go
-backend/app/generated/resources/<name>/request.go
-backend/app/generated/resources/<name>/repository.go
-backend/app/generated/resources/<name>/service.go
-backend/app/generated/resources/<name>/controller.go
-backend/app/generated/resources/<name>/routes.go
-backend/app/generated/resources/<name>/permissions.go
-backend/app/generated/resources/<name>/manifest_test.go
-backend/app/generated/resources/<name>/README.md
+backend/app/modules/<name>/resource/manifest.go
+backend/app/modules/<name>/resource/model.go
+backend/app/modules/<name>/resource/request.go
+backend/app/modules/<name>/resource/repository.go
+backend/app/modules/<name>/resource/service.go
+backend/app/modules/<name>/resource/controller.go
+backend/app/modules/<name>/resource/routes.go
+backend/app/modules/<name>/resource/permissions.go
+backend/app/modules/<name>/resource/manifest_test.go
+backend/app/modules/<name>/resource/README.md
+backend/app/modules/<name>/permissions/permissions.go
+backend/app/modules/<name>/permissions/README.md
+backend/app/modules/<name>/menu/menu.go
+backend/app/modules/<name>/menu/README.md
 backend/database/migrations/<timestamp>_create_<name>_table.go
 
-admin/src/generated/resources/<name>/resource.ts
-admin/src/generated/resources/<name>/api.ts
-admin/src/generated/resources/<name>/menu.ts
-admin/src/generated/resources/<name>/routes.ts
-admin/src/generated/resources/<name>/pages/<Name>ListPage.vue
-admin/src/generated/resources/<name>/pages/<Name>FormPage.vue
-admin/src/generated/resources/<name>/pages/<Name>DetailPage.vue
-admin/src/generated/resources/<name>/<name>.test.ts
+admin/src/modules/<name>/resource.ts
+admin/src/modules/<name>/api.ts
+admin/src/modules/<name>/menu.ts
+admin/src/modules/<name>/routes.ts
+admin/src/modules/<name>/pages/<Name>ListPage.vue
+admin/src/modules/<name>/pages/<Name>FormPage.vue
+admin/src/modules/<name>/pages/<Name>DetailPage.vue
+admin/src/modules/<name>/<name>.test.ts
 ```
 
 页面产物必须复用现有 Admin Shell、ResourceList、Resource Form、Resource Detail 和权限语义，不复制一套新的 UI 基础组件。生成的 List/Form/Detail 页面可以是薄包装器，负责传入资源元数据和权限；复杂业务页面才允许人工扩展。

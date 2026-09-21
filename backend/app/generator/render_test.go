@@ -23,17 +23,17 @@ func TestRenderPostsGolden(t *testing.T) {
 		t.Fatalf("render: %v", err)
 	}
 	wantPaths := []string{
-		"app/generated/resources/posts/manifest.go",
-		"app/generated/resources/posts/model.go",
-		"app/generated/resources/posts/request.go",
-		"app/generated/resources/posts/repository.go",
-		"app/generated/resources/posts/service.go",
-		"app/generated/resources/posts/controller.go",
-		"app/generated/resources/posts/routes.go",
-		"app/generated/resources/posts/permissions.go",
-		"app/generated/resources/posts/manifest_test.go",
+		"app/modules/posts/resource/manifest.go",
+		"app/modules/posts/resource/model.go",
+		"app/modules/posts/resource/request.go",
+		"app/modules/posts/resource/repository.go",
+		"app/modules/posts/resource/service.go",
+		"app/modules/posts/resource/controller.go",
+		"app/modules/posts/resource/routes.go",
+		"app/modules/posts/resource/permissions.go",
+		"app/modules/posts/resource/manifest_test.go",
 		"database/migrations/20260921000000_create_posts_table.go",
-		"app/generated/resources/posts/README.md",
+		"app/modules/posts/resource/README.md",
 	}
 	if got := artifactPaths(artifacts); !reflect.DeepEqual(got, wantPaths) {
 		t.Fatalf("artifact paths = %v, want %v", got, wantPaths)

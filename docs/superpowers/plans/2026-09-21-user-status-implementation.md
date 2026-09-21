@@ -121,10 +121,10 @@
 ### Task 3: Expose status through the Resource Registry and list API
 
 **Files:**
-- Modify: `backend/app/resources/registry.go`
+- Modify: `backend/app/modules/admin/registry/registry.go`
 - Modify: `backend/app/http/controllers/resource_list_controller.go`
 - Modify: `backend/app/http/controllers/resource_detail_controller.go`
-- Test: `backend/app/resources/registry_test.go`
+- Test: `backend/app/modules/admin/registry/registry_test.go`
 - Test: `backend/tests/feature/resource_test.go`
 
 **Interfaces:**
@@ -137,7 +137,7 @@
 
 - [ ] **Step 2: Run focused tests and verify failure**
 
-  Run `go test ./app/resources ./tests/feature -run 'Resource|Manifest' -count=1` from `backend/`.
+  Run `go test ./app/modules/admin/registry ./tests/feature -run 'Resource|Manifest' -count=1` from `backend/`.
 
   Expected failure: manifest has boolean `is_active` and the list controller ignores the status query.
 
@@ -151,7 +151,7 @@
 
 - [ ] **Step 5: Commit the resource contract**
 
-  Run `git add backend/app/resources backend/app/http/controllers backend/tests && git commit -m "feat: expose user status resource contract"`.
+  Run `git add backend/app/modules/admin/registry backend/app/core backend/tests && git commit -m "feat: expose user status resource contract"`.
 
 ### Task 4: Replace the Active switch with status selection and filtering
 

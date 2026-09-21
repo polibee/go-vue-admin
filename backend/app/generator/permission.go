@@ -45,7 +45,7 @@ func NormalizePermission(input PermissionInput) (PermissionSpec, error) {
 }
 
 func RenderPermission(spec PermissionSpec) ([]Artifact, error) {
-	base := filepath.ToSlash(filepath.Join("app", "generated", "permissions", spec.Name))
+	base := filepath.ToSlash(filepath.Join("app", "modules", spec.Name, "permissions"))
 	var constants strings.Builder
 	var all strings.Builder
 	for index, action := range spec.Actions {

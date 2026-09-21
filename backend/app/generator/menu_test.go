@@ -21,7 +21,7 @@ func TestRenderMenuProducesStableArtifacts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(artifacts) != 2 || artifacts[0].Path != "app/generated/menus/orders/menu.go" || artifacts[1].Path != "app/generated/menus/orders/README.md" {
+	if len(artifacts) != 2 || artifacts[0].Path != "app/modules/orders/menu/menu.go" || artifacts[1].Path != "app/modules/orders/menu/README.md" {
 		t.Fatalf("artifacts = %+v", artifactPaths(artifacts))
 	}
 	for _, artifact := range artifacts {

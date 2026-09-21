@@ -62,11 +62,11 @@
 **Files:**
 - Create: `backend/app/generator/frontend_render.go`
 - Test: `backend/app/generator/frontend_render_test.go`
-- Create: `admin/src/generated/resources/posts/resource.ts.golden`
-- Create: `admin/src/generated/resources/posts/menu.ts.golden`
-- Create: `admin/src/generated/resources/posts/routes.ts.golden`
-- Create: `admin/src/generated/resources/posts/pages/*.vue.golden`
-- Create: `admin/src/generated/resources/posts/posts.test.ts.golden`
+- Create: `admin/src/modules/posts/resource.ts.golden`
+- Create: `admin/src/modules/posts/menu.ts.golden`
+- Create: `admin/src/modules/posts/routes.ts.golden`
+- Create: `admin/src/modules/posts/pages/*.vue.golden`
+- Create: `admin/src/modules/posts/posts.test.ts.golden`
 
 - [ ] Write a failing Golden File test for the frontend artifact paths and contents from one `posts` ResourceSpec.
 - [ ] Run `go test ./app/generator -run TestRenderFrontend -count=1` and confirm failure.

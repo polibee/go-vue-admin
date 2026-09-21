@@ -1,6 +1,6 @@
-package resources
+package registry
 
-import "goravel/app/resource"
+import "goravel/app/core/resource"
 
 func AdminRegistry() *resource.Registry {
 	registry := resource.NewRegistry()

@@ -19,14 +19,14 @@ func TestRenderFrontendArtifactsFromResourceSpec(t *testing.T) {
 	}
 	paths := artifactPaths(artifacts)
 	for _, want := range []string{
-		"admin/src/generated/resources/orders/resource.ts",
-		"admin/src/generated/resources/orders/api.ts",
-		"admin/src/generated/resources/orders/menu.ts",
-		"admin/src/generated/resources/orders/routes.ts",
-		"admin/src/generated/resources/orders/pages/OrdersListPage.vue",
-		"admin/src/generated/resources/orders/pages/OrdersFormPage.vue",
-		"admin/src/generated/resources/orders/pages/OrdersDetailPage.vue",
-		"admin/src/generated/resources/orders/orders.test.ts",
+		"admin/src/modules/orders/resource.ts",
+		"admin/src/modules/orders/api.ts",
+		"admin/src/modules/orders/menu.ts",
+		"admin/src/modules/orders/routes.ts",
+		"admin/src/modules/orders/pages/OrdersListPage.vue",
+		"admin/src/modules/orders/pages/OrdersFormPage.vue",
+		"admin/src/modules/orders/pages/OrdersDetailPage.vue",
+		"admin/src/modules/orders/orders.test.ts",
 	} {
 		found := false
 		for _, path := range paths {
@@ -45,7 +45,7 @@ func TestRenderFrontendArtifactsFromResourceSpec(t *testing.T) {
 		}
 	}
 	for _, artifact := range artifacts {
-		if artifact.Path == "admin/src/generated/resources/orders/api.ts" {
+		if artifact.Path == "admin/src/modules/orders/api.ts" {
 			content := string(artifact.Content)
 			for _, fragment := range []string{"list", "show", "create", "update", "remove", "/api/v1/admin/orders"} {
 				if !strings.Contains(content, fragment) {
@@ -53,7 +53,7 @@ func TestRenderFrontendArtifactsFromResourceSpec(t *testing.T) {
 				}
 			}
 		}
-		if artifact.Path == "admin/src/generated/resources/orders/pages/OrdersFormPage.vue" && !strings.Contains(string(artifact.Content), "ResourceFormView") {
+		if artifact.Path == "admin/src/modules/orders/pages/OrdersFormPage.vue" && !strings.Contains(string(artifact.Content), "ResourceFormView") {
 			t.Fatal("generated form page does not use ResourceFormView")
 		}
 	}
