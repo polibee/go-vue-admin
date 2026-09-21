@@ -59,7 +59,7 @@ func (s *UserRoleService) ReplaceRoles(operatorID, userID int64, roleIDs []int64
 	if userID == operatorID && !adminRole {
 		return ErrLastAdmin
 	}
-	if user.IsActive && !adminRole {
+	if user.Status == userStatusActive && !adminRole {
 		lastAdmin, err := NewRBACService().IsLastActiveAdmin(userID)
 		if err != nil {
 			return err

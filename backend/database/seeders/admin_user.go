@@ -30,7 +30,7 @@ func (s *AdminUser) Run() error {
 			Name:     "Administrator",
 			Email:    email,
 			Password: password,
-			IsActive: true,
+			Status:   "active",
 			Locale:   "zh-CN",
 		}); err != nil {
 			return err

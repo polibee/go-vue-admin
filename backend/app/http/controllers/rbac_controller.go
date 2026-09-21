@@ -34,7 +34,7 @@ type userPayload struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Locale   string `json:"locale"`
-	Active   *bool  `json:"is_active"`
+	Status   string `json:"status"`
 }
 
 func (r *RBACController) Users(ctx http.Context) http.Response {
@@ -42,7 +42,7 @@ func (r *RBACController) Users(ctx http.Context) http.Response {
 		return unauthorized(ctx)
 	}
 	var users []models.User
-	if err := facades.Orm().Query().Select("id", "name", "email", "is_active", "locale", "created_at", "updated_at").OrderByDesc("id").Get(&users); err != nil {
+	if err := facades.Orm().Query().Select("id", "name", "email", "status", "locale", "created_at", "updated_at").OrderByDesc("id").Get(&users); err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "RBAC_USERS_ERROR", "message": "could not load users"})
 	}
 	items := make([]map[string]any, 0, len(users))
@@ -54,10 +54,10 @@ func (r *RBACController) Users(ctx http.Context) http.Response {
 
 func (r *RBACController) CreateUser(ctx http.Context) http.Response {
 	var payload userPayload
-	if err := ctx.Request().Bind(&payload); err != nil || payload.Active == nil {
+	if err := ctx.Request().Bind(&payload); err != nil {
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	}
-	user, err := services.NewUserService().Create(payload.Name, payload.Email, payload.Password, payload.Locale, *payload.Active)
+	user, err := services.NewUserService().Create(payload.Name, payload.Email, payload.Password, payload.Locale, payload.Status)
 	if err != nil {
 		return userServiceError(ctx, err)
 	}
@@ -66,10 +66,10 @@ func (r *RBACController) CreateUser(ctx http.Context) http.Response {
 
 func (r *RBACController) UpdateUser(ctx http.Context) http.Response {
 	var payload userPayload
-	if err := ctx.Request().Bind(&payload); err != nil || payload.Active == nil {
+	if err := ctx.Request().Bind(&payload); err != nil {
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	}
-	user, err := services.NewUserService().Update(ctx.Request().RouteInt64("id"), payload.Name, payload.Email, payload.Password, payload.Locale, *payload.Active)
+	user, err := services.NewUserService().Update(ctx.Request().RouteInt64("id"), payload.Name, payload.Email, payload.Password, payload.Locale, payload.Status)
 	if err != nil {
 		return userServiceError(ctx, err)
 	}

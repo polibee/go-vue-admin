@@ -50,7 +50,7 @@ func (s *RBACService) IsLastActiveAdmin(userID int64) (bool, error) {
 		Join("JOIN users ON users.id = role_user.user_id").
 		Join("JOIN permission_role ON permission_role.role_id = role_user.role_id").
 		Join("JOIN permissions ON permissions.id = permission_role.permission_id").
-		Where("users.is_active = ? AND permissions.name IN (?, ?, ?)", true, "admin.users.view", "admin.roles.manage", "admin.permissions.manage").
+		Where("users.status = ? AND permissions.name IN (?, ?, ?)", userStatusActive, "admin.users.view", "admin.roles.manage", "admin.permissions.manage").
 		Get(&activeAdmins); err != nil {
 		return false, err
 	}

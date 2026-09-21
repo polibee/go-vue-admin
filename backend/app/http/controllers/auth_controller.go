@@ -11,6 +11,10 @@ import (
 
 type AuthController struct{}
 
+func loginAllowedForStatus(status string) bool {
+	return status == "active"
+}
+
 func NewAuthController() *AuthController {
 	return &AuthController{}
 }
@@ -32,7 +36,7 @@ func (r *AuthController) Login(ctx http.Context) http.Response {
 			"message": "invalid credentials",
 		})
 	}
-	if !user.IsActive {
+	if !loginAllowedForStatus(user.Status) {
 		return ctx.Response().Status(403).Json(http.Json{
 			"code":    "AUTH_USER_DISABLED",
 			"message": "user is disabled",

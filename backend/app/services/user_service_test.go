@@ -33,3 +33,11 @@ func TestValidateUserInput(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateUserStatus(t *testing.T) {
+	for _, status := range []string{"active", "disabled", "locked"} {
+		require.NoError(t, validateUserStatus(status))
+	}
+	require.ErrorIs(t, validateUserStatus("pending"), ErrInvalidUser)
+	require.Equal(t, userStatusActive, normalizeUserStatus(""))
+}
