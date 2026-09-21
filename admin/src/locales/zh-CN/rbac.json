@@ -14,6 +14,7 @@
   "loadFailed": "访问控制数据加载失败",
   "createRole": "新建角色",
   "editRole": "编辑角色",
+  "roleFormDescription": "维护角色标识和显示名称。",
   "deleteRole": "删除角色",
   "deleteRoleTitle": "确认删除角色？",
   "deleteRoleDescription": "此操作不可撤销，角色及其分配关系将被删除。",

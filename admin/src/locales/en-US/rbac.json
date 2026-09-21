@@ -14,6 +14,7 @@
   "loadFailed": "Failed to load access-control data",
   "createRole": "Create role",
   "editRole": "Edit role",
+  "roleFormDescription": "Maintain the role key and display name.",
   "deleteRole": "Delete role",
   "deleteRoleTitle": "Delete this role?",
   "deleteRoleDescription": "This action cannot be undone. The role and its assignments will be removed.",

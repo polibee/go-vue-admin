@@ -22,3 +22,12 @@ test('serializes empty optional values without changing boolean semantics', () =
 
   assert.deepEqual(payload, { name: 'Ada', age: null, is_active: false })
 })
+
+test('serializes role fields through the same resource form contract', () => {
+  const payload = serializeResourceForm([
+    { name: 'name', label: 'Name', type: 'text' },
+    { name: 'display_name', label: 'Display name', type: 'text' },
+  ], { name: 'editor', display_name: 'Editor' })
+
+  assert.deepEqual(payload, { name: 'editor', display_name: 'Editor' })
+})
