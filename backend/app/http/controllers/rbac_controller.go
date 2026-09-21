@@ -66,6 +66,7 @@ func (r *RBACController) CreateUser(ctx http.Context) http.Response {
 	if err != nil {
 		return userServiceError(ctx, err)
 	}
+	recordManagementAudit(ctx, "user.create", map[string]any{"target_user_id": user.ID})
 	return ctx.Response().Status(201).Json(http.Json{"data": user.Public()})
 }
 
@@ -78,13 +79,16 @@ func (r *RBACController) UpdateUser(ctx http.Context) http.Response {
 	if err != nil {
 		return userServiceError(ctx, err)
 	}
+	recordManagementAudit(ctx, "user.update", map[string]any{"target_user_id": user.ID})
 	return ctx.Response().Success().Json(http.Json{"data": user.Public()})
 }
 
 func (r *RBACController) DeleteUser(ctx http.Context) http.Response {
-	if err := services.NewUserService().Delete(ctx.Request().RouteInt64("id")); err != nil {
+	targetID := ctx.Request().RouteInt64("id")
+	if err := services.NewUserService().Delete(targetID); err != nil {
 		return userServiceError(ctx, err)
 	}
+	recordManagementAudit(ctx, "user.delete", map[string]any{"target_user_id": targetID})
 	return ctx.Response().NoContent(204)
 }
 
@@ -96,6 +100,7 @@ func (r *RBACController) BulkSetUserStatus(ctx http.Context) http.Response {
 	if err := services.NewUserService().BulkSetStatus(payload.UserIDs, payload.Status); err != nil {
 		return userServiceError(ctx, err)
 	}
+	recordManagementAudit(ctx, "user.status.bulk", map[string]any{"target_user_ids": payload.UserIDs, "status": payload.Status})
 	return ctx.Response().NoContent(204)
 }
 
@@ -130,6 +135,7 @@ func (r *RBACController) CreateRole(ctx http.Context) http.Response {
 	if err != nil {
 		return roleServiceError(ctx, err)
 	}
+	recordManagementAudit(ctx, "role.create", map[string]any{"target_role_id": role.ID})
 	return ctx.Response().Status(201).Json(http.Json{"data": role})
 }
 
@@ -156,13 +162,16 @@ func (r *RBACController) UpdateRole(ctx http.Context) http.Response {
 	if err != nil {
 		return roleServiceError(ctx, err)
 	}
+	recordManagementAudit(ctx, "role.update", map[string]any{"target_role_id": role.ID})
 	return ctx.Response().Success().Json(http.Json{"data": role})
 }
 
 func (r *RBACController) DeleteRole(ctx http.Context) http.Response {
-	if err := services.NewRoleService().Delete(ctx.Request().RouteInt64("id")); err != nil {
+	targetID := ctx.Request().RouteInt64("id")
+	if err := services.NewRoleService().Delete(targetID); err != nil {
 		return roleServiceError(ctx, err)
 	}
+	recordManagementAudit(ctx, "role.delete", map[string]any{"target_role_id": targetID})
 	return ctx.Response().NoContent(204)
 }
 
@@ -171,9 +180,11 @@ func (r *RBACController) ReplaceRolePermissions(ctx http.Context) http.Response 
 	if err := ctx.Request().Bind(&payload); err != nil {
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	}
-	if err := services.NewRoleService().ReplacePermissions(ctx.Request().RouteInt64("id"), payload.PermissionIDs); err != nil {
+	targetID := ctx.Request().RouteInt64("id")
+	if err := services.NewRoleService().ReplacePermissions(targetID, payload.PermissionIDs); err != nil {
 		return roleServiceError(ctx, err)
 	}
+	recordManagementAudit(ctx, "role.permissions.replace", map[string]any{"target_role_id": targetID, "permission_ids": payload.PermissionIDs})
 	return ctx.Response().NoContent(204)
 }
 
@@ -198,10 +209,24 @@ func (r *RBACController) ReplaceUserRoles(ctx http.Context) http.Response {
 	if err != nil {
 		return unauthorized(ctx)
 	}
-	if err := services.NewUserRoleService().ReplaceRoles(operatorID, ctx.Request().RouteInt64("id"), payload.RoleIDs); err != nil {
+	targetID := ctx.Request().RouteInt64("id")
+	if err := services.NewUserRoleService().ReplaceRoles(operatorID, targetID, payload.RoleIDs); err != nil {
 		return userRoleServiceError(ctx, err)
 	}
+	recordManagementAudit(ctx, "user.roles.replace", map[string]any{"target_user_id": targetID, "role_ids": payload.RoleIDs})
 	return ctx.Response().NoContent(204)
+}
+
+func recordManagementAudit(ctx http.Context, action string, metadata map[string]any) {
+	identity, err := facades.Auth(ctx).ID()
+	if err != nil {
+		return
+	}
+	operatorID, err := strconv.ParseUint(identity, 10, 64)
+	if err != nil {
+		return
+	}
+	recordAudit(uint(operatorID), action, metadata)
 }
 
 func roleServiceError(ctx http.Context, err error) http.Response {
