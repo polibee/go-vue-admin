@@ -3,6 +3,7 @@
   "VALIDATION_ERROR": "The request parameters are invalid.",
   "AUTH_INVALID_CREDENTIALS": "The email or password is incorrect.",
   "AUTH_UNAUTHORIZED": "Your session has expired. Please sign in again.",
+  "AUTH_SESSION_STORE_UNAVAILABLE": "Authentication is temporarily unavailable. Please try again later.",
   "RBAC_FORBIDDEN": "You do not have permission to perform this action.",
   "RBAC_ROLE_NOT_FOUND": "The role was not found.",
   "RBAC_PERMISSION_NOT_FOUND": "The permission was not found.",

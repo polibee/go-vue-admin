@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/goravel/framework/contracts/http"
@@ -53,6 +54,9 @@ func (r *AuthController) Login(ctx http.Context) http.Response {
 	}
 	refreshToken, err := services.NewRefreshTokenService(facades.Cache()).Issue(user.ID)
 	if err != nil {
+		if errors.Is(err, services.ErrRefreshTokenStoreUnavailable) {
+			return sessionStoreUnavailable(ctx)
+		}
 		return ctx.Response().Status(500).Json(http.Json{
 			"code":    "AUTH_REFRESH_TOKEN_ERROR",
 			"message": "could not create refresh token",
@@ -98,6 +102,9 @@ func (r *AuthController) Refresh(ctx http.Context) http.Response {
 	refreshService := services.NewRefreshTokenService(facades.Cache())
 	userID, err := refreshService.Consume(ctx.Request().Cookie(services.RefreshTokenCookieName))
 	if err != nil {
+		if errors.Is(err, services.ErrRefreshTokenStoreUnavailable) {
+			return sessionStoreUnavailable(ctx)
+		}
 		return unauthorized(ctx)
 	}
 
@@ -111,6 +118,9 @@ func (r *AuthController) Refresh(ctx http.Context) http.Response {
 	}
 	rotatedToken, err := refreshService.Issue(user.ID)
 	if err != nil {
+		if errors.Is(err, services.ErrRefreshTokenStoreUnavailable) {
+			return sessionStoreUnavailable(ctx)
+		}
 		return ctx.Response().Status(500).Json(http.Json{
 			"code":    "AUTH_REFRESH_TOKEN_ERROR",
 			"message": "could not rotate refresh token",
@@ -145,5 +155,12 @@ func unauthorized(ctx http.Context) http.Response {
 	return ctx.Response().Status(401).Json(http.Json{
 		"code":    "AUTH_UNAUTHORIZED",
 		"message": "authentication required",
+	})
+}
+
+func sessionStoreUnavailable(ctx http.Context) http.Response {
+	return ctx.Response().Status(503).Json(http.Json{
+		"code":    "AUTH_SESSION_STORE_UNAVAILABLE",
+		"message": "authentication session storage is unavailable",
 	})
 }

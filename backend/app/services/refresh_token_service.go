@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 )
@@ -15,6 +16,7 @@ const (
 )
 
 var ErrRefreshTokenInvalid = errors.New("invalid refresh token")
+var ErrRefreshTokenStoreUnavailable = errors.New("refresh token store unavailable")
 
 type refreshTokenStore interface {
 	Put(key string, value any, ttl time.Duration) error
@@ -37,12 +39,15 @@ func (s *RefreshTokenService) Issue(userID uint) (string, error) {
 	}
 	raw := base64.RawURLEncoding.EncodeToString(buffer)
 	if err := s.store.Put(refreshTokenKey(raw), strconv.FormatUint(uint64(userID), 10), refreshTokenTTL); err != nil {
-		return "", err
+		return "", fmt.Errorf("%w: %v", ErrRefreshTokenStoreUnavailable, err)
 	}
 	return raw, nil
 }
 
 func (s *RefreshTokenService) Consume(raw string) (uint, error) {
+	if err := s.probe(); err != nil {
+		return 0, err
+	}
 	if raw == "" {
 		return 0, ErrRefreshTokenInvalid
 	}
@@ -57,6 +62,15 @@ func (s *RefreshTokenService) Consume(raw string) (uint, error) {
 		return 0, ErrRefreshTokenInvalid
 	}
 	return uint(userID), nil
+}
+
+func (s *RefreshTokenService) probe() error {
+	const key = "auth:refresh:availability-probe"
+	if err := s.store.Put(key, "ok", time.Second); err != nil {
+		return fmt.Errorf("%w: %v", ErrRefreshTokenStoreUnavailable, err)
+	}
+	s.store.Forget(key)
+	return nil
 }
 
 func (s *RefreshTokenService) Revoke(raw string) {
