@@ -15,8 +15,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
+import { userStatusLabelKey, type UserStatus } from '@/lib/user-status'
 
-interface RBACUser { id: number; name: string; email: string; is_active: boolean }
+interface RBACUser { id: number; name: string; email: string; status: UserStatus }
 interface RBACRole { id: number; name: string; display_name: string }
 interface RBACPermission { id: number; name: string; display_name: string }
 interface RBACRoleDetail extends RBACRole { permissions: RBACPermission[] }
@@ -200,7 +201,7 @@ onMounted(loadRBAC)
         <CardHeader><CardTitle>{{ t('rbac.users') }}</CardTitle><CardDescription>{{ users.length }}</CardDescription></CardHeader>
         <CardContent>
           <Empty v-if="!users.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('rbac.noUsers') }}</EmptyDescription></EmptyHeader></Empty>
-          <Table v-else><TableHeader><TableRow><TableHead>{{ t('rbac.name') }}</TableHead><TableHead>{{ t('rbac.status') }}</TableHead><TableHead /></TableRow></TableHeader><TableBody><TableRow v-for="user in users" :key="user.id"><TableCell><div class="font-medium">{{ user.name }}</div><div class="text-xs text-muted-foreground">{{ user.email }}</div></TableCell><TableCell><Badge variant="secondary">{{ user.is_active ? t('rbac.active') : t('rbac.disabled') }}</Badge></TableCell><TableCell><Button variant="ghost" size="sm" @click="openUserRoles(user)">{{ t('rbac.assignRoles') }}</Button></TableCell></TableRow></TableBody></Table>
+          <Table v-else><TableHeader><TableRow><TableHead>{{ t('rbac.name') }}</TableHead><TableHead>{{ t('rbac.status') }}</TableHead><TableHead /></TableRow></TableHeader><TableBody><TableRow v-for="user in users" :key="user.id"><TableCell><div class="font-medium">{{ user.name }}</div><div class="text-xs text-muted-foreground">{{ user.email }}</div></TableCell><TableCell><Badge variant="secondary">{{ t(userStatusLabelKey(user.status)) }}</Badge></TableCell><TableCell><Button variant="ghost" size="sm" @click="openUserRoles(user)">{{ t('rbac.assignRoles') }}</Button></TableCell></TableRow></TableBody></Table>
         </CardContent>
       </Card>
       <Card class="lg:col-span-2">

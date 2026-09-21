@@ -31,3 +31,11 @@ test('serializes role fields through the same resource form contract', () => {
 
   assert.deepEqual(payload, { name: 'editor', display_name: 'Editor' })
 })
+
+test('defaults a new user resource to active status', () => {
+  const form = createResourceForm([
+    { name: 'status', label: 'Status', type: 'select', options: [] },
+  ])
+
+  assert.equal(form.status, 'active')
+})

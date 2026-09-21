@@ -1,12 +1,13 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { apiFetch } from '@/lib/api'
+import type { UserStatus } from '@/lib/user-status'
 
 export interface AuthUser {
   id: number
   name: string
   email: string
-  is_active: boolean
+  status: UserStatus
   locale: string
 }
 

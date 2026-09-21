@@ -8,10 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
 import { createResourceForm, serializeResourceForm, type ResourceFormField } from '@/lib/resource-form'
 import { generatePassword } from '@/lib/password-generator'
+import { userStatusLabelKey, type UserStatus } from '@/lib/user-status'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 
@@ -35,10 +37,12 @@ function localizedError(value: unknown) { return value instanceof ApiError ? t(e
 function fieldId(field: ResourceFormField) { return `resource-field-${field.name}` }
 function isPassword(field: ResourceFormField) { return field.type === 'password' }
 function isBoolean(field: ResourceFormField) { return field.type === 'boolean' }
+function isSelect(field: ResourceFormField) { return field.type === 'select' }
 function isNumber(field: ResourceFormField) { return field.type === 'number' }
 function inputType(field: ResourceFormField) { return field.type === 'email' || field.type === 'password' || field.type === 'number' || field.type === 'date' ? field.type : 'text' }
-function fieldRequired(field: ResourceFormField) { return !editing.value && field.name !== 'is_active' }
+function fieldRequired(field: ResourceFormField) { return !editing.value && field.name !== 'locale' }
 function fieldDescription(field: ResourceFormField) { return isPassword(field) ? (editing.value ? t('resource.passwordHint') : t('resource.passwordRequired')) : '' }
+function statusOptionLabel(value: string) { return t(userStatusLabelKey(value as UserStatus)) }
 function generateUserPassword() {
   form.value.password = generatePassword()
   showPassword.value = true
@@ -98,6 +102,10 @@ async function submit() {
           <Field v-for="field in visibleFields" :key="field.name">
             <FieldLabel :for="fieldId(field)">{{ field.label }}</FieldLabel>
             <Switch v-if="isBoolean(field)" :id="fieldId(field)" v-model="form[field.name]" />
+            <Select v-else-if="isSelect(field)" v-model="form[field.name]">
+              <SelectTrigger :id="fieldId(field)"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem v-for="option in field.options || []" :key="option.value" :value="option.value">{{ statusOptionLabel(option.value) }}</SelectItem></SelectContent>
+            </Select>
             <InputGroup v-else-if="isPassword(field)">
               <InputGroupInput :id="fieldId(field)" v-model="form[field.name]" :type="showPassword ? 'text' : 'password'" :required="fieldRequired(field)" autocomplete="new-password" />
               <InputGroupAddon align="inline-end">

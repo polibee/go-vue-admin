@@ -38,6 +38,11 @@
   ,"hidePassword": "隐藏密码"
   ,"copyPassword": "复制密码"
   ,"copiedPassword": "已复制密码"
+  ,"statusFilter": "状态筛选"
+  ,"statusAll": "全部状态"
+  ,"statusActive": "正常"
+  ,"statusDisabled": "已停用"
+  ,"statusLocked": "已锁定"
   ,"deleteUser": "删除用户",
   "deleteUserTitle": "确认删除用户？",
   "deleteUserDescription": "删除后将解除该用户的角色关联，且无法恢复。"

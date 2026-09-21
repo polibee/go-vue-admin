@@ -38,6 +38,11 @@
   ,"hidePassword": "Hide password"
   ,"copyPassword": "Copy password"
   ,"copiedPassword": "Password copied"
+  ,"statusFilter": "Status filter"
+  ,"statusAll": "All statuses"
+  ,"statusActive": "Active"
+  ,"statusDisabled": "Disabled"
+  ,"statusLocked": "Locked"
   ,"deleteUser": "Delete user",
   "deleteUserTitle": "Delete this user?",
   "deleteUserDescription": "The user's role links will be removed and this action cannot be undone."

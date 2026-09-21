@@ -10,11 +10,11 @@
 
 ## Phase 2：认证与 RBAC
 
-基础版本已完成：用户表、JWT 登录、当前用户、刷新、登出、Goravel Hash、中英文认证语言包、角色/权限表、管理员 RBAC 列表接口、角色 CRUD、权限分配、用户角色绑定、细粒度后端权限校验和初始 super-admin 数据已完成；Refresh Token Cookie/轮换、菜单、Action 权限和审计待实现。
+基础版本已完成：用户表、JWT 登录、当前用户、刷新、登出、Goravel Hash、中英文认证语言包、角色/权限表、管理员 RBAC 列表接口、角色 CRUD、权限分配、用户角色绑定、细粒度后端权限校验、初始 super-admin 数据和用户状态管理（active/disabled/locked）已完成；Refresh Token Cookie/轮换、菜单、Action 权限和审计待实现。
 
 ## Phase 3：Resource Engine
 
-Resource Registry、字段、列、标准列表查询（分页、搜索、排序）已完成；users 资源已补齐创建、编辑、详情和删除闭环。通用资源表单、批量操作、Custom Action 和 Custom Page 出口仍待实现。
+Resource Registry、字段、列、标准列表查询（分页、搜索、排序、用户状态筛选）已完成；users 资源已补齐创建、编辑、详情和删除闭环，metadata-driven 用户/角色表单已接入。批量操作、Custom Action 和 Custom Page 出口仍待实现。
 
 ## Phase 4：OpenAPI 与 SDK
 

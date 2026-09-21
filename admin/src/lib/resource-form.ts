@@ -2,12 +2,14 @@ export interface ResourceFormField {
   name: string
   label: string
   type: string
+  options?: Array<{ value: string; label: string }>
 }
 
 function valueForField(field: ResourceFormField, value: unknown) {
-  if (field.type === 'boolean') return Boolean(value)
-  if (field.type === 'number') return value === null || value === undefined ? '' : Number(value)
-  return value === null || value === undefined ? '' : String(value)
+	if (field.type === 'boolean') return Boolean(value)
+	if (field.type === 'number') return value === null || value === undefined ? '' : Number(value)
+	if (field.name === 'status' && (value === null || value === undefined || value === '')) return 'active'
+	return value === null || value === undefined ? '' : String(value)
 }
 
 export function createResourceForm(fields: ResourceFormField[], record: Record<string, unknown> = {}) {
