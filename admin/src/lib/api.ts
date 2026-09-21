@@ -18,6 +18,12 @@ const LOCALIZED_ERROR_CODES = new Set([
   'SETTINGS_INVALID',
   'SETTINGS_ERROR',
   'INTERNAL_ERROR',
+  'IMPORT_SENSITIVE_FIELD',
+  'IMPORT_FILE_REQUIRED',
+  'IMPORT_FILE_TOO_LARGE',
+  'IMPORT_FILE_INVALID',
+  'IMPORT_VALIDATION_ERROR',
+  'IMPORT_PERSIST_FAILED',
 ])
 
 export function errorMessageKey(code?: string) {
@@ -80,4 +86,15 @@ export async function apiDownload(path: string, init: RequestInit = {}, token?: 
     throw new ApiError(payload?.message ?? 'Download failed', response.status, payload?.code)
   }
   return response.blob()
+}
+
+export async function apiUpload<T>(path: string, file: File, token?: string): Promise<T> {
+  const body = new FormData()
+  body.append('file', file)
+  const headers = new Headers()
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', body, headers, credentials: 'include' })
+  const payload = await response.json().catch(() => null) as { data?: T; code?: string; message?: string } | null
+  if (!response.ok) throw new ApiError(payload?.message ?? 'Upload failed', response.status, payload?.code)
+  return (payload?.data ?? payload) as T
 }

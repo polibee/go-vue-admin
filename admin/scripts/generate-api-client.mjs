@@ -15,7 +15,7 @@ const content = `/* eslint-disable */
 /* Generated from ${baseUrl}/api/openapi.json. DO NOT EDIT. */
 /* Contract paths: ${paths.join(', ')} */
 
-import { ApiError, apiDownload, apiFetch, apiFetchEnvelope } from '@/lib/api'
+import { ApiError, apiDownload, apiFetch, apiFetchEnvelope, apiUpload } from '@/lib/api'
 
 export type UserStatus = ${statuses.map((status) => JSON.stringify(status)).join(' | ')}
 export interface AuthUser { id: number; name: string; email: string; status: UserStatus; locale: string; permissions: string[] }
@@ -45,6 +45,8 @@ export const generatedApi = {
   auditLogs(token: string, query: URLSearchParams) { return apiFetchEnvelope<AuditLog[]>('/api/v1/admin/audit-logs?' + query, {}, token) as unknown as Promise<ResourceList<AuditLog>> },
   resourceList<T = Record<string, unknown>>(resource: string, query: URLSearchParams, token: string) { return apiFetchEnvelope<T[]>('/api/v1/admin/' + resource + '?' + query, {}, token) as unknown as Promise<ResourceList<T>> },
   resourceExport(resource: string, query: URLSearchParams, token: string) { return apiDownload('/api/v1/admin/' + resource + '/export?' + query, {}, token) },
+  resourceImportPreview<T = ResourceImportPreview>(resource: string, file: File, token: string) { return apiUpload<T>('/api/v1/admin/' + resource + '/import/preview', file, token) },
+  resourceImport<T = { imported: number }>(resource: string, file: File, token: string) { return apiUpload<T>('/api/v1/admin/' + resource + '/import', file, token) },
   resourceShow<T = Record<string, unknown>>(resource: string, id: string | number, token: string) { return apiFetch<T>('/api/v1/admin/' + resource + '/' + id, {}, token) },
   resourceCreate<T = Record<string, unknown>>(resource: string, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/' + resource, { method: 'POST', body: JSON.stringify(payload) }, token) },
   resourceUpdate<T = Record<string, unknown>>(resource: string, id: string | number, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/' + resource + '/' + id, { method: 'PUT', body: JSON.stringify(payload) }, token) },

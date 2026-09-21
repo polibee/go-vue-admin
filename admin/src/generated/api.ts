@@ -1,8 +1,8 @@
 /* eslint-disable */
 /* Generated from http://127.0.0.1:3000/api/openapi.json. DO NOT EDIT. */
-/* Contract paths: /admin/{resource}, /admin/{resource}/export, /admin/{resource}/{id}, /admin/audit-logs, /admin/overview, /admin/registry, /admin/users/status, /auth/login, /auth/logout-all, /auth/me, /auth/refresh */
+/* Contract paths: /admin/{resource}, /admin/{resource}/export, /admin/{resource}/import, /admin/{resource}/import/preview, /admin/{resource}/{id}, /admin/audit-logs, /admin/overview, /admin/registry, /admin/users/status, /auth/login, /auth/logout-all, /auth/me, /auth/refresh */
 
-import { ApiError, apiDownload, apiFetch, apiFetchEnvelope } from '@/lib/api'
+import { ApiError, apiDownload, apiFetch, apiFetchEnvelope, apiUpload } from '@/lib/api'
 
 export type UserStatus = "active" | "disabled" | "locked"
 export interface AuthUser { id: number; name: string; email: string; status: UserStatus; locale: string; permissions: string[] }
@@ -15,6 +15,8 @@ export interface ResourceList<T = Record<string, unknown>> { data: T[]; meta: Re
 export interface BulkUserStatusRequest { user_ids: number[]; status: UserStatus }
 export interface AdminOverview { users: number; roles: number; permissions: number }
 export interface AuditLog { id: number; user_id: number; action: string; metadata: Record<string, unknown> | null; created_at: string }
+export interface ResourceImportRowError { row: number; messages: string[] }
+export interface ResourceImportPreview { rows: Array<Record<string, unknown>>; row_errors: ResourceImportRowError[]; errors: string[] }
 
 export const generatedApi = {
   login(request: LoginRequest) { return apiFetch<LoginResponse>('/api/v1/auth/login', { method: 'POST', body: JSON.stringify(request) }) },
@@ -32,6 +34,8 @@ export const generatedApi = {
   auditLogs(token: string, query: URLSearchParams) { return apiFetchEnvelope<AuditLog[]>('/api/v1/admin/audit-logs?' + query, {}, token) as unknown as Promise<ResourceList<AuditLog>> },
   resourceList<T = Record<string, unknown>>(resource: string, query: URLSearchParams, token: string) { return apiFetchEnvelope<T[]>('/api/v1/admin/' + resource + '?' + query, {}, token) as unknown as Promise<ResourceList<T>> },
   resourceExport(resource: string, query: URLSearchParams, token: string) { return apiDownload('/api/v1/admin/' + resource + '/export?' + query, {}, token) },
+  resourceImportPreview<T = ResourceImportPreview>(resource: string, file: File, token: string) { return apiUpload<T>('/api/v1/admin/' + resource + '/import/preview', file, token) },
+  resourceImport<T = { imported: number }>(resource: string, file: File, token: string) { return apiUpload<T>('/api/v1/admin/' + resource + '/import', file, token) },
   resourceShow<T = Record<string, unknown>>(resource: string, id: string | number, token: string) { return apiFetch<T>('/api/v1/admin/' + resource + '/' + id, {}, token) },
   resourceCreate<T = Record<string, unknown>>(resource: string, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/' + resource, { method: 'POST', body: JSON.stringify(payload) }, token) },
   resourceUpdate<T = Record<string, unknown>>(resource: string, id: string | number, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/' + resource + '/' + id, { method: 'PUT', body: JSON.stringify(payload) }, token) },

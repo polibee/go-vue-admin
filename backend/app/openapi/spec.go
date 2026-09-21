@@ -33,7 +33,9 @@ func Spec() map[string]any {
 				"get":  listOperation("listResourceRows", []map[string]any{pathParameter("resource"), queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("search", "string"), queryParameter("sort", "string"), queryParameter("dir", "string")}),
 				"post": resourceWriteOperation("createResource", "201"),
 			},
-			"/admin/{resource}/export": exportOperation(),
+			"/admin/{resource}/export":         exportOperation(),
+			"/admin/{resource}/import/preview": importOperation("previewResourceImport"),
+			"/admin/{resource}/import":         importOperation("importResource"),
 			"/admin/{resource}/{id}": map[string]any{
 				"get":    resourceItemOperation("showResource"),
 				"put":    resourceWriteOperation("updateResource", "200", true),
@@ -101,6 +103,15 @@ func exportOperation() map[string]any {
 			"200": map[string]any{"description": "CSV export", "content": map[string]any{"text/csv": map[string]any{"schema": map[string]any{"type": "string", "format": "binary"}}}},
 			"401": errorResponse(), "403": errorResponse(), "404": errorResponse(),
 		},
+	}
+}
+
+func importOperation(operationID string) map[string]any {
+	return map[string]any{
+		"operationId": operationID,
+		"parameters":  []map[string]any{pathParameter("resource")},
+		"requestBody": map[string]any{"required": true, "content": map[string]any{"multipart/form-data": map[string]any{"schema": map[string]any{"type": "object", "required": []string{"file"}, "properties": map[string]any{"file": map[string]any{"type": "string", "format": "binary"}}}}}},
+		"responses":   map[string]any{"200": jsonResponse(operationID + "Response"), "401": errorResponse(), "403": errorResponse(), "404": errorResponse(), "422": errorResponse()},
 	}
 }
 

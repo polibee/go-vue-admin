@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowDownUp, Download, Pencil, RefreshCw, Search, Trash2 } from '@lucide/vue'
+import { ArrowDownUp, Download, FileUp, Pencil, RefreshCw, Search, Trash2 } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ApiError, errorMessageKey } from '@/lib/api'
-import { generatedApi, type ResourceManifest as GeneratedResourceManifest, type ResourceListMeta } from '@/generated/api'
+import { generatedApi, type ResourceImportPreview, type ResourceManifest as GeneratedResourceManifest, type ResourceListMeta } from '@/generated/api'
 import { canDeleteResource } from '@/lib/resource-actions'
 import { useAuthStore } from '@/stores/auth'
 import { USER_STATUSES, userStatusLabelKey, type UserStatus } from '@/lib/user-status'
@@ -42,6 +42,11 @@ const loading = ref(true)
 const exporting = ref(false)
 const error = ref('')
 const deleteDialogOpen = ref(false)
+const importDialogOpen = ref(false)
+const importFile = ref<File>()
+const importPreview = ref<ResourceImportPreview>()
+const importing = ref(false)
+const importInput = ref<HTMLInputElement>()
 const deleting = ref(false)
 const deleteTarget = ref<Record<string, unknown>>()
 const selectedIds = ref<string[]>([])
@@ -56,6 +61,7 @@ const filterFields = computed(() => (currentManifest.value?.fields || []).filter
 const canManageUsers = computed(() => auth.can('admin.users.manage'))
 const canManageRoles = computed(() => auth.can('admin.roles.manage'))
 const canCreate = computed(() => resourceName.value === 'users' ? canManageUsers.value : resourceName.value === 'roles' ? canManageRoles.value : hasAction('create'))
+const canImport = computed(() => Boolean(currentManifest.value && !currentManifest.value.fields.some((field) => ['password', 'secret', 'token', 'credential'].some((part) => field.name.toLowerCase().includes(part))) && (resourceName.value === 'users' ? canManageUsers.value : resourceName.value === 'roles' ? canManageRoles.value : hasAction('create'))))
 const allVisibleSelected = computed(() => rows.value.length > 0 && rows.value.every((row) => selectedIds.value.includes(String(row.id))))
 
 function localizedError(value: unknown) {
@@ -192,6 +198,40 @@ async function exportRows() {
   }
 }
 
+async function previewImport(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file || !auth.token) return
+  importFile.value = file
+  importing.value = true
+  error.value = ''
+  try {
+    importPreview.value = await generatedApi.resourceImportPreview(resourceName.value, file, auth.token)
+    importDialogOpen.value = true
+  } catch (value) {
+    error.value = localizedError(value)
+  } finally {
+    importing.value = false
+    if (importInput.value) importInput.value.value = ''
+  }
+}
+
+async function confirmImport() {
+  if (!auth.token || !importFile.value || !importPreview.value || importPreview.value.errors.length || importPreview.value.row_errors.length) return
+  importing.value = true
+  error.value = ''
+  try {
+    await generatedApi.resourceImport(resourceName.value, importFile.value, auth.token)
+    importDialogOpen.value = false
+    importFile.value = undefined
+    importPreview.value = undefined
+    await loadRows(1)
+  } catch (value) {
+    error.value = localizedError(value)
+  } finally {
+    importing.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     await loadManifests()
@@ -211,7 +251,7 @@ watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {};
         <h1 class="text-2xl font-semibold tracking-tight">{{ currentManifest?.label || t('resource.title') }}</h1>
         <p class="text-sm text-muted-foreground">{{ t('resource.description') }}</p>
       </div>
-      <div class="flex gap-2"><Button v-if="canCreate" variant="default" @click="router.push(resourceName === 'users' ? '/users/new' : resourceName === 'roles' ? '/roles/new' : `/${resourceName}/new`)">{{ resourceName === 'users' ? t('resource.createUser') : resourceName === 'roles' ? t('rbac.createRole') : t('resource.create') }}</Button><Button variant="outline" :disabled="loading || exporting" @click="exportRows"><Download data-icon="inline-start" />{{ t('resource.export') }}</Button><Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
+      <div class="flex gap-2"><Button v-if="canCreate" variant="default" @click="router.push(resourceName === 'users' ? '/users/new' : resourceName === 'roles' ? '/roles/new' : `/${resourceName}/new`)">{{ resourceName === 'users' ? t('resource.createUser') : resourceName === 'roles' ? t('rbac.createRole') : t('resource.create') }}</Button><Button v-if="canImport" variant="outline" :disabled="loading || importing" @click="importInput?.click()"><FileUp data-icon="inline-start" />{{ t('resource.import') }}</Button><input ref="importInput" class="hidden" type="file" accept=".csv,text/csv" @change="previewImport" /><Button variant="outline" :disabled="loading || exporting" @click="exportRows"><Download data-icon="inline-start" />{{ t('resource.export') }}</Button><Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
         <RefreshCw data-icon="inline-start" />{{ t('resource.refresh') }}
       </Button></div>
     </div>
@@ -241,5 +281,6 @@ watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {};
     </Card>
     <AlertDialog v-model:open="deleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.deleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.deleteDescription') }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="deleting" @click="deleteRow">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     <AlertDialog v-model:open="bulkStatusDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkStatusTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkStatusDescription', { count: selectedIds.length, status: t(userStatusLabelKey(bulkStatus)) }) }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkUpdating" @click="applyBulkStatus">{{ t('resource.applyStatus') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    <AlertDialog v-model:open="importDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.importPreview') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.importPreviewDescription', { count: importPreview?.rows.length || 0 }) }}</AlertDialogDescription></AlertDialogHeader><div v-if="importPreview?.errors.length || importPreview?.row_errors.length" class="max-h-48 overflow-y-auto rounded-md border p-3 text-sm text-destructive"><p v-for="item in importPreview?.errors" :key="item">{{ item }}</p><p v-for="item in importPreview?.row_errors" :key="item.row">{{ t('resource.importRowError', { row: item.row, message: item.messages.join(', ') }) }}</p></div><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="importing || Boolean(importPreview?.errors.length || importPreview?.row_errors.length)" @click="confirmImport">{{ t('resource.confirmImport') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>
 </template>
