@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Pencil, Trash2 } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -13,6 +13,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const props = defineProps<{ resource?: string }>()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
@@ -24,6 +25,7 @@ const loading = ref(true)
 const error = ref('')
 const deleteDialogOpen = ref(false)
 const deleting = ref(false)
+const resourceName = computed(() => props.resource || String(route.params.resource || 'users'))
 
 function localizedError(value: unknown) {
   return value instanceof ApiError ? t(errorMessageKey(value.code)) : t('errors.unknown')
@@ -34,9 +36,9 @@ onMounted(async () => {
   try {
     const [manifests, record] = await Promise.all([
       apiFetch<ResourceManifest[]>('/api/v1/admin/resources', {}, auth.token),
-      apiFetch<Record<string, unknown>>(`/api/v1/admin/resources/${route.params.resource}/${route.params.id}`, {}, auth.token),
+      apiFetch<Record<string, unknown>>(`/api/v1/admin/resources/${resourceName.value}/${route.params.id}`, {}, auth.token),
     ])
-    manifest.value = manifests.find((item) => item.name === route.params.resource)
+    manifest.value = manifests.find((item) => item.name === resourceName.value)
     data.value = record
   } catch (value) {
     error.value = localizedError(value)
@@ -69,7 +71,7 @@ async function deleteUser() {
   <div class="flex flex-col gap-6">
     <div class="flex items-center gap-3">
       <Button variant="ghost" size="icon" :aria-label="t('resource.back')" @click="router.back()"><ArrowLeft /></Button>
-      <div class="flex-1"><h1 class="text-2xl font-semibold tracking-tight">{{ t('resource.detail') }}</h1><p class="text-sm text-muted-foreground">{{ route.params.resource }} #{{ route.params.id }}</p></div><div v-if="route.params.resource === 'users' || route.params.resource === 'roles'" class="flex gap-2"><Button variant="outline" @click="router.push(route.params.resource === 'roles' ? `/roles/${route.params.id}/edit` : `/users/${route.params.id}/edit`)"><Pencil data-icon="inline-start" />{{ route.params.resource === 'roles' ? t('rbac.editRole') : t('resource.editUser') }}</Button><Button v-if="route.params.resource === 'users'" variant="destructive" @click="deleteDialogOpen = true"><Trash2 data-icon="inline-start" />{{ t('resource.deleteUser') }}</Button></div>
+      <div class="flex-1"><h1 class="text-2xl font-semibold tracking-tight">{{ t('resource.detail') }}</h1><p class="text-sm text-muted-foreground">{{ resourceName }} #{{ route.params.id }}</p></div><div v-if="resourceName === 'users' || resourceName === 'roles'" class="flex gap-2"><Button variant="outline" @click="router.push(resourceName === 'roles' ? `/roles/${route.params.id}/edit` : `/users/${route.params.id}/edit`)"><Pencil data-icon="inline-start" />{{ resourceName === 'roles' ? t('rbac.editRole') : t('resource.editUser') }}</Button><Button v-if="resourceName === 'users'" variant="destructive" @click="deleteDialogOpen = true"><Trash2 data-icon="inline-start" />{{ t('resource.deleteUser') }}</Button></div>
     </div>
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Card v-if="loading"><CardHeader><Skeleton class="h-6 w-40" /><Skeleton class="h-4 w-64" /></CardHeader><CardContent class="flex flex-col gap-3"><Skeleton v-for="item in 4" :key="item" class="h-10" /></CardContent></Card>

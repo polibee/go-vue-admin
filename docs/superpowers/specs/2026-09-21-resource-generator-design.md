@@ -4,7 +4,7 @@
 
 Generator 的唯一主入口是资源，而不是彼此独立的代码片段。`admin:make-resource` 使用一份资源定义，统一派生后端 Resource、CRUD 边界、权限、菜单、前端列表/表单/详情页面、路由描述、迁移和测试骨架。
 
-生成器负责产出完整、可审阅的代码集合；它不把新功能悄悄接入现有运行时。生成完成后，开发者根据 README 和只读检查结果，手动注册 Provider、路由、权限、菜单、Resource Registry，并手动审阅和执行迁移。
+生成器负责产出完整、可审阅的代码集合，并通过生成专属 discovery 文件让资源进入现有后台面板。它不修改人工维护的路由、Sidebar 或业务 Registry 文件；生成完成后只需要审阅产物并手动执行迁移。
 
 ## 主入口
 
@@ -61,12 +61,11 @@ backend/database/migrations/<timestamp>_create_<name>_table.go
 
 admin/src/modules/<name>/resource.ts
 admin/src/modules/<name>/api.ts
-admin/src/modules/<name>/menu.ts
-admin/src/modules/<name>/routes.ts
 admin/src/modules/<name>/pages/<Name>ListPage.vue
 admin/src/modules/<name>/pages/<Name>FormPage.vue
 admin/src/modules/<name>/pages/<Name>DetailPage.vue
 admin/src/modules/<name>/<name>.test.ts
+admin/src/core/resource/generated.ts
 ```
 
 页面产物必须复用现有 Admin Shell、ResourceList、Resource Form、Resource Detail 和权限语义，不复制一套新的 UI 基础组件。生成的 List/Form/Detail 页面可以是薄包装器，负责传入资源元数据和权限；复杂业务页面才允许人工扩展。
@@ -77,11 +76,13 @@ admin/src/modules/<name>/<name>.test.ts
 - 菜单配置包含 label、route、icon 和 permission；
 - 路由描述包含列表、新建、编辑和详情入口；
 - API 契约包含 list、show、create、update、delete 五类操作，并明确对应的 `/api/v1/admin/<name>` 路径；
-- 所有这些文件只写入生成目录，不自动修改现有 Registry、Sidebar 或 router 文件。
+- 生成器额外维护生成专属 discovery 文件：后端 `app/modules/admin/registry/generated_resources.go`，前端 `admin/src/core/resource/generated.ts`。
+- 主 Registry、主 router 和 Admin Shell 只接入一次 discovery 文件；新资源通过更新 discovery 文件自动进入后台菜单和页面。
 
 ## 安全边界
 
-- 不自动注册 Provider、路由、权限、菜单或 Resource Registry。
+- 不修改人工维护的 Provider、路由、Sidebar、权限 Seeder 或 Resource Registry。
+- 允许更新带有生成器标记的 discovery 文件；发现人工内容或标记缺失时必须拒绝覆盖。
 - 不自动执行迁移，不连接数据库，不修改现有迁移或 Seeder。
 - 允许生成新的迁移文件，但迁移必须人工审阅后执行。
 - 所有目标文件在写入前统一预检；任一冲突都导致整次生成失败，不能留下半套输出。

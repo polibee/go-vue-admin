@@ -14,15 +14,13 @@ func TestRenderFrontendArtifactsFromResourceSpec(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(artifacts) != 8 {
-		t.Fatalf("artifact count = %d, want 8", len(artifacts))
+	if len(artifacts) != 6 {
+		t.Fatalf("artifact count = %d, want 6", len(artifacts))
 	}
 	paths := artifactPaths(artifacts)
 	for _, want := range []string{
 		"admin/src/modules/orders/resource.ts",
 		"admin/src/modules/orders/api.ts",
-		"admin/src/modules/orders/menu.ts",
-		"admin/src/modules/orders/routes.ts",
 		"admin/src/modules/orders/pages/OrdersListPage.vue",
 		"admin/src/modules/orders/pages/OrdersFormPage.vue",
 		"admin/src/modules/orders/pages/OrdersDetailPage.vue",
@@ -47,7 +45,7 @@ func TestRenderFrontendArtifactsFromResourceSpec(t *testing.T) {
 	for _, artifact := range artifacts {
 		if artifact.Path == "admin/src/modules/orders/api.ts" {
 			content := string(artifact.Content)
-			for _, fragment := range []string{"list", "show", "create", "update", "remove", "/api/v1/admin/orders"} {
+			for _, fragment := range []string{"list", "show", "create", "update", "remove", "/api/v1/admin/resources/orders"} {
 				if !strings.Contains(content, fragment) {
 					t.Fatalf("api contract missing %q", fragment)
 				}

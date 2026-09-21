@@ -40,6 +40,7 @@ type Manifest struct {
 	Name        string   `json:"name"`
 	Label       string   `json:"label"`
 	Route       string   `json:"route"`
+	Table       string   `json:"table,omitempty"`
 	Permissions []string `json:"permissions"`
 	Fields      []Field  `json:"fields"`
 	Columns     []Column `json:"columns"`

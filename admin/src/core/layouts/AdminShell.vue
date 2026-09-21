@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ClipboardList, Languages, LayoutDashboard, LogOut, Settings, ShieldCheck, Unplug } from '@lucide/vue'
+import { ClipboardList, Languages, LayoutDashboard, LogOut, ShieldCheck, Unplug } from '@lucide/vue'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Separator } from '@/components/ui/separator'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/auth'
+import { generatedResourceDefinitions } from '@/core/resource/generated'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -68,11 +69,13 @@ async function logoutAll() {
                   <RouterLink to="/audit-logs"><ClipboardList /><span>{{ t('auth.auditLogs') }}</span></RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem v-if="auth.can('admin.settings.manage')">
-                <SidebarMenuButton as-child :is-active="$route.name === 'settings'" :tooltip="t('settings.title')">
-                  <RouterLink to="/settings"><Settings /><span>{{ t('settings.title') }}</span></RouterLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              <template v-for="item in generatedResourceDefinitions" :key="item.name">
+                <SidebarMenuItem v-if="auth.can(item.permission)">
+                  <SidebarMenuButton as-child :is-active="$route.path.startsWith(item.route)" :tooltip="item.label">
+                    <RouterLink :to="item.route"><LayoutDashboard /><span>{{ item.label }}</span></RouterLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </template>
               <SidebarMenuItem v-if="auth.can('admin.users.view')">
                 <SidebarMenuButton as-child :is-active="$route.name === 'resource-list'" :tooltip="t('resource.title')">
                   <RouterLink to="/users"><LayoutDashboard /><span>{{ t('resource.title') }}</span></RouterLink>

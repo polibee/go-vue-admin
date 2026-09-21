@@ -9,6 +9,7 @@ import (
 
 	"goravel/app/facades"
 	"goravel/app/models"
+	"goravel/app/modules/admin/registry"
 )
 
 type resourceListQuery struct {
@@ -38,6 +39,7 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 
 	var rows any
 	var q orm.Query
+	var total int64
 	switch ctx.Request().Route("resource") {
 	case "users":
 		rows = &[]models.User{}
@@ -58,11 +60,29 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		q = applyResourceSearch(q, query.Search, "name", "display_name")
 		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "display_name": true}, "id")
 	default:
-		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
+		manifest, err := registry.AdminRegistry().Find(ctx.Request().Route("resource"))
+		if err != nil || manifest.Table == "" {
+			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
+		}
+		rows = &[]map[string]any{}
+		q = facades.Orm().Query().Table(manifest.Table)
+		searchColumns := make([]string, 0, len(manifest.Columns))
+		allowedColumns := make(map[string]bool, len(manifest.Columns)+1)
+		allowedColumns["id"] = true
+		for _, column := range manifest.Columns {
+			allowedColumns[column.Name] = true
+			searchColumns = append(searchColumns, column.Name)
+		}
+		q = applyResourceSearch(q, query.Search, searchColumns...)
+		query.Sort = allowedSort(query.Sort, allowedColumns, "id")
+		q = q.OrderBy(query.Sort, query.Dir)
+		if err := q.Paginate(query.Page, query.PerPage, rows, &total); err != nil {
+			return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
+		}
+		return resourceListResponse(ctx, rows, query, total)
 	}
 
 	q = q.OrderBy(query.Sort, query.Dir)
-	var total int64
 	if err := q.Paginate(query.Page, query.PerPage, rows, &total); err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 	}

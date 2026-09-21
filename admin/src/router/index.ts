@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { generatedResourceRoutes } from '@/core/resource/generated'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -21,7 +22,7 @@ const router = createRouter({
         },
         { path: 'rbac', name: 'rbac', meta: { anyPermissions: ['admin.users.view', 'admin.roles.manage', 'admin.permissions.manage'] }, component: () => import('@/modules/rbac/pages/RBACPage.vue') },
         { path: 'audit-logs', name: 'audit-logs', meta: { permission: 'admin.users.view' }, component: () => import('@/modules/audit/pages/AuditLogPage.vue') },
-        { path: 'settings', name: 'settings', meta: { permission: 'admin.settings.manage' }, component: () => import('@/modules/settings/pages/SettingsPage.vue') },
+        ...generatedResourceRoutes,
         { path: ':resource(users|roles|permissions)', name: 'resource-list', component: () => import('@/core/resource/pages/ResourceListPage.vue') },
         { path: 'users/new', name: 'user-create', meta: { permission: 'admin.users.manage' }, component: () => import('@/modules/users/pages/UserFormPage.vue') },
         { path: 'users/:id/edit', name: 'user-edit', meta: { permission: 'admin.users.manage' }, component: () => import('@/modules/users/pages/UserFormPage.vue') },

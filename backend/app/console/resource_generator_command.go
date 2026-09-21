@@ -57,6 +57,11 @@ func (ResourceGeneratorCommand) Handle(ctx console.Context) error {
 	if err != nil {
 		return fmt.Errorf("get working directory: %w", err)
 	}
+	runtimeArtifacts, err := generator.RenderRuntimeRegistration(root, spec)
+	if err != nil {
+		return err
+	}
+	artifacts = append(artifacts, runtimeArtifacts...)
 	if err := generator.WriteAll(root, artifacts); err != nil {
 		return err
 	}

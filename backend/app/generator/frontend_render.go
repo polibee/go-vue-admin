@@ -15,8 +15,6 @@ func RenderFrontend(spec Spec) ([]Artifact, error) {
 	}{
 		{filepath.Join(base, "resource.ts"), frontendResourceSource(spec)},
 		{filepath.Join(base, "api.ts"), frontendAPISource(spec)},
-		{filepath.Join(base, "menu.ts"), frontendMenuSource(spec)},
-		{filepath.Join(base, "routes.ts"), frontendRoutesSource(spec)},
 		{filepath.Join(pageBase, spec.GoName+"ListPage.vue"), frontendListPageSource(spec)},
 		{filepath.Join(pageBase, spec.GoName+"FormPage.vue"), frontendFormPageSource(spec)},
 		{filepath.Join(pageBase, spec.GoName+"DetailPage.vue"), frontendDetailPageSource(spec)},
@@ -63,7 +61,7 @@ import { apiFetch, apiFetchEnvelope } from '@/lib/api';
 export type ResourceRecord = Record<string, unknown>;
 export type ResourceList<T = ResourceRecord> = { data: T[]; meta?: Record<string, unknown> };
 
-const basePath = '/api/v1/admin/%s';
+const basePath = '/api/v1/admin/resources/%s';
 
 export const resourceApi = {
   list(query: URLSearchParams, token: string) {
@@ -105,15 +103,15 @@ export const resourceRoutes: RouteRecordRaw[] = [
 }
 
 func frontendListPageSource(spec Spec) string {
-	return `<script setup lang="ts">
+	return fmt.Sprintf(`<script setup lang="ts">
 import ResourceListView from '@/core/resource/pages/ResourceListPage.vue';
 </script>
 
 <!-- Generated resource page. Register its route only after reviewing the resource contract. -->
 <template>
-  <ResourceListView />
+  <ResourceListView resource=%q />
 </template>
-`
+`, spec.Name)
 }
 
 func frontendFormPageSource(spec Spec) string {
@@ -131,15 +129,15 @@ import { resourceDefinition } from '../resource';
 }
 
 func frontendDetailPageSource(spec Spec) string {
-	return `<script setup lang="ts">
+	return fmt.Sprintf(`<script setup lang="ts">
 import ResourceDetailView from '@/core/resource/pages/ResourceDetailPage.vue';
 </script>
 
 <!-- Generated resource page. Register its route only after reviewing the resource contract. -->
 <template>
-  <ResourceDetailView />
+  <ResourceDetailView resource=%q />
 </template>
-`
+`, spec.Name)
 }
 
 func frontendTestSource(spec Spec) string {

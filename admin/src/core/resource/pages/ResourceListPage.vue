@@ -26,6 +26,7 @@ interface ResourceManifest extends GeneratedResourceManifest {}
 type ResourceMeta = ResourceListMeta
 
 const { t } = useI18n()
+const props = defineProps<{ resource?: string }>()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
@@ -47,7 +48,7 @@ const bulkStatus = ref<UserStatus>('disabled')
 const bulkStatusDialogOpen = ref(false)
 const bulkUpdating = ref(false)
 
-const resourceName = computed(() => String(route.params.resource || 'users'))
+const resourceName = computed(() => props.resource || String(route.params.resource || 'users'))
 const currentManifest = computed(() => manifests.value.find((item) => item.name === resourceName.value))
 const canManageUsers = computed(() => auth.can('admin.users.manage'))
 const canManageRoles = computed(() => auth.can('admin.roles.manage'))

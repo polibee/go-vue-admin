@@ -8,7 +8,7 @@ Generator 的目标是减少重复代码，不是替代架构设计。生成命�
 
 `admin:make-resource` 是唯一主入口，由同一份 ResourceSpec 统一生成后端、权限、菜单、前端列表/表单/详情页面、路由描述、迁移、测试和 README。Permission/Menu 只作为内部渲染器存在，不提供独立命令；`admin:make-crud` 已移除，避免形成第二套生成流程。
 
-当前生成器仍遵守安全边界：生成代码但不自动注册运行时、不修改现有路由或 Sidebar、不写权限/角色数据、不执行迁移。
+当前生成器采用自动发现：生成代码后更新生成专属 discovery 文件，资源自动进入后台 Registry、router 和 Sidebar；不修改人工维护文件，不写权限/角色数据，不执行迁移。
 
 ## `admin:make-resource`
 
@@ -21,16 +21,16 @@ go run . artisan admin:make-resource posts \
   --field=published:boolean
 ```
 
-命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、菜单、前端列表/表单/详情页、路由描述、统一 API 契约、测试、README 和 Migration 文件。表单页复用共享 `ResourceFormView`，API 契约包含 list/show/create/update/delete 五类操作；后端路由仍需人工注册和授权审阅。迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
+命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、菜单、前端列表/表单/详情页、路由描述、统一 API 契约、测试、README 和 Migration 文件，并更新生成专属 discovery 文件。表单页复用共享 `ResourceFormView`，API 契约包含 list/show/create/update/delete 五类操作；迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
 
 生成文件写入 `backend/app/modules/<name>/`、`admin/src/modules/<name>/` 和 `backend/database/migrations/`。如果任一目标文件已经存在，命令会在写入前失败，不会覆盖人工文件，也不会留下半套输出。
 
 生成完成后的人工接入顺序：
 
 1. 审阅生成的接口骨架、字段和迁移；
-2. 手动将 Manifest 注册到 Resource Registry；
-3. 手动注册需要暴露的 Routes 和权限；
-4. 手动执行已审阅的数据库迁移。
+2. 检查生成专属 discovery 文件是否包含新资源；
+3. 手动审阅并执行数据库迁移；
+4. 按业务需要补充非通用动作和授权规则。
 
 ## 模块检查
 
@@ -40,7 +40,7 @@ go run . artisan admin:make-resource posts \
 go run . artisan admin:check-module billing
 ```
 
-检查命令只读取文件，不创建、修改或删除文件，也不连接数据库。检查通过后仍需人工注册运行时边界；当前版本没有默认开启的自动注册选项。
+检查命令只读取文件，不创建、修改或删除文件，也不连接数据库。检查通过后资源已经由 discovery 文件自动进入运行时。
 
 ## 当前命令
 

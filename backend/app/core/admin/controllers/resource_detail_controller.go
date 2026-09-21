@@ -7,6 +7,7 @@ import (
 
 	"goravel/app/facades"
 	"goravel/app/models"
+	"goravel/app/modules/admin/registry"
 )
 
 func (r *ResourceController) Show(ctx http.Context) http.Response {
@@ -36,6 +37,14 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		}
 		return ctx.Response().Success().Json(http.Json{"data": permission})
 	default:
-		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
+		manifest, findErr := registry.AdminRegistry().Find(resourceName)
+		if findErr != nil || manifest.Table == "" {
+			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
+		}
+		var rows []map[string]any
+		if err := facades.Orm().Query().Table(manifest.Table).Where("id = ?", id).Get(&rows); err != nil || len(rows) == 0 {
+			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
+		}
+		return ctx.Response().Success().Json(http.Json{"data": rows[0]})
 	}
 }

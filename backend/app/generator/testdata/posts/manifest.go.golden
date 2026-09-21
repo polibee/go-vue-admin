@@ -5,7 +5,7 @@ import "goravel/app/core/resource"
 
 func Manifest() resource.Manifest {
 	return resource.Manifest{
-		Name: "posts", Label: "Posts", Route: "/admin/posts", Permissions: []string{"admin.posts.view"},
+		Name: "posts", Label: "Posts", Route: "/admin/posts", Table: "posts", Permissions: []string{"admin.posts.view"},
 		Fields: []resource.Field{
 			{Name: "title", Label: "Title", Type: "text"},
 			{Name: "published", Label: "Published", Type: "boolean"},
@@ -13,6 +13,12 @@ func Manifest() resource.Manifest {
 		Columns: []resource.Column{
 			{Name: "title", Label: "Title", Sortable: true},
 			{Name: "published", Label: "Published", Sortable: true},
+		},
+		Actions: []resource.Action{
+			{Name: "view", Label: "View", Permission: "admin.posts.view"},
+			{Name: "create", Label: "Create", Permission: "admin.posts.create"},
+			{Name: "update", Label: "Update", Permission: "admin.posts.update"},
+			{Name: "delete", Label: "Delete", Permission: "admin.posts.delete"},
 		},
 	}
 }

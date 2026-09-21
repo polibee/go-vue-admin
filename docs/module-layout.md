@@ -54,8 +54,6 @@ backend/app/services/
 admin/src/modules/<resource>/
 ├── api.ts
 ├── resource.ts
-├── menu.ts
-├── routes.ts
 ├── pages/
 │   ├── <Resource>ListPage.vue
 │   ├── <Resource>FormPage.vue
