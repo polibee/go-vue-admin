@@ -16,7 +16,7 @@ func Spec() map[string]any {
 		"paths": map[string]any{
 			"/auth/login": map[string]any{"post": map[string]any{
 				"security": []any{}, "operationId": "login", "requestBody": jsonBody("LoginRequest", map[string]any{"type": "object", "required": []string{"email", "password"}, "properties": map[string]any{"email": map[string]any{"type": "string", "format": "email"}, "password": map[string]any{"type": "string", "format": "password"}}}),
-				"responses": map[string]any{"200": jsonResponse("LoginResponse"), "403": errorResponse()},
+				"responses": map[string]any{"200": jsonResponse("LoginResponse"), "403": errorResponse(), "429": errorResponse(), "503": errorResponse()},
 			}},
 			"/auth/refresh": map[string]any{"post": map[string]any{
 				"security": []any{}, "operationId": "refresh", "responses": map[string]any{"200": jsonResponse("RefreshResponse"), "401": errorResponse()},

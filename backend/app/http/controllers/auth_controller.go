@@ -30,6 +30,14 @@ func (r *AuthController) Login(ctx http.Context) http.Response {
 			"message": "email and password are required",
 		})
 	}
+	rateLimiter := services.NewLoginRateLimiter()
+	allowed, err := rateLimiter.Allow(email, ctx.Request().Ip())
+	if err != nil {
+		return ctx.Response().Status(503).Json(http.Json{"code": "AUTH_RATE_LIMIT_STORE_UNAVAILABLE"})
+	}
+	if !allowed {
+		return ctx.Response().Status(429).Json(http.Json{"code": "AUTH_RATE_LIMITED"})
+	}
 
 	var user models.User
 	if err := facades.Orm().Query().Where("email = ?", email).First(&user); err != nil || !facades.Hash().Check(password, user.Password) {
@@ -63,6 +71,7 @@ func (r *AuthController) Login(ctx http.Context) http.Response {
 		})
 	}
 	recordAudit(user.ID, "auth.login", map[string]any{"method": "password"})
+	rateLimiter.Reset(email, ctx.Request().Ip())
 	publicUser, err := authUserPublic(&user)
 	if err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "RBAC_PERMISSIONS_ERROR"})

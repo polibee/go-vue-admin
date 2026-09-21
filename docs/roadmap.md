@@ -10,7 +10,7 @@
 
 ## Phase 2：认证与 RBAC
 
-基础版本已完成：用户表、JWT 登录、当前用户、刷新、登出、logout-all、Goravel Hash、中英文认证语言包、角色/权限表、管理员 RBAC 列表接口、角色 CRUD、权限分配、用户角色绑定、细粒度后端权限校验、初始 super-admin 数据和用户状态管理（active/disabled/locked）已完成；独立 Refresh Token Cookie、PostgreSQL 权威会话、Redis 镜像、自动故障切换、一次性轮换和重放检测已完成；认证审计日志、服务端筛选分页和前端详情查看、权限感知菜单/路由/资源操作已完成。请求响应级审计与登录限流仍属于后续增强。
+基础版本已完成：用户表、JWT 登录、当前用户、刷新、登出、logout-all、Goravel Hash、中英文认证语言包、角色/权限表、管理员 RBAC 列表接口、角色 CRUD、权限分配、用户角色绑定、细粒度后端权限校验、初始 super-admin 数据和用户状态管理（active/disabled/locked）已完成；独立 Refresh Token Cookie、PostgreSQL 权威会话、Redis 镜像、自动故障切换、一次性轮换和重放检测已完成；认证审计日志、服务端筛选分页和前端详情查看、权限感知菜单/路由/资源操作、基于邮箱/IP 哈希键的登录失败限流及 Redis/PostgreSQL 自动故障切换已完成。请求响应级审计仍属于后续增强。
 
 ## Phase 3：Resource Engine
 

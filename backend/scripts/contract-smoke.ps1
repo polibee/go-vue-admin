@@ -1,7 +1,8 @@
 param(
     [string]$BaseUrl = "http://127.0.0.1:3000",
     [string]$Email = "admin@example.com",
-    [string]$Password = "Admin123!"
+    [string]$Password = "Admin123!",
+    [string]$ClientIp = "198.51.100.10"
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,7 +24,8 @@ Assert-Contract ($LASTEXITCODE -eq 0) "Scalar docs page returns 200"
 Assert-Contract (($docs -join "`n") -match "api-reference") "Scalar docs page contains the reference element"
 
 $loginBody = @{ email = $Email; password = $Password } | ConvertTo-Json
-$login = Invoke-RestMethod -Uri "$BaseUrl/api/v1/auth/login" -Method Post -ContentType "application/json" -Body $loginBody
+$requestHeaders = @{ "X-Forwarded-For" = $ClientIp }
+$login = Invoke-RestMethod -Uri "$BaseUrl/api/v1/auth/login" -Method Post -Headers $requestHeaders -ContentType "application/json" -Body $loginBody
 $token = $login.data.access_token
 Assert-Contract (-not [string]::IsNullOrWhiteSpace($token)) "login returns an access token"
 $headers = @{ Authorization = "Bearer $token" }

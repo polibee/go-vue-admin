@@ -4,6 +4,8 @@
   "AUTH_INVALID_CREDENTIALS": "账号或密码错误",
   "AUTH_UNAUTHORIZED": "登录状态已失效，请重新登录",
   "AUTH_SESSION_STORE_UNAVAILABLE": "认证服务暂时不可用，请稍后重试",
+  "AUTH_RATE_LIMITED": "登录尝试过于频繁，请稍后再试",
+  "AUTH_RATE_LIMIT_STORE_UNAVAILABLE": "登录安全服务暂时不可用，请稍后重试",
   "RBAC_FORBIDDEN": "你没有执行此操作的权限",
   "RBAC_PERMISSIONS_ERROR": "用户权限暂时无法加载",
   "RBAC_ROLE_NOT_FOUND": "角色不存在",
