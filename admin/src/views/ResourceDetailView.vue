@@ -16,7 +16,10 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+interface ResourceField { name: string; label: string; type: string }
+interface ResourceManifest { name: string; fields: ResourceField[] }
 const data = ref<Record<string, unknown>>({})
+const manifest = ref<ResourceManifest>()
 const loading = ref(true)
 const error = ref('')
 const deleteDialogOpen = ref(false)
@@ -29,13 +32,22 @@ function localizedError(value: unknown) {
 onMounted(async () => {
   if (!auth.token) return
   try {
-    data.value = await apiFetch<Record<string, unknown>>(`/api/v1/admin/resources/${route.params.resource}/${route.params.id}`, {}, auth.token)
+    const [manifests, record] = await Promise.all([
+      apiFetch<ResourceManifest[]>('/api/v1/admin/resources', {}, auth.token),
+      apiFetch<Record<string, unknown>>(`/api/v1/admin/resources/${route.params.resource}/${route.params.id}`, {}, auth.token),
+    ])
+    manifest.value = manifests.find((item) => item.name === route.params.resource)
+    data.value = record
   } catch (value) {
     error.value = localizedError(value)
   } finally {
     loading.value = false
   }
 })
+
+function fieldLabel(name: string) {
+  return manifest.value?.fields.find((field) => field.name === name)?.label || name
+}
 
 async function deleteUser() {
   if (!auth.token) return
@@ -62,7 +74,7 @@ async function deleteUser() {
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Card v-if="loading"><CardHeader><Skeleton class="h-6 w-40" /><Skeleton class="h-4 w-64" /></CardHeader><CardContent class="flex flex-col gap-3"><Skeleton v-for="item in 4" :key="item" class="h-10" /></CardContent></Card>
     <Empty v-else-if="error"><EmptyHeader><EmptyTitle>{{ t('states.errorTitle') }}</EmptyTitle><EmptyDescription>{{ error }}</EmptyDescription></EmptyHeader></Empty>
-    <Card v-else-if="Object.keys(data).length"><CardHeader><CardTitle>{{ String(data.display_name || data.name || data.email || route.params.id) }}</CardTitle><CardDescription>{{ t('resource.detailDescription') }}</CardDescription></CardHeader><CardContent><dl class="grid gap-4 sm:grid-cols-2"> <div v-for="(value, key) in data" :key="key" class="rounded-md border p-3"><dt class="text-xs text-muted-foreground">{{ key }}</dt><dd class="mt-1 break-words text-sm font-medium">{{ value === null || value === undefined ? '—' : String(value) }}</dd></div></dl></CardContent></Card>
+    <Card v-else-if="Object.keys(data).length"><CardHeader><CardTitle>{{ String(data.display_name || data.name || data.email || route.params.id) }}</CardTitle><CardDescription>{{ t('resource.detailDescription') }}</CardDescription></CardHeader><CardContent><dl class="grid gap-4 sm:grid-cols-2"> <div v-for="(value, key) in data" :key="key" class="rounded-md border p-3"><dt class="text-xs text-muted-foreground">{{ fieldLabel(String(key)) }}</dt><dd class="mt-1 break-words text-sm font-medium">{{ value === null || value === undefined ? '—' : String(value) }}</dd></div></dl></CardContent></Card>
     <Empty v-else><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
     <AlertDialog v-model:open="deleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.deleteUserTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.deleteUserDescription') }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="deleting" @click="deleteUser">{{ t('resource.deleteUser') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>
