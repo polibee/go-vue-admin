@@ -101,9 +101,9 @@ watch(resourceName, () => { void loadRows(1) })
         <h1 class="text-2xl font-semibold tracking-tight">{{ t('resource.title') }}</h1>
         <p class="text-sm text-muted-foreground">{{ t('resource.description') }}</p>
       </div>
-      <Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
+      <div class="flex gap-2"><Button v-if="resourceName === 'users'" variant="default" @click="router.push('/users/new')">{{ t('resource.createUser') }}</Button><Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
         <RefreshCw data-icon="inline-start" />{{ t('resource.refresh') }}
-      </Button>
+      </Button></div>
     </div>
 
     <div v-if="manifests.length" class="flex flex-wrap gap-2">

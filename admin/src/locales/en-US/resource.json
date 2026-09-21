@@ -14,5 +14,21 @@
   "detail": "Resource detail",
   "detailDescription": "View the detailed fields for this resource record.",
   "back": "Back to list",
-  "perPage": "{count} / page"
+  "perPage": "{count} / page",
+  "createUser": "New user",
+  "editUser": "Edit user",
+  "userFormDescription": "Maintain the user profile, password, and active state.",
+  "userName": "Name",
+  "userEmail": "Email",
+  "userPassword": "Password",
+  "passwordHint": "Leave blank to keep the current password.",
+  "passwordRequired": "The password must be at least 8 characters.",
+  "userLocale": "Locale",
+  "userActive": "User is active",
+  "saving": "Saving…",
+  "save": "Save",
+  "cancel": "Cancel"
+  ,"deleteUser": "Delete user",
+  "deleteUserTitle": "Delete this user?",
+  "deleteUserDescription": "The user's role links will be removed and this action cannot be undone."
 }

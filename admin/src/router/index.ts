@@ -21,6 +21,8 @@ const router = createRouter({
         },
         { path: 'rbac', name: 'rbac', component: () => import('@/views/RBACView.vue') },
         { path: ':resource(users|roles|permissions)', name: 'resource-list', component: () => import('@/views/ResourceListView.vue') },
+        { path: 'users/new', name: 'user-create', component: () => import('@/views/UserFormView.vue') },
+        { path: 'users/:id/edit', name: 'user-edit', component: () => import('@/views/UserFormView.vue') },
         { path: ':resource(users|roles|permissions)/:id', name: 'resource-detail', component: () => import('@/views/ResourceDetailView.vue') },
         { path: 'loading', name: 'loading', component: () => import('@/views/LoadingView.vue') },
         { path: 'empty', name: 'empty', component: () => import('@/views/EmptyView.vue') },

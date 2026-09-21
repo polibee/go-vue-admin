@@ -14,5 +14,21 @@
   "detail": "资源详情",
   "detailDescription": "查看资源记录的详细字段。",
   "back": "返回列表",
-  "perPage": "每页 {count} 条"
+  "perPage": "每页 {count} 条",
+  "createUser": "新建用户",
+  "editUser": "编辑用户",
+  "userFormDescription": "维护用户资料、登录密码和启用状态。",
+  "userName": "姓名",
+  "userEmail": "邮箱",
+  "userPassword": "密码",
+  "passwordHint": "留空表示保持原密码不变。",
+  "passwordRequired": "密码至少 8 个字符。",
+  "userLocale": "语言区域",
+  "userActive": "用户已启用",
+  "saving": "保存中…",
+  "save": "保存",
+  "cancel": "取消"
+  ,"deleteUser": "删除用户",
+  "deleteUserTitle": "确认删除用户？",
+  "deleteUserDescription": "删除后将解除该用户的角色关联，且无法恢复。"
 }

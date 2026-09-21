@@ -69,6 +69,7 @@ func (s *AdminUser) Run() error {
 
 	for _, permission := range []models.Permission{
 		{Name: "admin.users.view", DisplayName: "View users"},
+		{Name: "admin.users.manage", DisplayName: "Manage users"},
 		{Name: "admin.roles.manage", DisplayName: "Manage roles"},
 		{Name: "admin.permissions.manage", DisplayName: "Manage permissions"},
 	} {

@@ -29,6 +29,14 @@ type userRolesPayload struct {
 	RoleIDs []int64 `json:"role_ids"`
 }
 
+type userPayload struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Locale   string `json:"locale"`
+	Active   *bool  `json:"is_active"`
+}
+
 func (r *RBACController) Users(ctx http.Context) http.Response {
 	if err := parseAuthToken(ctx); err != nil {
 		return unauthorized(ctx)
@@ -42,6 +50,37 @@ func (r *RBACController) Users(ctx http.Context) http.Response {
 		items = append(items, user.Public())
 	}
 	return ctx.Response().Success().Json(http.Json{"data": items})
+}
+
+func (r *RBACController) CreateUser(ctx http.Context) http.Response {
+	var payload userPayload
+	if err := ctx.Request().Bind(&payload); err != nil || payload.Active == nil {
+		return rbacError(ctx, 422, "VALIDATION_ERROR")
+	}
+	user, err := services.NewUserService().Create(payload.Name, payload.Email, payload.Password, payload.Locale, *payload.Active)
+	if err != nil {
+		return userServiceError(ctx, err)
+	}
+	return ctx.Response().Status(201).Json(http.Json{"data": user.Public()})
+}
+
+func (r *RBACController) UpdateUser(ctx http.Context) http.Response {
+	var payload userPayload
+	if err := ctx.Request().Bind(&payload); err != nil || payload.Active == nil {
+		return rbacError(ctx, 422, "VALIDATION_ERROR")
+	}
+	user, err := services.NewUserService().Update(ctx.Request().RouteInt64("id"), payload.Name, payload.Email, payload.Password, payload.Locale, *payload.Active)
+	if err != nil {
+		return userServiceError(ctx, err)
+	}
+	return ctx.Response().Success().Json(http.Json{"data": user.Public()})
+}
+
+func (r *RBACController) DeleteUser(ctx http.Context) http.Response {
+	if err := services.NewUserService().Delete(ctx.Request().RouteInt64("id")); err != nil {
+		return userServiceError(ctx, err)
+	}
+	return ctx.Response().NoContent(204)
 }
 
 func (r *RBACController) Roles(ctx http.Context) http.Response {
@@ -173,6 +212,19 @@ func userRoleServiceError(ctx http.Context, err error) http.Response {
 	case errors.Is(err, services.ErrLastAdmin):
 		return rbacError(ctx, 409, "RBAC_LAST_ADMIN")
 	case errors.Is(err, rbac.ErrInvalidRoleIDs):
+		return rbacError(ctx, 422, "VALIDATION_ERROR")
+	default:
+		return rbacError(ctx, 500, "INTERNAL_ERROR")
+	}
+}
+
+func userServiceError(ctx http.Context, err error) http.Response {
+	switch {
+	case errors.Is(err, services.ErrUserNotFound):
+		return rbacError(ctx, 404, "RBAC_USER_NOT_FOUND")
+	case errors.Is(err, services.ErrLastAdmin):
+		return rbacError(ctx, 409, "RBAC_LAST_ADMIN")
+	case errors.Is(err, services.ErrUserExists), errors.Is(err, services.ErrInvalidUser):
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	default:
 		return rbacError(ctx, 500, "INTERNAL_ERROR")
