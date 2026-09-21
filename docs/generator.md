@@ -2,6 +2,12 @@
 
 Generator 的目标是减少重复代码，不是替代架构设计。生成命令在 `backend/` Goravel 项目根目录执行，前端文件写入 `admin/`。
 
+## 当前主流程方向
+
+现有 Resource、Module、Permission 和 Menu 命令已经提供可复用的基础渲染能力，但它们不是最终的业务入口。下一阶段以 `admin:make-resource` 和 `admin:make-crud` 为主入口，由同一份资源定义统一生成后端、权限、菜单、前端列表/表单/详情页面、路由描述、迁移和测试产物。独立 Permission/Menu 命令只保留为兼容性适配器。
+
+当前生成器仍遵守安全边界：生成代码但不自动注册运行时、不修改现有路由或 Sidebar、不写权限/角色数据、不执行迁移。
+
 ## 已实现：`admin:make-resource`
 
 当前第一阶段只生成后端 Resource 基础骨架，不自动接入路由、Resource Registry 或数据库迁移执行器。
