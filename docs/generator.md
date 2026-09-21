@@ -2,6 +2,30 @@
 
 Generator 的目标是减少重复代码，不是替代架构设计。生成命令在 `backend/` Goravel 项目根目录执行，前端文件写入 `admin/`。
 
+## 已实现：`admin:make-resource`
+
+当前第一阶段只生成后端 Resource 基础骨架，不自动接入路由、Resource Registry 或数据库迁移执行器。
+
+```text
+go run . artisan admin:make-resource posts \
+  --label="Posts" \
+  --route="/admin/posts" \
+  --permission="admin.posts.view" \
+  --field=title:text:required \
+  --field=published:boolean
+```
+
+命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、Manifest Test 和 Migration 文件。迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
+
+生成文件写入 `backend/app/generated/resources/<name>/` 和 `backend/database/migrations/`。如果任一目标文件已经存在，命令会在写入前失败，不会覆盖人工文件，也不会留下半套输出。
+
+生成完成后的人工接入顺序：
+
+1. 审阅生成的接口骨架、字段和迁移；
+2. 手动将 Manifest 注册到 Resource Registry；
+3. 手动注册需要暴露的 Routes 和权限；
+4. 手动执行已审阅的数据库迁移。
+
 ## 第一阶段命令
 
 ```text
