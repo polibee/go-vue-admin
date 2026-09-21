@@ -115,7 +115,7 @@ GET  /api/v1/auth/me
 - 基于 `admin.users.view`、`admin.roles.manage`、`admin.permissions.manage` 的后端细粒度授权；
 - API 错误统一返回稳定 `code`，前端按模块语言包渲染中文或英文。
 
-当前实现暂时直接返回 JWT Access Token，Refresh Token Cookie、轮换和 Redis 会话撤销仍属于后续安全增强，不应视为生产认证完成。系统角色 `super-admin` 受到保护，最后一个具备管理权限的管理员不能被移除。
+当前实现已接入独立的随机 Refresh Token：登录写入 HttpOnly Cookie，Redis 只保存 Token 哈希和用户 ID，刷新时一次性消费并轮换，重放返回 401，登出会撤销并清除 Cookie。生产环境仍需按部署拓扑配置 HTTPS、SameSite 和跨来源 Cookie 策略；`logout-all`、审计和登录限流仍属于后续增强。系统角色 `super-admin` 受到保护，最后一个具备管理权限的管理员不能被移除。
 
 ## 测试
 

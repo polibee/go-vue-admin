@@ -2,12 +2,8 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { generatedApi, type AuthUser, type LoginResponse } from '@/generated/api'
 
-const STORAGE_KEY = 'go-vue-admin.access-token'
-function readStoredToken() { return typeof window === 'undefined' ? undefined : sessionStorage.getItem(STORAGE_KEY) ?? undefined }
-function writeStoredToken(value: string | undefined) { if (typeof window === 'undefined') return; if (value) sessionStorage.setItem(STORAGE_KEY, value); else sessionStorage.removeItem(STORAGE_KEY) }
-
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref<string | undefined>(readStoredToken())
+  const token = ref<string | undefined>()
   const user = ref<AuthUser>()
   const restored = ref(false)
 
@@ -16,7 +12,6 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     const response: LoginResponse = await generatedApi.login({ email, password })
     token.value = response.access_token
-    writeStoredToken(token.value)
     user.value = response.user
   }
 
@@ -29,13 +24,13 @@ export const useAuthStore = defineStore('auth', () => {
   async function restore() {
     if (restored.value) return
     restored.value = true
-    if (!token.value) return
     try {
+      const response = await generatedApi.refresh()
+      token.value = response.access_token
       await fetchCurrentUser()
     } catch {
       token.value = undefined
       user.value = undefined
-      writeStoredToken(undefined)
     }
   }
 
@@ -46,7 +41,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
     token.value = undefined
     user.value = undefined
-    writeStoredToken(undefined)
   }
 
   return { token, user, isAuthenticated, login, fetchCurrentUser, restore, logout }

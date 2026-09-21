@@ -40,7 +40,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, token?: 
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers })
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers, credentials: 'include' })
   const payload = await response.json().catch(() => null) as { data?: T; code?: string; message?: string } | null
   if (!response.ok) {
     throw new ApiError(payload?.message ?? 'Request failed', response.status, payload?.code)
@@ -56,7 +56,7 @@ export async function apiFetchEnvelope<T>(path: string, init: RequestInit = {}, 
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers })
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers, credentials: 'include' })
   const payload = await response.json().catch(() => null) as { data?: T; meta?: Record<string, unknown>; code?: string; message?: string } | null
   if (!response.ok) {
     throw new ApiError(payload?.message ?? 'Request failed', response.status, payload?.code)

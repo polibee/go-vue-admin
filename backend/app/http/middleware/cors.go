@@ -22,6 +22,7 @@ func (corsMiddleware) Handle(ctx httpcontract.Context) {
 	ctx.Response().Header("Access-Control-Allow-Origin", origin)
 	ctx.Response().Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 	ctx.Response().Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+	ctx.Response().Header("Access-Control-Allow-Credentials", "true")
 	ctx.Response().Header("Access-Control-Max-Age", "600")
 	ctx.Response().Header("Vary", "Origin")
 

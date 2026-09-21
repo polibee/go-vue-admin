@@ -7,6 +7,7 @@ import (
 
 	"goravel/app/facades"
 	"goravel/app/models"
+	"goravel/app/services"
 )
 
 type AuthController struct{}
@@ -50,8 +51,16 @@ func (r *AuthController) Login(ctx http.Context) http.Response {
 			"message": "could not create access token",
 		})
 	}
+	refreshToken, err := services.NewRefreshTokenService(facades.Cache()).Issue(user.ID)
+	if err != nil {
+		return ctx.Response().Status(500).Json(http.Json{
+			"code":    "AUTH_REFRESH_TOKEN_ERROR",
+			"message": "could not create refresh token",
+		})
+	}
 
-	return ctx.Response().Success().Json(http.Json{
+	response := ctx.Response().Cookie(refreshTokenCookie(refreshToken))
+	return response.Success().Json(http.Json{
 		"data": http.Json{
 			"access_token": token,
 			"token_type":   "Bearer",
@@ -74,31 +83,58 @@ func (r *AuthController) Me(ctx http.Context) http.Response {
 }
 
 func (r *AuthController) Logout(ctx http.Context) http.Response {
+	services.NewRefreshTokenService(facades.Cache()).Revoke(ctx.Request().Cookie(services.RefreshTokenCookieName))
 	if err := r.parseToken(ctx); err != nil {
-		return unauthorized(ctx)
+		return ctx.Response().WithoutCookie(services.RefreshTokenCookieName).Status(204).Json(nil)
 	}
 	if err := facades.Auth(ctx).Logout(); err != nil {
 		return unauthorized(ctx)
 	}
 
-	return ctx.Response().NoContent(204)
+	return ctx.Response().WithoutCookie(services.RefreshTokenCookieName).NoContent(204)
 }
 
 func (r *AuthController) Refresh(ctx http.Context) http.Response {
-	if err := r.parseToken(ctx); err != nil {
-		return unauthorized(ctx)
-	}
-	token, err := facades.Auth(ctx).Refresh()
+	refreshService := services.NewRefreshTokenService(facades.Cache())
+	userID, err := refreshService.Consume(ctx.Request().Cookie(services.RefreshTokenCookieName))
 	if err != nil {
 		return unauthorized(ctx)
 	}
 
-	return ctx.Response().Success().Json(http.Json{
+	var user models.User
+	if err := facades.Orm().Query().Find(&user, userID); err != nil || !loginAllowedForStatus(user.Status) {
+		return unauthorized(ctx)
+	}
+	token, err := facades.Auth(ctx).Login(&user)
+	if err != nil {
+		return unauthorized(ctx)
+	}
+	rotatedToken, err := refreshService.Issue(user.ID)
+	if err != nil {
+		return ctx.Response().Status(500).Json(http.Json{
+			"code":    "AUTH_REFRESH_TOKEN_ERROR",
+			"message": "could not rotate refresh token",
+		})
+	}
+
+	return ctx.Response().Cookie(refreshTokenCookie(rotatedToken)).Success().Json(http.Json{
 		"data": http.Json{
 			"access_token": token,
 			"token_type":   "Bearer",
 		},
 	})
+}
+
+func refreshTokenCookie(token string) http.Cookie {
+	return http.Cookie{
+		Name:     services.RefreshTokenCookieName,
+		Value:    token,
+		Path:     "/api/v1/auth",
+		MaxAge:   30 * 24 * 60 * 60,
+		SameSite: "Lax",
+		Secure:   facades.Config().GetString("app.env", "production") == "production",
+		HttpOnly: true,
+	}
 }
 
 func (r *AuthController) parseToken(ctx http.Context) error {
