@@ -22,7 +22,7 @@ Resource Registry、字段、列、标准列表查询（分页、搜索、排序
 
 ## Phase 5：Generator
 
-第一阶段已完成：`admin:make-resource` 可确定性生成后端 Resource 基础骨架、迁移文件和 README；`admin:make-module` 可生成编译期模块边界和测试骨架；`admin:make-crud` 可组合生成模块与 Resource CRUD 骨架。生成前完整检查冲突，默认不覆盖人工文件，不自动注册路由/Registry，也不自动执行迁移。权限、菜单和前端页面生成仍待后续阶段。
+第一阶段已完成：`admin:make-resource` 可确定性生成后端 Resource 基础骨架、迁移文件和 README；`admin:make-module` 可生成编译期模块边界和测试骨架；`admin:make-crud` 可组合生成模块与 Resource CRUD 骨架；`admin:make-permission` 可生成权限常量和说明。生成前完整检查冲突，默认不覆盖人工文件，不自动注册路由/Registry，也不自动执行迁移。菜单和前端页面生成仍待后续阶段。
 
 ## Phase 6：可选扩展
 
