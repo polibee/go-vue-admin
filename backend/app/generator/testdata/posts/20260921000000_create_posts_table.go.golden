@@ -3,12 +3,26 @@ package migrations
 
 import (
 	"github.com/goravel/framework/contracts/database/schema"
-	"github.com/goravel/framework/database/schema/grammars"
+
+	"goravel/app/facades"
 )
 
-type CreatepostsTable struct{}
+type MpostsCreatePostsTable struct{}
 
-func (m *CreatepostsTable) Up() error   { return nil }
-func (m *CreatepostsTable) Down() error { return nil }
+func (m *MpostsCreatePostsTable) Signature() string {
+	return "create_posts_table"
+}
 
-var _ schema.Grammar = (*grammars.PostgresGrammar)(nil)
+func (m *MpostsCreatePostsTable) Up() error {
+	return facades.Schema().Create("posts", func(table schema.Blueprint) {
+		table.ID()
+		table.String("title")
+		table.Boolean("published")
+		table.DateTimeTz("created_at").Nullable()
+		table.DateTimeTz("updated_at").Nullable()
+	})
+}
+
+func (m *MpostsCreatePostsTable) Down() error {
+	return facades.Schema().DropIfExists("posts")
+}

@@ -1,9 +1,11 @@
 package bootstrap
 
 import (
+	contractsconsole "github.com/goravel/framework/contracts/console"
 	contractsfoundation "github.com/goravel/framework/contracts/foundation"
 	contractsconfiguration "github.com/goravel/framework/contracts/foundation/configuration"
 	"github.com/goravel/framework/foundation"
+	adminconsole "goravel/app/console"
 	adminmiddleware "goravel/app/http/middleware"
 	"goravel/config"
 	"goravel/routes"
@@ -13,6 +15,9 @@ func Boot() contractsfoundation.Application {
 	return foundation.Setup().
 		WithSeeders(Seeders).
 		WithMigrations(Migrations).
+		WithCommands(func() []contractsconsole.Command {
+			return []contractsconsole.Command{adminconsole.ResourceGeneratorCommand{}}
+		}).
 		WithRouting(func() {
 			routes.Web()
 			routes.Grpc()
