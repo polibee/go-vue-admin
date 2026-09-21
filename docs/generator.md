@@ -26,10 +26,10 @@ go run . artisan admin:make-resource posts \
 
 生成文件写入 `backend/app/modules/<name>/`、`admin/src/modules/<name>/` 和 `backend/database/migrations/`。如果任一目标文件已经存在，命令会在写入前失败，不会覆盖人工文件，也不会留下半套输出。
 
-生成完成后的人工接入顺序：
+生成完成后的人工审阅顺序：
 
 1. 审阅生成的接口骨架、字段和迁移；
-2. 检查生成专属 discovery 文件是否包含新资源；
+2. 检查生成专属 discovery 文件是否包含新资源；资源会通过该文件自动进入 Registry、路由和 Admin Shell；
 3. 手动审阅并执行数据库迁移；
 4. 按业务需要补充非通用动作和授权规则。
 

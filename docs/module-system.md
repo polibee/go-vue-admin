@@ -11,7 +11,7 @@ backend/app/modules/<name>/
 └── menu/
 ```
 
-`admin:make-resource` 是唯一生成入口，从一份 ResourceSpec 生成后端资源边界、权限、菜单、前端页面、路由描述、迁移、测试和 README。生成器不会自动注册 Provider、Routes、权限、菜单或 Resource Registry；模块启用由人工审阅后完成。
+`admin:make-resource` 是唯一生成入口，从一份 ResourceSpec 生成后端资源边界、权限、菜单、前端页面、路由描述、迁移、测试和 README。生成器不会修改人工维护的 Provider、Routes、权限或菜单文件；它会更新带生成标记的 discovery 文件，使资源自动进入 Registry、路由和 Admin Shell。数据库迁移仍需人工审阅后执行。
 
 模块可以提供自己的中英文语言包：前端由 vue-i18n 加载，后端由 Goravel Localization 加载。语言文件统一归档到前端 `locales/<locale>/<namespace>/` 和后端 `lang/<locale>/<namespace>/`。模块不得覆盖 `core` 或其他模块的命名空间。
 
