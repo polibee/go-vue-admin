@@ -140,3 +140,40 @@ func (s *UserService) Delete(id int64) error {
 		return err
 	})
 }
+
+func (s *UserService) BulkSetStatus(ids []int64, status string) error {
+	if len(ids) == 0 || validateUserStatus(status) != nil {
+		return ErrInvalidUser
+	}
+	seen := make(map[int64]struct{}, len(ids))
+	for _, id := range ids {
+		if id < 1 {
+			return ErrInvalidUser
+		}
+		if _, exists := seen[id]; exists {
+			continue
+		}
+		seen[id] = struct{}{}
+		var user models.User
+		if err := facades.Orm().Query().Where("id", id).First(&user); err != nil {
+			return ErrUserNotFound
+		}
+		if status != userStatusActive && user.Status == userStatusActive {
+			last, err := NewRBACService().IsLastActiveAdmin(id)
+			if err != nil {
+				return err
+			}
+			if last {
+				return ErrLastAdmin
+			}
+		}
+	}
+	return facades.Orm().Transaction(func(tx orm.Query) error {
+		for id := range seen {
+			if _, err := tx.Table("users").Where("id", id).Update("status", status); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}

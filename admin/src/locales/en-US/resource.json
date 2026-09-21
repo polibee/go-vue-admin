@@ -43,6 +43,14 @@
   ,"statusActive": "Active"
   ,"statusDisabled": "Disabled"
   ,"statusLocked": "Locked"
+  ,"selectedCount": "{count} selected"
+  ,"selectAll": "Select all users"
+  ,"selectRow": "Select user {name}"
+  ,"bulkStatus": "Bulk status"
+  ,"applyStatus": "Apply status"
+  ,"clearSelection": "Clear selection"
+  ,"bulkStatusTitle": "Apply status to selected users?"
+  ,"bulkStatusDescription": "This will set {count} selected users to {status}."
   ,"deleteUser": "Delete user",
   "deleteUserTitle": "Delete this user?",
   "deleteUserDescription": "The user's role links will be removed and this action cannot be undone."

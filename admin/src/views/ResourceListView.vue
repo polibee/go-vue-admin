@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
@@ -22,7 +23,6 @@ import { useI18n } from 'vue-i18n'
 interface ResourceColumn { name: string; label: string; sortable: boolean }
 interface ResourceManifest { name: string; label: string; route: string; columns: ResourceColumn[] }
 interface ResourceMeta { page: number; per_page: number; total: number; last_page: number }
-interface ResourceListResponse { data: Record<string, unknown>[]; meta: ResourceMeta }
 
 const { t } = useI18n()
 const route = useRoute()
@@ -41,9 +41,14 @@ const error = ref('')
 const deleteDialogOpen = ref(false)
 const deleting = ref(false)
 const deleteTarget = ref<Record<string, unknown>>()
+const selectedIds = ref<string[]>([])
+const bulkStatus = ref<UserStatus>('disabled')
+const bulkStatusDialogOpen = ref(false)
+const bulkUpdating = ref(false)
 
 const resourceName = computed(() => String(route.params.resource || 'users'))
 const currentManifest = computed(() => manifests.value.find((item) => item.name === resourceName.value))
+const allVisibleSelected = computed(() => rows.value.length > 0 && rows.value.every((row) => selectedIds.value.includes(String(row.id))))
 
 function localizedError(value: unknown) {
   return value instanceof ApiError ? t(errorMessageKey(value.code)) : t('errors.unknown')
@@ -68,6 +73,7 @@ async function loadRows(page = 1) {
     const response = await apiFetchEnvelope<Record<string, unknown>[]>(`/api/v1/admin/resources/${resourceName.value}?${params}`, {}, auth.token)
     rows.value = response.data
     meta.value = response.meta as unknown as ResourceMeta
+    selectedIds.value = []
   } catch (value) {
     rows.value = []
     error.value = localizedError(value)
@@ -92,6 +98,29 @@ function selectResource(name: string) { void router.push(`/${name}`) }
 function displayValue(value: unknown) { return value === null || value === undefined ? '—' : String(value) }
 function statusLabel(value: unknown) { return typeof value === 'string' ? t(userStatusLabelKey(value as UserStatus)) : '—' }
 function changeStatusFilter(value: unknown) { statusFilter.value = String(value); void loadRows(1) }
+function toggleRow(id: unknown, checked: boolean | 'indeterminate') {
+  const value = String(id)
+  selectedIds.value = checked === true ? [...new Set([...selectedIds.value, value])] : selectedIds.value.filter((item) => item !== value)
+}
+function toggleAll(checked: boolean | 'indeterminate') {
+  selectedIds.value = checked === true ? rows.value.map((row) => String(row.id)) : []
+}
+function clearSelection() { selectedIds.value = [] }
+async function applyBulkStatus() {
+  if (!auth.token || !selectedIds.value.length) return
+  bulkUpdating.value = true
+  error.value = ''
+  try {
+    await apiFetch('/api/v1/admin/users/status', { method: 'PUT', body: JSON.stringify({ user_ids: selectedIds.value.map(Number), status: bulkStatus.value }) }, auth.token)
+    bulkStatusDialogOpen.value = false
+    clearSelection()
+    await loadRows(meta.value.page)
+  } catch (value) {
+    error.value = localizedError(value)
+  } finally {
+    bulkUpdating.value = false
+  }
+}
 function editPath(row: Record<string, unknown>) { return `/${resourceName.value}/${row.id}/edit` }
 function openDelete(row: Record<string, unknown>) { deleteTarget.value = row; deleteDialogOpen.value = true }
 async function deleteRow() {
@@ -136,6 +165,12 @@ watch(resourceName, () => { statusFilter.value = 'all'; void loadRows(1) })
     <div v-if="manifests.length" class="flex flex-wrap gap-2">
       <Button v-for="manifest in manifests" :key="manifest.name" :variant="manifest.name === resourceName ? 'default' : 'outline'" size="sm" @click="selectResource(manifest.name)">{{ manifest.label }}</Button>
     </div>
+    <div v-if="resourceName === 'users' && selectedIds.length" class="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3">
+      <span class="text-sm text-muted-foreground">{{ t('resource.selectedCount', { count: selectedIds.length }) }}</span>
+      <Select v-model="bulkStatus"><SelectTrigger class="w-36" :aria-label="t('resource.bulkStatus')"><SelectValue /></SelectTrigger><SelectContent><SelectItem v-for="status in USER_STATUSES" :key="status" :value="status">{{ t(userStatusLabelKey(status)) }}</SelectItem></SelectContent></Select>
+      <Button size="sm" @click="bulkStatusDialogOpen = true">{{ t('resource.applyStatus') }}</Button>
+      <Button variant="ghost" size="sm" @click="clearSelection">{{ t('resource.clearSelection') }}</Button>
+    </div>
 
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Card>
@@ -146,10 +181,11 @@ watch(resourceName, () => { statusFilter.value = 'all'; void loadRows(1) })
       <CardContent>
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
         <Empty v-else-if="!rows.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
-        <Table v-else><TableHeader><TableRow><TableHead v-for="column in currentManifest?.columns || []" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead><TableHead class="w-36 text-right">{{ t('resource.actions') }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-for="column in currentManifest?.columns || []" :key="column.name"><Badge v-if="column.name === 'status'" variant="secondary">{{ statusLabel(row[column.name]) }}</Badge><template v-else>{{ displayValue(row[column.name]) }}</template></TableCell><TableCell class="text-right"><div v-if="row.id && (resourceName === 'users' || resourceName === 'roles')" class="flex justify-end gap-1" @click.stop><Button variant="ghost" size="sm" :aria-label="t('resource.edit')" @click="router.push(editPath(row))"><Pencil data-icon="inline-start" />{{ t('resource.edit') }}</Button><Button variant="ghost" size="sm" :disabled="!canDeleteResource(resourceName, row)" :aria-label="t('resource.delete')" @click="openDelete(row)"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div></TableCell></TableRow></TableBody></Table>
+        <Table v-else><TableHeader><TableRow><TableHead v-if="resourceName === 'users'" class="w-10"><Checkbox :checked="allVisibleSelected" :aria-label="t('resource.selectAll')" @click="toggleAll(!allVisibleSelected)" /></TableHead><TableHead v-for="column in currentManifest?.columns || []" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead><TableHead class="w-36 text-right">{{ t('resource.actions') }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-if="resourceName === 'users'" @click.stop><Checkbox :checked="selectedIds.includes(String(row.id))" :aria-label="t('resource.selectRow', { name: row.name })" @click="toggleRow(row.id, !selectedIds.includes(String(row.id)))" /></TableCell><TableCell v-for="column in currentManifest?.columns || []" :key="column.name"><Badge v-if="column.name === 'status'" variant="secondary">{{ statusLabel(row[column.name]) }}</Badge><template v-else>{{ displayValue(row[column.name]) }}</template></TableCell><TableCell class="text-right"><div v-if="row.id && (resourceName === 'users' || resourceName === 'roles')" class="flex justify-end gap-1" @click.stop><Button variant="ghost" size="sm" :aria-label="t('resource.edit')" @click="router.push(editPath(row))"><Pencil data-icon="inline-start" />{{ t('resource.edit') }}</Button><Button variant="ghost" size="sm" :disabled="!canDeleteResource(resourceName, row)" :aria-label="t('resource.delete')" @click="openDelete(row)"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div></TableCell></TableRow></TableBody></Table>
         <div v-if="!loading && meta.total > 0" class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between"><p class="text-sm text-muted-foreground">{{ t('resource.page', { page: meta.page }) }}</p><div class="flex items-center gap-2"><Select :model-value="pageSize" @update:model-value="changePageSize"><SelectTrigger class="w-24"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="10">{{ t('resource.perPage', { count: 10 }) }}</SelectItem><SelectItem value="20">{{ t('resource.perPage', { count: 20 }) }}</SelectItem><SelectItem value="50">{{ t('resource.perPage', { count: 50 }) }}</SelectItem></SelectContent></Select></div><Pagination v-model:page="meta.page" :items-per-page="meta.per_page" :total="meta.total" @update:page="loadRows"><PaginationContent v-slot="{ items }"><PaginationPrevious /><template v-for="(item, index) in items" :key="index"><PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === meta.page">{{ item.value }}</PaginationItem></template><PaginationNext /></PaginationContent></Pagination></div>
       </CardContent>
     </Card>
     <AlertDialog v-model:open="deleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.deleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.deleteDescription') }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="deleting" @click="deleteRow">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    <AlertDialog v-model:open="bulkStatusDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkStatusTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkStatusDescription', { count: selectedIds.length, status: t(userStatusLabelKey(bulkStatus)) }) }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkUpdating" @click="applyBulkStatus">{{ t('resource.applyStatus') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>
 </template>

@@ -34,6 +34,7 @@ func Web() {
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/resources/:resource/:id", resourceController.Show)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/users", rbacController.Users)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.manage")).Post("/api/v1/admin/users", rbacController.CreateUser)
+	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.manage")).Put("/api/v1/admin/users/status", rbacController.BulkSetUserStatus)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.manage")).Put("/api/v1/admin/users/:id", rbacController.UpdateUser)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.manage")).Delete("/api/v1/admin/users/:id", rbacController.DeleteUser)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.roles.manage")).Get("/api/v1/admin/roles", rbacController.Roles)

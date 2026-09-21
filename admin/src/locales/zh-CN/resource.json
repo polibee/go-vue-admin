@@ -43,6 +43,14 @@
   ,"statusActive": "正常"
   ,"statusDisabled": "已停用"
   ,"statusLocked": "已锁定"
+  ,"selectedCount": "已选择 {count} 项"
+  ,"selectAll": "选择全部用户"
+  ,"selectRow": "选择用户 {name}"
+  ,"bulkStatus": "批量状态"
+  ,"applyStatus": "应用状态"
+  ,"clearSelection": "清除选择"
+  ,"bulkStatusTitle": "确认批量设置状态？"
+  ,"bulkStatusDescription": "将把已选择的 {count} 个用户设置为“{status}”。"
   ,"deleteUser": "删除用户",
   "deleteUserTitle": "确认删除用户？",
   "deleteUserDescription": "删除后将解除该用户的角色关联，且无法恢复。"

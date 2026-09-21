@@ -27,9 +27,10 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 - `POST /api/v1/admin/users` 创建用户并使用 Goravel Hash 保存密码；
 - `PUT /api/v1/admin/users/:id` 编辑用户，密码留空时保持不变；
 - `DELETE /api/v1/admin/users/:id` 删除用户并清理角色关联；
+- `PUT /api/v1/admin/users/status` 批量设置用户状态，复用状态校验和最后管理员保护；
 - 最后一个具备管理权限的活动管理员不能被删除。
 
-Admin 前端提供 `/users/new`、`/users/:id/edit` 和用户详情删除确认流程。roles、permissions 的通用写表单仍沿用 RBAC 专用页面。
+Admin 前端提供 `/users/new`、`/users/:id/edit`、用户详情删除确认和批量状态设置流程。roles、permissions 的通用写表单仍沿用 RBAC 专用页面。
 
 ## Resource Definition
 
