@@ -22,6 +22,17 @@ type NotificationInput struct {
 	URL   string
 }
 
+const (
+	TypeUserCreated             = "user.created"
+	TypeUserStatusChanged       = "user.status_changed"
+	TypeUserPasswordReset       = "user.password_reset"
+	TypeUserRolesChanged        = "user.roles_changed"
+	TypeRolePermissionsChanged  = "role.permissions_changed"
+	TypeResourceAction          = "resource.action"
+	TypeAuditCleanup            = "audit.cleanup"
+	TypeSecuritySessionsRevoked = "security.sessions_revoked"
+)
+
 type NotificationPage struct {
 	Data     []models.Notification `json:"data"`
 	Page     int                   `json:"page"`
@@ -67,6 +78,14 @@ func (s *NotificationService) Create(userID uint, input NotificationInput) (*mod
 		return nil, err
 	}
 	return notification, nil
+}
+
+// PublishBestEffort keeps a successful domain mutation from failing solely
+// because an auxiliary in-app notification could not be persisted.
+func (s *NotificationService) PublishBestEffort(userID uint, input NotificationInput) {
+	if _, err := s.Create(userID, input); err != nil {
+		facades.Log().Errorf("notification publish failed user_id=%d type=%s error=%v", userID, input.Type, err)
+	}
 }
 
 func normalizePage(page, perPage int) (int, int) {

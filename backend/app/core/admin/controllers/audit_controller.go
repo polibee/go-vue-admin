@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 
 	"goravel/app/facades"
 	auditservices "goravel/app/services/audit"
+	notificationservices "goravel/app/services/notifications"
 )
 
 type AuditController struct{}
@@ -116,6 +118,12 @@ func (a *AuditController) Cleanup(ctx http.Context) http.Response {
 				metadata["cutoff"] = cutoff.Format(time.RFC3339)
 			}
 			_ = auditservices.NewAuditService().Record(uint(userID), "audit.cleanup", metadata)
+			notificationservices.NewNotificationService().PublishBestEffort(uint(userID), notificationservices.NotificationInput{
+				Type:  notificationservices.TypeAuditCleanup,
+				Title: "审计日志清理完成",
+				Body:  fmt.Sprintf("本次清理已删除 %d 条审计日志。", deleted),
+				URL:   "/audit-logs",
+			})
 		}
 	}
 	response := http.Json{"deleted": deleted, "mode": payload.Mode}

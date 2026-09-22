@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 
 	"github.com/goravel/framework/contracts/http"
 
@@ -11,6 +13,7 @@ import (
 	adminactionregistry "goravel/app/modules/admin/actions"
 	"goravel/app/modules/admin/registry"
 	useractions "goravel/app/modules/users/actions"
+	notificationservices "goravel/app/services/notifications"
 	rbacservices "goravel/app/services/rbac"
 	userservices "goravel/app/services/users"
 )
@@ -81,6 +84,7 @@ func (r *ResourceController) Action(ctx http.Context) http.Response {
 			return actionHandlerError(ctx, executeErr)
 		}
 		recordManagementAudit(ctx, "resource.action", map[string]any{"resource": resourceName, "action": actionName, "requested": result.Requested, "succeeded": result.Succeeded, "failed": result.Failed})
+		notifyResourceAction(ctx, resourceName, actionName, result)
 		return ctx.Response().Success().Json(http.Json{"data": result})
 	}
 	if action.Kind == "builtin-update" {
@@ -89,6 +93,7 @@ func (r *ResourceController) Action(ctx http.Context) http.Response {
 			return actionHandlerError(ctx, executeErr)
 		}
 		recordManagementAudit(ctx, "resource.action", map[string]any{"resource": resourceName, "action": actionName, "requested": result.Requested, "succeeded": result.Succeeded, "failed": result.Failed})
+		notifyResourceAction(ctx, resourceName, actionName, result)
 		return ctx.Response().Success().Json(http.Json{"data": result})
 	}
 	if action.Kind == "builtin-restore" || action.Kind == "builtin-force-delete" {
@@ -97,6 +102,7 @@ func (r *ResourceController) Action(ctx http.Context) http.Response {
 			return actionHandlerError(ctx, executeErr)
 		}
 		recordManagementAudit(ctx, "resource.action", map[string]any{"resource": resourceName, "action": actionName, "requested": result.Requested, "succeeded": result.Succeeded, "failed": result.Failed})
+		notifyResourceAction(ctx, resourceName, actionName, result)
 		return ctx.Response().Success().Json(http.Json{"data": result})
 	}
 	handler, err := adminactionregistry.Registry().FindForPayload(action.Kind, action.Payload)
@@ -132,7 +138,25 @@ func (r *ResourceController) Action(ctx http.Context) http.Response {
 	}
 	result := mergeActionResults(actionName, len(request.IDs)+len(scopeFailures), scopeFailures, handlerResult)
 	recordManagementAudit(ctx, "resource.action", map[string]any{"resource": resourceName, "action": actionName, "requested": result.Requested, "succeeded": result.Succeeded, "failed": result.Failed})
+	notifyResourceAction(ctx, resourceName, actionName, result)
 	return ctx.Response().Success().Json(http.Json{"data": result})
+}
+
+func notifyResourceAction(ctx http.Context, resourceName, actionName string, result adminactions.Result) {
+	identity, err := facades.Auth(ctx).ID()
+	if err != nil {
+		return
+	}
+	userID, err := strconv.ParseUint(identity, 10, 32)
+	if err != nil || userID == 0 {
+		return
+	}
+	notificationservices.NewNotificationService().PublishBestEffort(uint(userID), notificationservices.NotificationInput{
+		Type:  notificationservices.TypeResourceAction,
+		Title: "批量操作已完成",
+		Body:  fmt.Sprintf("%s / %s：请求 %d 条，成功 %d 条，失败 %d 条。", resourceName, actionName, result.Requested, result.Succeeded, result.Failed),
+		URL:   "/" + resourceName,
+	})
 }
 
 func executeBuiltinUpdate(ctx http.Context, manifest resource.Manifest, request adminactions.Request) (adminactions.Result, error) {

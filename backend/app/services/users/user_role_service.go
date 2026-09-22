@@ -2,12 +2,16 @@ package userservices
 
 import (
 	"errors"
+	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/goravel/framework/contracts/database/orm"
 
 	"goravel/app/facades"
 	"goravel/app/models"
 	"goravel/app/rbac"
+	notificationservices "goravel/app/services/notifications"
 	rbacservices "goravel/app/services/rbac"
 )
 
@@ -47,6 +51,10 @@ func (s *UserRoleService) ReplaceRoles(operatorID, userID int64, roleIDs []int64
 	if err := rbac.ValidateRoleIDs(roleIDs); err != nil {
 		return err
 	}
+	previousRoles, err := s.Roles(userID)
+	if err != nil {
+		return err
+	}
 
 	roles := make([]models.Role, 0, len(roleIDs))
 	for _, roleID := range roleIDs {
@@ -70,7 +78,7 @@ func (s *UserRoleService) ReplaceRoles(operatorID, userID int64, roleIDs []int64
 		}
 	}
 
-	return facades.Orm().Transaction(func(tx orm.Query) error {
+	if err := facades.Orm().Transaction(func(tx orm.Query) error {
 		if _, err := tx.Table("role_user").Where("user_id = ?", userID).Delete(); err != nil {
 			return err
 		}
@@ -83,7 +91,43 @@ func (s *UserRoleService) ReplaceRoles(operatorID, userID int64, roleIDs []int64
 			}
 		}
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+	if roleSetChanged(previousRoles, roles) {
+		roleNames := make([]string, 0, len(roles))
+		for _, role := range roles {
+			roleNames = append(roleNames, role.DisplayName)
+		}
+		sort.Strings(roleNames)
+		notificationservices.NewNotificationService().PublishBestEffort(uint(user.ID), notificationservices.NotificationInput{
+			Type:  notificationservices.TypeUserRolesChanged,
+			Title: "角色分配已变更",
+			Body:  fmt.Sprintf("你的角色已更新为：%s。", strings.Join(roleNames, "、")),
+			URL:   fmt.Sprintf("/users/%d/edit", user.ID),
+		})
+	}
+	return nil
+}
+
+func roleSetChanged(previous []models.Role, current []models.Role) bool {
+	previousIDs := make(map[uint]struct{}, len(previous))
+	currentIDs := make(map[uint]struct{}, len(current))
+	for _, role := range previous {
+		previousIDs[role.ID] = struct{}{}
+	}
+	for _, role := range current {
+		currentIDs[role.ID] = struct{}{}
+	}
+	if len(previousIDs) != len(currentIDs) {
+		return true
+	}
+	for id := range previousIDs {
+		if _, ok := currentIDs[id]; !ok {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *UserRoleService) rolesGrantAdministration(roleIDs []int64) bool {

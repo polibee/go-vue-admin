@@ -2,12 +2,14 @@ package userservices
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/goravel/framework/contracts/database/orm"
 
 	"goravel/app/facades"
 	"goravel/app/models"
+	notificationservices "goravel/app/services/notifications"
 	rbacservices "goravel/app/services/rbac"
 )
 
@@ -82,6 +84,12 @@ func (s *UserService) Create(name, email, password, locale, status string) (*mod
 	if err := facades.Orm().Query().Create(user); err != nil {
 		return nil, err
 	}
+	notificationservices.NewNotificationService().PublishBestEffort(user.ID, notificationservices.NotificationInput{
+		Type:  notificationservices.TypeUserCreated,
+		Title: "账号已创建",
+		Body:  fmt.Sprintf("管理员已为你创建账号：%s。", user.Name),
+		URL:   fmt.Sprintf("/users/%d/edit", user.ID),
+	})
 	return user, nil
 }
 
@@ -90,6 +98,7 @@ func (s *UserService) Update(id int64, name, email, password, locale, status str
 	if err := facades.Orm().Query().Where("id", id).First(&user); err != nil {
 		return nil, ErrUserNotFound
 	}
+	previousStatus := user.Status
 	name, email, password = strings.TrimSpace(name), strings.TrimSpace(email), strings.TrimSpace(password)
 	if err := validateUserInput(name, email, password, false); err != nil {
 		return nil, err
@@ -117,6 +126,23 @@ func (s *UserService) Update(id int64, name, email, password, locale, status str
 	}
 	if err := facades.Orm().Query().Save(&user); err != nil {
 		return nil, err
+	}
+	notifications := notificationservices.NewNotificationService()
+	if previousStatus != user.Status {
+		notifications.PublishBestEffort(user.ID, notificationservices.NotificationInput{
+			Type:  notificationservices.TypeUserStatusChanged,
+			Title: "账号状态已变更",
+			Body:  fmt.Sprintf("你的账号状态已变更为：%s。", user.Status),
+			URL:   fmt.Sprintf("/users/%d/edit", user.ID),
+		})
+	}
+	if password != "" {
+		notifications.PublishBestEffort(user.ID, notificationservices.NotificationInput{
+			Type:  notificationservices.TypeUserPasswordReset,
+			Title: "密码已重置",
+			Body:  "管理员已重置你的登录密码，请使用新密码登录。",
+			URL:   "/users",
+		})
 	}
 	return &user, nil
 }
@@ -147,6 +173,7 @@ func (s *UserService) BulkSetStatus(ids []int64, status string) error {
 		return ErrInvalidUser
 	}
 	seen := make(map[int64]struct{}, len(ids))
+	changed := make(map[uint]struct{}, len(ids))
 	for _, id := range ids {
 		if id < 1 {
 			return ErrInvalidUser
@@ -168,13 +195,27 @@ func (s *UserService) BulkSetStatus(ids []int64, status string) error {
 				return ErrLastAdmin
 			}
 		}
+		if user.Status != status {
+			changed[user.ID] = struct{}{}
+		}
 	}
-	return facades.Orm().Transaction(func(tx orm.Query) error {
+	if err := facades.Orm().Transaction(func(tx orm.Query) error {
 		for id := range seen {
 			if _, err := tx.Table("users").Where("id", id).Update("status", status); err != nil {
 				return err
 			}
 		}
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+	for id := range changed {
+		notificationservices.NewNotificationService().PublishBestEffort(id, notificationservices.NotificationInput{
+			Type:  notificationservices.TypeUserStatusChanged,
+			Title: "账号状态已批量变更",
+			Body:  fmt.Sprintf("你的账号状态已变更为：%s。", status),
+			URL:   fmt.Sprintf("/users/%d/edit", id),
+		})
+	}
+	return nil
 }

@@ -2,6 +2,7 @@ package rbacservices
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/goravel/framework/contracts/database/orm"
@@ -11,6 +12,7 @@ import (
 	"goravel/app/models"
 	"goravel/app/modules/admin/registry"
 	"goravel/app/rbac"
+	notificationservices "goravel/app/services/notifications"
 )
 
 var (
@@ -207,7 +209,7 @@ func (s *RoleService) ReplacePermissions(roleID int64, permissionIDs []int64, sc
 		}
 	}
 
-	return facades.Orm().Transaction(func(tx orm.Query) error {
+	if err := facades.Orm().Transaction(func(tx orm.Query) error {
 		if _, err := tx.Table("permission_role_field").Where("role_id = ?", roleID).Delete(); err != nil {
 			return err
 		}
@@ -232,7 +234,24 @@ func (s *RoleService) ReplacePermissions(roleID int64, permissionIDs []int64, sc
 			}
 		}
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+	var members []struct {
+		UserID uint `db:"user_id"`
+	}
+	if err := facades.Orm().Query().Table("role_user").Select("user_id").Where("role_id = ?", roleID).Get(&members); err != nil {
+		return err
+	}
+	for _, member := range members {
+		notificationservices.NewNotificationService().PublishBestEffort(member.UserID, notificationservices.NotificationInput{
+			Type:  notificationservices.TypeRolePermissionsChanged,
+			Title: "角色权限已变更",
+			Body:  fmt.Sprintf("你所属的角色“%s”的权限已更新。", role.DisplayName),
+			URL:   fmt.Sprintf("/roles/%d/edit", role.ID),
+		})
+	}
+	return nil
 }
 
 func (s *RoleService) permissionFieldOverrides(roleID, permissionID int64) (map[string]FieldOverride, error) {

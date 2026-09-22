@@ -10,6 +10,7 @@ import (
 	"goravel/app/models"
 	auditservices "goravel/app/services/audit"
 	authservices "goravel/app/services/auth"
+	notificationservices "goravel/app/services/notifications"
 	rbacservices "goravel/app/services/rbac"
 )
 
@@ -149,6 +150,12 @@ func (r *AuthController) LogoutAll(ctx http.Context) http.Response {
 		})
 	}
 	recordAudit(user.ID, "auth.logout_all", nil)
+	notificationservices.NewNotificationService().PublishBestEffort(user.ID, notificationservices.NotificationInput{
+		Type:  notificationservices.TypeSecuritySessionsRevoked,
+		Title: "其他登录会话已撤销",
+		Body:  "除当前会话外的其他登录会话已被撤销。",
+		URL:   "/",
+	})
 	return response.NoContent(204)
 }
 
