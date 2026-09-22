@@ -4,6 +4,7 @@ import ResourceListPage from '@/core/resource/pages/ResourceListPage.vue'
 import ResourceFormPage from '@/core/resource/pages/ResourceFormPage.vue'
 import ResourceDetailPage from '@/core/resource/pages/ResourceDetailPage.vue'
 import { resourceDefinition as announcementsResource } from '@/modules/announcements/resource'
+import { resourceDefinition as departmentsResource } from '@/modules/departments/resource'
 
 export interface GeneratedResourceDefinition {
   name: string
@@ -17,6 +18,7 @@ export interface GeneratedResourceDefinition {
 
 export const generatedResourceDefinitions = [
   announcementsResource,
+  departmentsResource,
 ] as const
 
 export const generatedResourceRoutes: RouteRecordRaw[] = [
@@ -24,4 +26,8 @@ export const generatedResourceRoutes: RouteRecordRaw[] = [
   { path: announcementsResource.route + '/new', name: "announcements-resource-create", props: { resource: announcementsResource.name }, meta: { permission: announcementsResource.permission }, component: ResourceFormPage },
   { path: announcementsResource.route + '/:id/edit', name: "announcements-resource-edit", props: { resource: announcementsResource.name }, meta: { permission: announcementsResource.permission }, component: ResourceFormPage },
   { path: announcementsResource.route + '/:id', name: "announcements-resource-detail", props: { resource: announcementsResource.name }, meta: { permission: announcementsResource.permission }, component: ResourceDetailPage },
+  { path: departmentsResource.route, name: "departments-resource-list", props: { resource: departmentsResource.name }, meta: { permission: departmentsResource.permission }, component: ResourceListPage },
+  { path: departmentsResource.route + '/new', name: "departments-resource-create", props: { resource: departmentsResource.name }, meta: { permission: departmentsResource.permission }, component: ResourceFormPage },
+  { path: departmentsResource.route + '/:id/edit', name: "departments-resource-edit", props: { resource: departmentsResource.name }, meta: { permission: departmentsResource.permission }, component: ResourceFormPage },
+  { path: departmentsResource.route + '/:id', name: "departments-resource-detail", props: { resource: departmentsResource.name }, meta: { permission: departmentsResource.permission }, component: ResourceDetailPage },
 ]

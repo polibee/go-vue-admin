@@ -1,6 +1,10 @@
 package registry
 
-import "testing"
+import (
+	"testing"
+
+	"goravel/app/core/resource"
+)
 
 func TestAdminRegistryExposesFormFields(t *testing.T) {
 	manifest, err := AdminRegistry().Find("users")
@@ -32,5 +36,18 @@ func TestAdminRegistryExposesFormFields(t *testing.T) {
 	}
 	if manifest.Actions[6].Name != "set-status" || manifest.Actions[6].Kind != "user-status" || !manifest.Actions[6].Batch || manifest.Actions[6].Payload != "user-status" {
 		t.Fatalf("expected declarative user status action, got %+v", manifest.Actions[4])
+	}
+}
+
+func TestDepartmentsIsAStandardGenericResource(t *testing.T) {
+	manifest, err := AdminRegistry().Find("departments")
+	if err != nil {
+		t.Fatalf("departments resource missing: %v", err)
+	}
+	if manifest.PageMode != resource.PageModeGeneric {
+		t.Fatalf("departments page mode = %q, want %q", manifest.PageMode, resource.PageModeGeneric)
+	}
+	if manifest.Route != "/admin/departments" {
+		t.Fatalf("departments route = %q, want /admin/departments", manifest.Route)
 	}
 }

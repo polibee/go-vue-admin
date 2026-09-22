@@ -4,8 +4,10 @@ package registry
 import (
 	"goravel/app/core/resource"
 	announcementsresource "goravel/app/modules/announcements/resource"
+	departmentsresource "goravel/app/modules/departments/resource"
 )
 
 func registerGenerated(registry *resource.Registry) {
 	_ = registry.Register(announcementsresource.Manifest())
+	_ = registry.Register(departmentsresource.Manifest())
 }
