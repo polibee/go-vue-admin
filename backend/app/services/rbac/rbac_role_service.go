@@ -6,6 +6,7 @@ import (
 
 	"github.com/goravel/framework/contracts/database/orm"
 
+	"goravel/app/core/resource"
 	"goravel/app/facades"
 	"goravel/app/models"
 	"goravel/app/rbac"
@@ -16,11 +17,17 @@ var (
 	ErrPermissionNotFound = errors.New("permission not found")
 	ErrSystemRole         = errors.New("system role cannot be changed")
 	ErrDuplicateRole      = errors.New("role name already exists")
+	ErrInvalidDataScope   = errors.New("invalid data scope")
 )
 
 const SystemRoleName = "super-admin"
 
 type RoleService struct{}
+
+type PermissionAssignment struct {
+	models.Permission
+	Scope resource.DataScope `json:"scope"`
+}
 
 func NewRoleService() *RoleService {
 	return &RoleService{}
@@ -75,6 +82,28 @@ func (s *RoleService) Permissions(roleID int64) ([]models.Permission, error) {
 	return permissions, nil
 }
 
+func (s *RoleService) PermissionAssignments(roleID int64) ([]PermissionAssignment, error) {
+	if _, err := s.Find(roleID); err != nil {
+		return nil, err
+	}
+	var assignments []PermissionAssignment
+	if err := facades.Orm().Query().
+		Table("permissions").
+		Select("permissions.id, permissions.name, permissions.display_name, permission_role.scope").
+		Join("JOIN permission_role ON permission_role.permission_id = permissions.id").
+		Where("permission_role.role_id = ?", roleID).
+		OrderBy("permissions.id").
+		Get(&assignments); err != nil {
+		return nil, err
+	}
+	for index := range assignments {
+		if assignments[index].Scope == "" {
+			assignments[index].Scope = resource.DataScopeAll
+		}
+	}
+	return assignments, nil
+}
+
 func (s *RoleService) Update(id int64, name, displayName string) (*models.Role, error) {
 	if err := validateRoleInput(name, displayName); err != nil {
 		return nil, err
@@ -122,7 +151,7 @@ func (s *RoleService) Delete(id int64) error {
 	})
 }
 
-func (s *RoleService) ReplacePermissions(roleID int64, permissionIDs []int64) error {
+func (s *RoleService) ReplacePermissions(roleID int64, permissionIDs []int64, scopes map[int64]resource.DataScope) error {
 	role, err := s.Find(roleID)
 	if err != nil {
 		return err
@@ -139,6 +168,14 @@ func (s *RoleService) ReplacePermissions(roleID int64, permissionIDs []int64) er
 		if _, ok := seen[permissionID]; ok {
 			continue
 		}
+		scope := scopes[permissionID]
+		if scope == "" {
+			scope = resource.DataScopeAll
+		}
+		if err := validatePermissionScope(scope); err != nil {
+			return err
+		}
+		scopes[permissionID] = scope
 		seen[permissionID] = struct{}{}
 		permission := &models.Permission{}
 		if err := facades.Orm().Query().Where("id = ?", permissionID).First(permission); err != nil {
@@ -154,10 +191,18 @@ func (s *RoleService) ReplacePermissions(roleID int64, permissionIDs []int64) er
 			if err := tx.Table("permission_role").Create(&map[string]any{
 				"permission_id": permissionID,
 				"role_id":       roleID,
+				"scope":         scopes[permissionID],
 			}); err != nil {
 				return err
 			}
 		}
 		return nil
 	})
+}
+
+func validatePermissionScope(scope resource.DataScope) error {
+	if scope != resource.DataScopeAll && scope != resource.DataScopeOwn {
+		return ErrInvalidDataScope
+	}
+	return nil
 }

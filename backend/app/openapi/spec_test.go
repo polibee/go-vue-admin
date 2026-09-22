@@ -8,7 +8,7 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		t.Fatalf("unexpected OpenAPI version: %v", spec["openapi"])
 	}
 	paths := spec["paths"].(map[string]any)
-	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/search", "/admin/{resource}", "/admin/{resource}/export", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/settings", "/admin/settings/{key}", "/admin/users/status"} {
+	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/search", "/admin/{resource}", "/admin/{resource}/export", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/settings", "/admin/settings/{key}", "/admin/users/status", "/admin/roles/{id}/permissions"} {
 		if _, ok := paths[path]; !ok {
 			t.Fatalf("missing contract path %s", path)
 		}
@@ -34,7 +34,7 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		}
 	}
 	schemas := spec["components"].(map[string]any)["schemas"].(map[string]any)
-	for _, schema := range []string{"ResourceManifest", "ResourceField", "ResourceOption", "ResourceAction", "GlobalSearchResult", "GlobalSearchResponse"} {
+	for _, schema := range []string{"ResourceManifest", "ResourceField", "ResourceOption", "ResourceAction", "GlobalSearchResult", "GlobalSearchResponse", "DataScope"} {
 		if _, ok := schemas[schema]; !ok {
 			t.Fatalf("missing resource schema %s", schema)
 		}
@@ -42,5 +42,13 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 	status := spec["components"].(map[string]any)["schemas"].(map[string]any)["UserStatus"]
 	if status == nil {
 		t.Fatal("missing UserStatus schema")
+	}
+	rolePermissions := paths["/admin/roles/{id}/permissions"].(map[string]any)["put"].(map[string]any)
+	requestBody := rolePermissions["requestBody"].(map[string]any)
+	content := requestBody["content"].(map[string]any)["application/json"].(map[string]any)
+	bodySchema := content["schema"].(map[string]any)
+	properties := bodySchema["properties"].(map[string]any)
+	if _, ok := properties["scopes"]; !ok {
+		t.Fatal("role permission contract must expose scopes")
 	}
 }

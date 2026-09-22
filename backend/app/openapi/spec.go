@@ -10,6 +10,7 @@ func Spec() map[string]any {
 			"securitySchemes": map[string]any{"bearerAuth": map[string]any{"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}},
 			"schemas": map[string]any{
 				"UserStatus":           map[string]any{"type": "string", "enum": []string{"active", "disabled", "locked"}},
+				"DataScope":            map[string]any{"type": "string", "enum": []string{"all", "own"}},
 				"Error":                map[string]any{"type": "object", "required": []string{"code"}, "properties": map[string]any{"code": map[string]any{"type": "string"}}},
 				"ResourceOption":       resourceOptionSchema(),
 				"ResourceField":        resourceFieldSchema(),
@@ -49,6 +50,15 @@ func Spec() map[string]any {
 			"/admin/users/status": map[string]any{"put": map[string]any{
 				"operationId": "bulkSetUserStatus", "requestBody": jsonBody("BulkUserStatusRequest", map[string]any{"type": "object", "required": []string{"user_ids", "status"}, "properties": map[string]any{"user_ids": map[string]any{"type": "array", "items": map[string]any{"type": "integer", "format": "int64"}}, "status": map[string]any{"$ref": "#/components/schemas/UserStatus"}}}),
 				"responses": map[string]any{"204": map[string]any{"description": "Status updated"}, "409": errorResponse(), "422": errorResponse()},
+			}},
+			"/admin/roles/{id}/permissions": map[string]any{"put": map[string]any{
+				"operationId": "replaceRolePermissions",
+				"parameters":  []map[string]any{pathParameter("id")},
+				"requestBody": jsonBody("RolePermissionsRequest", map[string]any{"type": "object", "required": []string{"permission_ids"}, "properties": map[string]any{
+					"permission_ids": map[string]any{"type": "array", "items": map[string]any{"type": "integer", "format": "int64"}},
+					"scopes":         map[string]any{"type": "object", "additionalProperties": map[string]any{"$ref": "#/components/schemas/DataScope"}},
+				}}),
+				"responses": map[string]any{"204": map[string]any{"description": "Permissions replaced"}, "401": errorResponse(), "403": errorResponse(), "404": errorResponse(), "422": errorResponse()},
 			}},
 		},
 	}

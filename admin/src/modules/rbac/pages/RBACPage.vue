@@ -12,16 +12,17 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/u
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
-import { generatedApi } from '@/generated/api'
+import { generatedApi, type DataScope, type RolePermissionAssignment } from '@/generated/api'
 import { useAuthStore } from '@/stores/auth'
 import { userStatusLabelKey, type UserStatus } from '@/lib/user-status'
 
 interface RBACUser { id: number; name: string; email: string; status: UserStatus }
 interface RBACRole { id: number; name: string; display_name: string }
 interface RBACPermission { id: number; name: string; display_name: string }
-interface RBACRoleDetail extends RBACRole { permissions: RBACPermission[] }
+interface RBACRoleDetail extends RBACRole { permissions: RolePermissionAssignment[] }
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -37,6 +38,7 @@ const userRoleDialogOpen = ref(false)
 const deleteRoleDialogOpen = ref(false)
 const editingRoleId = ref<number | null>(null)
 const selectedPermissionIDs = ref<number[]>([])
+const selectedPermissionScopes = ref<Record<string, DataScope>>({})
 const selectedRoleIDs = ref<number[]>([])
 const selectedRole = ref<RBACRole>()
 const roleToDelete = ref<RBACRole>()
@@ -128,9 +130,11 @@ async function openRolePermissions(role: RBACRole) {
   try {
     const current = await generatedApi.resourceShow<RBACRoleDetail>('roles', role.id, auth.token)
     selectedPermissionIDs.value = current.permissions.map((permission) => permission.id)
+    selectedPermissionScopes.value = Object.fromEntries(current.permissions.map((permission) => [String(permission.id), permission.scope || 'all']))
   } catch (loadError) {
     actionError.value = localizedError(loadError)
     selectedPermissionIDs.value = []
+    selectedPermissionScopes.value = {}
   }
   permissionDialogOpen.value = true
 }
@@ -140,7 +144,7 @@ async function saveRolePermissions() {
   saving.value = true
   actionError.value = ''
   try {
-    await apiFetch(`/api/v1/admin/roles/${selectedRole.value.id}/permissions`, { method: 'PUT', body: JSON.stringify({ permission_ids: selectedPermissionIDs.value }) }, auth.token)
+    await generatedApi.replaceRolePermissions(selectedRole.value.id, selectedPermissionIDs.value, selectedPermissionScopes.value, auth.token)
     permissionDialogOpen.value = false
   } catch (saveError) {
     actionError.value = localizedError(saveError)
@@ -185,6 +189,10 @@ function toggleID(target: number[], id: number, checked: boolean) {
   }
 }
 
+function updatePermissionScope(permissionID: number, scope: string) {
+  selectedPermissionScopes.value[String(permissionID)] = scope === 'own' ? 'own' : 'all'
+}
+
 onMounted(loadRBAC)
 </script>
 
@@ -220,9 +228,11 @@ onMounted(loadRBAC)
 
     <Dialog v-model:open="roleDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ editingRoleId ? t('rbac.editRole') : t('rbac.createRole') }}</DialogTitle><DialogDescription>{{ t('rbac.description') }}</DialogDescription></DialogHeader><div class="flex flex-col gap-4"><div class="flex flex-col gap-2"><Label for="role-name">{{ t('rbac.roleName') }}</Label><Input id="role-name" v-model="roleForm.name" /></div><div class="flex flex-col gap-2"><Label for="role-display-name">{{ t('rbac.displayName') }}</Label><Input id="role-display-name" v-model="roleForm.display_name" /></div></div><DialogFooter><Button variant="outline" @click="roleDialogOpen = false">{{ t('rbac.cancel') }}</Button><Button :disabled="saving" @click="saveRole">{{ t('rbac.save') }}</Button></DialogFooter></DialogContent></Dialog>
 
-    <Dialog v-model:open="permissionDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ t('rbac.assignPermissions') }}</DialogTitle><DialogDescription>{{ selectedRole?.display_name }}</DialogDescription></DialogHeader><div v-if="permissions.length" class="flex max-h-80 flex-col gap-3 overflow-y-auto"><label v-for="permission in permissions" :key="permission.id" class="flex items-start gap-3 rounded-md border p-3"><Checkbox :model-value="selectedPermissionIDs.includes(permission.id)" @update:model-value="toggleID(selectedPermissionIDs, permission.id, Boolean($event))" /><span><span class="block text-sm font-medium">{{ permission.display_name }}</span><span class="block text-xs text-muted-foreground">{{ permission.name }}</span></span></label></div><Empty v-else><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('rbac.noAssignablePermissions') }}</EmptyDescription></EmptyHeader></Empty><DialogFooter><Button variant="outline" @click="permissionDialogOpen = false">{{ t('rbac.cancel') }}</Button><Button :disabled="saving || selectedRole?.name === 'super-admin'" @click="saveRolePermissions">{{ t('rbac.save') }}</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog v-model:open="permissionDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ t('rbac.assignPermissions') }}</DialogTitle><DialogDescription>{{ selectedRole?.display_name }}</DialogDescription></DialogHeader><div v-if="permissions.length" class="flex max-h-80 flex-col gap-3 overflow-y-auto"><label v-for="permission in permissions" :key="permission.id" class="flex items-start gap-3 rounded-md border p-3"><Checkbox :model-value="selectedPermissionIDs.includes(permission.id)" @update:model-value="toggleID(selectedPermissionIDs, permission.id, Boolean($event))" /><span class="min-w-0 flex-1"><span class="block text-sm font-medium">{{ permission.display_name }}</span><span class="block text-xs text-muted-foreground">{{ permission.name }}</span></span><Select v-if="selectedPermissionIDs.includes(permission.id)" :model-value="selectedPermissionScopes[String(permission.id)] || 'all'" @update:model-value="updatePermissionScope(permission.id, String($event))"><SelectTrigger class="w-28"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{{ t('rbac.scopeAll') }}</SelectItem><SelectItem value="own">{{ t('rbac.scopeOwn') }}</SelectItem></SelectContent></Select></label></div><Empty v-else><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('rbac.noAssignablePermissions') }}</EmptyDescription></EmptyHeader></Empty><DialogFooter><Button variant="outline" @click="permissionDialogOpen = false">{{ t('rbac.cancel') }}</Button><Button :disabled="saving || selectedRole?.name === 'super-admin'" @click="saveRolePermissions">{{ t('rbac.save') }}</Button></DialogFooter></DialogContent></Dialog>
 
     <Dialog v-model:open="userRoleDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ t('rbac.assignRoles') }}</DialogTitle><DialogDescription>{{ selectedUser?.email }}</DialogDescription></DialogHeader><div v-if="roles.length" class="flex max-h-80 flex-col gap-3 overflow-y-auto"><label v-for="role in roles" :key="role.id" class="flex items-center gap-3 rounded-md border p-3"><Checkbox :model-value="selectedRoleIDs.includes(role.id)" @update:model-value="toggleID(selectedRoleIDs, role.id, Boolean($event))" /><span><span class="block text-sm font-medium">{{ role.display_name }}</span><span class="block text-xs text-muted-foreground">{{ role.name }}</span></span></label></div><Empty v-else><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('rbac.noAssignableRoles') }}</EmptyDescription></EmptyHeader></Empty><DialogFooter><Button variant="outline" @click="userRoleDialogOpen = false">{{ t('rbac.cancel') }}</Button><Button :disabled="saving" @click="saveUserRoles">{{ t('rbac.save') }}</Button></DialogFooter></DialogContent></Dialog>
     <AlertDialog v-model:open="deleteRoleDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('rbac.deleteRoleTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('rbac.deleteRoleDescription') }} {{ roleToDelete?.display_name }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('rbac.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="saving" @click="deleteRole">{{ t('rbac.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>
 </template>
+
+

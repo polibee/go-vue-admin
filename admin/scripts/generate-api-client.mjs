@@ -8,6 +8,8 @@ if (!response.ok) throw new Error(`OpenAPI request failed: ${response.status}`)
 const spec = await response.json()
 const statuses = spec.components?.schemas?.UserStatus?.enum
 if (!Array.isArray(statuses) || statuses.length === 0) throw new Error('UserStatus enum is missing from the OpenAPI contract')
+const dataScopes = spec.components?.schemas?.DataScope?.enum
+if (!Array.isArray(dataScopes) || dataScopes.length === 0) throw new Error('DataScope enum is missing from the OpenAPI contract')
 const paths = Object.keys(spec.paths ?? {})
 const outputPath = resolve(dirname(fileURLToPath(import.meta.url)), '../src/generated/api.ts')
 
@@ -18,6 +20,7 @@ const content = `/* eslint-disable */
 import { ApiError, apiDownload, apiFetch, apiFetchEnvelope } from '@/lib/api'
 
 export type UserStatus = ${statuses.map((status) => JSON.stringify(status)).join(' | ')}
+export type DataScope = ${dataScopes.map((scope) => JSON.stringify(scope)).join(' | ')}
 export interface AuthUser { id: number; name: string; email: string; status: UserStatus; locale: string; permissions: string[] }
 export interface LoginRequest { email: string; password: string }
 export interface LoginResponse { access_token: string; token_type: string; user: AuthUser }
@@ -29,6 +32,7 @@ export interface BulkUserStatusRequest { user_ids: number[]; status: UserStatus 
 export interface AdminOverview { users: number; roles: number; permissions: number }
 export interface AuditLog { id: number; user_id: number; action: string; metadata: Record<string, unknown> | null; created_at: string }
 export interface GlobalSearchResult { resource: string; label: string; id: string | number; title: string; subtitle?: string; route: string }
+export interface RolePermissionAssignment { id: number; name: string; display_name: string; scope: DataScope }
 
 export const generatedApi = {
   login(request: LoginRequest) { return apiFetch<LoginResponse>('/api/v1/auth/login', { method: 'POST', body: JSON.stringify(request) }) },
@@ -54,6 +58,7 @@ export const generatedApi = {
   resourceUpdate<T = Record<string, unknown>>(resource: string, id: string | number, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/' + resource + '/' + id, { method: 'PUT', body: JSON.stringify(payload) }, token) },
   resourceDelete(resource: string, id: string | number, token: string) { return apiFetch<void>('/api/v1/admin/' + resource + '/' + id, { method: 'DELETE' }, token) },
   bulkSetUserStatus(request: BulkUserStatusRequest, token: string) { return apiFetch<void>('/api/v1/admin/users/status', { method: 'PUT', body: JSON.stringify(request) }, token) },
+  replaceRolePermissions(roleID: number, permissionIDs: number[], scopes: Record<string, DataScope>, token: string) { return apiFetch<void>('/api/v1/admin/roles/' + roleID + '/permissions', { method: 'PUT', body: JSON.stringify({ permission_ids: permissionIDs, scopes }) }, token) },
 }
 `
 

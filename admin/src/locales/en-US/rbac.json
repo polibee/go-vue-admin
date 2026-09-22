@@ -19,6 +19,8 @@
   "deleteRoleTitle": "Delete this role?",
   "deleteRoleDescription": "This action cannot be undone. The role and its assignments will be removed.",
   "assignPermissions": "Assign permissions",
+  "scopeAll": "All data",
+  "scopeOwn": "Own data only",
   "assignRoles": "Assign roles",
   "roleName": "Role key",
   "displayName": "Display name",

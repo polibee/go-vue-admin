@@ -6,6 +6,7 @@ import (
 
 	"github.com/goravel/framework/contracts/http"
 
+	"goravel/app/core/resource"
 	"goravel/app/facades"
 	"goravel/app/models"
 	"goravel/app/rbac"
@@ -39,7 +40,8 @@ type rolePayload struct {
 }
 
 type rolePermissionsPayload struct {
-	PermissionIDs []int64 `json:"permission_ids"`
+	PermissionIDs []int64           `json:"permission_ids"`
+	Scopes        map[string]string `json:"scopes"`
 }
 
 type userRolesPayload struct {
@@ -161,7 +163,7 @@ func (r *RBACController) ShowRole(ctx http.Context) http.Response {
 	if err != nil {
 		return roleServiceError(ctx, err)
 	}
-	permissions, err := rbacservices.NewRoleService().Permissions(int64(role.ID))
+	permissions, err := rbacservices.NewRoleService().PermissionAssignments(int64(role.ID))
 	if err != nil {
 		return rbacError(ctx, 500, "INTERNAL_ERROR")
 	}
@@ -198,7 +200,15 @@ func (r *RBACController) ReplaceRolePermissions(ctx http.Context) http.Response 
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	}
 	targetID := ctx.Request().RouteInt64("id")
-	if err := rbacservices.NewRoleService().ReplacePermissions(targetID, payload.PermissionIDs); err != nil {
+	scopes := make(map[int64]resource.DataScope, len(payload.Scopes))
+	for permissionID, scope := range payload.Scopes {
+		parsedID, parseErr := strconv.ParseInt(permissionID, 10, 64)
+		if parseErr != nil {
+			return rbacError(ctx, 422, "VALIDATION_ERROR")
+		}
+		scopes[parsedID] = resource.DataScope(scope)
+	}
+	if err := rbacservices.NewRoleService().ReplacePermissions(targetID, payload.PermissionIDs, scopes); err != nil {
 		return roleServiceError(ctx, err)
 	}
 	recordManagementAudit(ctx, "role.permissions.replace", map[string]any{"target_role_id": targetID, "permission_ids": payload.PermissionIDs})
@@ -252,6 +262,8 @@ func roleServiceError(ctx http.Context, err error) http.Response {
 		return rbacError(ctx, 404, "RBAC_ROLE_NOT_FOUND")
 	case errors.Is(err, rbacservices.ErrPermissionNotFound):
 		return rbacError(ctx, 404, "RBAC_PERMISSION_NOT_FOUND")
+	case errors.Is(err, rbacservices.ErrInvalidDataScope):
+		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	case errors.Is(err, rbacservices.ErrSystemRole):
 		return rbacError(ctx, 409, "RBAC_SYSTEM_ROLE")
 	case errors.Is(err, rbac.ErrInvalidRoleInput), errors.Is(err, rbacservices.ErrDuplicateRole):
