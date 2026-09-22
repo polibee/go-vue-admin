@@ -11,6 +11,7 @@ var (
 	ErrFieldNotFound         = errors.New("resource field is not declared")
 	ErrFieldQueryDenied      = errors.New("resource field query is not allowed")
 	ErrFieldPermissionDenied = errors.New("resource field permission denied")
+	ErrFieldPolicyExpansion  = errors.New("field policy cannot expand manifest access")
 )
 
 type FieldPolicy struct {
@@ -18,6 +19,11 @@ type FieldPolicy struct {
 	Readable  bool
 	Writable  bool
 	Sensitive bool
+}
+
+type FieldOverride struct {
+	Readable bool `json:"readable"`
+	Writable bool `json:"writable"`
 }
 
 type FieldPermissionService struct{}
@@ -76,6 +82,23 @@ func (s *FieldPermissionService) ValidateWritablePayload(payload map[string]any,
 		values[name] = value
 	}
 	return values, nil
+}
+
+func (s *FieldPermissionService) ValidateFieldOverrides(manifest resource.Manifest, overrides map[string]FieldOverride) error {
+	policies := s.ManifestPolicies(manifest)
+	for name, override := range overrides {
+		policy, ok := policies[name]
+		if !ok {
+			return fmt.Errorf("%w: %s", ErrFieldNotFound, name)
+		}
+		if override.Readable && !policy.Readable {
+			return fmt.Errorf("%w: %s", ErrFieldPolicyExpansion, name)
+		}
+		if override.Writable && !policy.Writable {
+			return fmt.Errorf("%w: %s", ErrFieldPolicyExpansion, name)
+		}
+	}
+	return nil
 }
 
 func (s *FieldPermissionService) ProjectRecord(record map[string]any, manifest resource.Manifest, policies map[string]FieldPolicy) map[string]any {

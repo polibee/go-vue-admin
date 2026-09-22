@@ -51,4 +51,7 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 	if _, ok := properties["scopes"]; !ok {
 		t.Fatal("role permission contract must expose scopes")
 	}
+	if _, ok := properties["fields"]; !ok {
+		t.Fatal("role permission contract must expose fields")
+	}
 }

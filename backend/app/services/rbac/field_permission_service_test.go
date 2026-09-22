@@ -69,3 +69,20 @@ func TestFieldPermissionServiceProjectsRecord(t *testing.T) {
 		t.Fatalf("readable field missing: %#v", projected)
 	}
 }
+
+func TestValidateFieldOverridesRejectsUnknownAndManifestExpansion(t *testing.T) {
+	manifest := resource.Manifest{Fields: []resource.Field{
+		{Name: "name", Label: "Name", Type: "text"},
+		{Name: "secret", Label: "Secret", Type: "text", Visible: true, Readable: false, Writable: false, PolicyConfigured: true},
+	}}
+	service := NewFieldPermissionService()
+	if err := service.ValidateFieldOverrides(manifest, map[string]FieldOverride{"missing": {Readable: false}}); !errors.Is(err, ErrFieldNotFound) {
+		t.Fatalf("expected unknown field rejection, got %v", err)
+	}
+	if err := service.ValidateFieldOverrides(manifest, map[string]FieldOverride{"secret": {Readable: true, Writable: true}}); !errors.Is(err, ErrFieldPolicyExpansion) {
+		t.Fatalf("expected manifest expansion rejection, got %v", err)
+	}
+	if err := service.ValidateFieldOverrides(manifest, map[string]FieldOverride{"name": {Readable: false, Writable: false}}); err != nil {
+		t.Fatalf("expected restrictive override to pass, got %v", err)
+	}
+}

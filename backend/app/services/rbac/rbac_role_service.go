@@ -9,6 +9,7 @@ import (
 	"goravel/app/core/resource"
 	"goravel/app/facades"
 	"goravel/app/models"
+	"goravel/app/modules/admin/registry"
 	"goravel/app/rbac"
 )
 
@@ -26,7 +27,8 @@ type RoleService struct{}
 
 type PermissionAssignment struct {
 	models.Permission
-	Scope resource.DataScope `json:"scope"`
+	Scope  resource.DataScope       `json:"scope"`
+	Fields map[string]FieldOverride `json:"fields,omitempty"`
 }
 
 func NewRoleService() *RoleService {
@@ -100,6 +102,11 @@ func (s *RoleService) PermissionAssignments(roleID int64) ([]PermissionAssignmen
 		if assignments[index].Scope == "" {
 			assignments[index].Scope = resource.DataScopeAll
 		}
+		fields, fieldErr := s.permissionFieldOverrides(roleID, int64(assignments[index].ID))
+		if fieldErr != nil {
+			return nil, fieldErr
+		}
+		assignments[index].Fields = fields
 	}
 	return assignments, nil
 }
@@ -140,6 +147,9 @@ func (s *RoleService) Delete(id int64) error {
 		return ErrSystemRole
 	}
 	return facades.Orm().Transaction(func(tx orm.Query) error {
+		if _, err := tx.Table("permission_role_field").Where("role_id = ?", id).Delete(); err != nil {
+			return err
+		}
 		if _, err := tx.Table("permission_role").Where("role_id = ?", id).Delete(); err != nil {
 			return err
 		}
@@ -151,7 +161,7 @@ func (s *RoleService) Delete(id int64) error {
 	})
 }
 
-func (s *RoleService) ReplacePermissions(roleID int64, permissionIDs []int64, scopes map[int64]resource.DataScope) error {
+func (s *RoleService) ReplacePermissions(roleID int64, permissionIDs []int64, scopes map[int64]resource.DataScope, fields map[int64]map[string]FieldOverride) error {
 	role, err := s.Find(roleID)
 	if err != nil {
 		return err
@@ -181,9 +191,26 @@ func (s *RoleService) ReplacePermissions(roleID int64, permissionIDs []int64, sc
 		if err := facades.Orm().Query().Where("id = ?", permissionID).First(permission); err != nil {
 			return ErrPermissionNotFound
 		}
+		if overrides := fields[permissionID]; len(overrides) > 0 {
+			manifest, ok := manifestForPermission(permission.Name)
+			if !ok {
+				return ErrPermissionNotFound
+			}
+			if err := NewFieldPermissionService().ValidateFieldOverrides(manifest, overrides); err != nil {
+				return err
+			}
+		}
+	}
+	for permissionID := range fields {
+		if _, ok := seen[permissionID]; !ok {
+			return ErrPermissionNotFound
+		}
 	}
 
 	return facades.Orm().Transaction(func(tx orm.Query) error {
+		if _, err := tx.Table("permission_role_field").Where("role_id = ?", roleID).Delete(); err != nil {
+			return err
+		}
 		if _, err := tx.Table("permission_role").Where("role_id = ?", roleID).Delete(); err != nil {
 			return err
 		}
@@ -195,9 +222,42 @@ func (s *RoleService) ReplacePermissions(roleID int64, permissionIDs []int64, sc
 			}); err != nil {
 				return err
 			}
+			for fieldName, override := range fields[permissionID] {
+				if err := tx.Table("permission_role_field").Create(&map[string]any{
+					"role_id": roleID, "permission_id": permissionID, "field_name": fieldName,
+					"readable": override.Readable, "writable": override.Writable,
+				}); err != nil {
+					return err
+				}
+			}
 		}
 		return nil
 	})
+}
+
+func (s *RoleService) permissionFieldOverrides(roleID, permissionID int64) (map[string]FieldOverride, error) {
+	var rows []struct {
+		FieldName string `db:"field_name"`
+		Readable  bool   `db:"readable"`
+		Writable  bool   `db:"writable"`
+	}
+	if err := facades.Orm().Query().Table("permission_role_field").Where("role_id = ? AND permission_id = ?", roleID, permissionID).Get(&rows); err != nil {
+		return nil, err
+	}
+	fields := make(map[string]FieldOverride, len(rows))
+	for _, row := range rows {
+		fields[row.FieldName] = FieldOverride{Readable: row.Readable, Writable: row.Writable}
+	}
+	return fields, nil
+}
+
+func manifestForPermission(permission string) (resource.Manifest, bool) {
+	parts := strings.Split(permission, ".")
+	if len(parts) < 3 || parts[0] != "admin" {
+		return resource.Manifest{}, false
+	}
+	manifest, err := registry.AdminRegistry().Find(parts[1])
+	return manifest, err == nil
 }
 
 func validatePermissionScope(scope resource.DataScope) error {

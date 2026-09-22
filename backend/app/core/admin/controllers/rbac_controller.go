@@ -40,8 +40,9 @@ type rolePayload struct {
 }
 
 type rolePermissionsPayload struct {
-	PermissionIDs []int64           `json:"permission_ids"`
-	Scopes        map[string]string `json:"scopes"`
+	PermissionIDs []int64                                          `json:"permission_ids"`
+	Scopes        map[string]string                                `json:"scopes"`
+	Fields        map[string]map[string]rbacservices.FieldOverride `json:"fields"`
 }
 
 type userRolesPayload struct {
@@ -208,7 +209,15 @@ func (r *RBACController) ReplaceRolePermissions(ctx http.Context) http.Response 
 		}
 		scopes[parsedID] = resource.DataScope(scope)
 	}
-	if err := rbacservices.NewRoleService().ReplacePermissions(targetID, payload.PermissionIDs, scopes); err != nil {
+	fields := make(map[int64]map[string]rbacservices.FieldOverride, len(payload.Fields))
+	for permissionID, overrides := range payload.Fields {
+		parsedID, parseErr := strconv.ParseInt(permissionID, 10, 64)
+		if parseErr != nil {
+			return rbacError(ctx, 422, "VALIDATION_ERROR")
+		}
+		fields[parsedID] = overrides
+	}
+	if err := rbacservices.NewRoleService().ReplacePermissions(targetID, payload.PermissionIDs, scopes, fields); err != nil {
 		return roleServiceError(ctx, err)
 	}
 	recordManagementAudit(ctx, "role.permissions.replace", map[string]any{"target_role_id": targetID, "permission_ids": payload.PermissionIDs})
@@ -263,6 +272,8 @@ func roleServiceError(ctx http.Context, err error) http.Response {
 	case errors.Is(err, rbacservices.ErrPermissionNotFound):
 		return rbacError(ctx, 404, "RBAC_PERMISSION_NOT_FOUND")
 	case errors.Is(err, rbacservices.ErrInvalidDataScope):
+		return rbacError(ctx, 422, "VALIDATION_ERROR")
+	case errors.Is(err, rbacservices.ErrFieldNotFound), errors.Is(err, rbacservices.ErrFieldPolicyExpansion):
 		return rbacError(ctx, 422, "VALIDATION_ERROR")
 	case errors.Is(err, rbacservices.ErrSystemRole):
 		return rbacError(ctx, 409, "RBAC_SYSTEM_ROLE")
