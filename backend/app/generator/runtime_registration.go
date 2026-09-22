@@ -10,9 +10,10 @@ import (
 )
 
 type generatedResource struct {
-	Name    string
-	GoName  string
-	Package string
+	Name     string
+	GoName   string
+	Package  string
+	PageMode string
 }
 
 // RenderRuntimeRegistration updates only generator-owned discovery files. The
@@ -29,6 +30,9 @@ func RenderRuntimeRegistration(root string, spec Spec) ([]Artifact, error) {
 		frontendModulesRoot = filepath.Join(root, "admin", "src", "modules")
 	}
 	frontendResources := discoverGeneratedResources(frontendModulesRoot, spec.Name, "", "resource.ts")
+	if err := validateCustomPageOverrides(frontendModulesRoot, frontendResources); err != nil {
+		return nil, err
+	}
 	frontend := generatedFrontendRegistry(frontendResources)
 	return []Artifact{
 		{Path: "app/modules/admin/registry/generated_resources.go", Content: backend, AllowOverwrite: true},
@@ -53,13 +57,34 @@ func discoverGeneratedResources(root, current, nested, marker string) []generate
 			continue
 		}
 		seen[name] = true
-		resources = append(resources, generatedResource{Name: name, GoName: pascal(name), Package: strings.ReplaceAll(name, "-", "_")})
+		item := generatedResource{Name: name, GoName: pascal(name), Package: strings.ReplaceAll(name, "-", "_"), PageMode: "generic"}
+		if nested == "" {
+			if content, err := os.ReadFile(path); err == nil && strings.Contains(string(content), "pageMode: \"custom\"") {
+				item.PageMode = "custom"
+			}
+		}
+		resources = append(resources, item)
 	}
 	if !seen[current] {
-		resources = append(resources, generatedResource{Name: current, GoName: pascal(current), Package: strings.ReplaceAll(current, "-", "_")})
+		resources = append(resources, generatedResource{Name: current, GoName: pascal(current), Package: strings.ReplaceAll(current, "-", "_"), PageMode: "generic"})
 	}
 	sort.Slice(resources, func(i, j int) bool { return resources[i].Name < resources[j].Name })
 	return resources
+}
+
+func validateCustomPageOverrides(root string, resources []generatedResource) error {
+	for _, item := range resources {
+		if item.PageMode != "custom" {
+			continue
+		}
+		for _, suffix := range []string{"ListPage.vue", "FormPage.vue", "DetailPage.vue"} {
+			path := filepath.Join(root, item.Name, "pages", item.GoName+suffix)
+			if _, err := os.Stat(path); err != nil {
+				return fmt.Errorf("custom resource %q is missing page override %s", item.Name, filepath.ToSlash(path))
+			}
+		}
+	}
+	return nil
 }
 
 func generatedBackendRegistry(resources []generatedResource) ([]byte, error) {
@@ -93,11 +118,18 @@ func generatedFrontendRegistry(resources []generatedResource) string {
 	for _, item := range resources {
 		alias := item.Package + "Resource"
 		fmt.Fprintf(&imports, "import { resourceDefinition as %s } from '@/modules/%s/resource'\n", alias, item.Name)
+		listComponent, formComponent, detailComponent := "ResourceListPage", "ResourceFormPage", "ResourceDetailPage"
+		if item.PageMode == "custom" {
+			fmt.Fprintf(&imports, "import %sListPage from '@/modules/%s/pages/%sListPage.vue'\n", item.GoName, item.Name, item.GoName)
+			fmt.Fprintf(&imports, "import %sFormPage from '@/modules/%s/pages/%sFormPage.vue'\n", item.GoName, item.Name, item.GoName)
+			fmt.Fprintf(&imports, "import %sDetailPage from '@/modules/%s/pages/%sDetailPage.vue'\n", item.GoName, item.Name, item.GoName)
+			listComponent, formComponent, detailComponent = item.GoName+"ListPage", item.GoName+"FormPage", item.GoName+"DetailPage"
+		}
 		fmt.Fprintf(&definitions, "  %s,\n", alias)
-		fmt.Fprintf(&routes, "  { path: %s.route, name: %q, props: { resource: %s.name }, meta: { permission: %s.permission }, component: ResourceListPage },\n", alias, item.Name+"-resource-list", alias, alias)
-		fmt.Fprintf(&routes, "  { path: %s.route + '/new', name: %q, props: { resource: %s.name }, meta: { permission: %s.permission }, component: ResourceFormPage },\n", alias, item.Name+"-resource-create", alias, alias)
-		fmt.Fprintf(&routes, "  { path: %s.route + '/:id/edit', name: %q, props: { resource: %s.name }, meta: { permission: %s.permission }, component: ResourceFormPage },\n", alias, item.Name+"-resource-edit", alias, alias)
-		fmt.Fprintf(&routes, "  { path: %s.route + '/:id', name: %q, props: { resource: %s.name }, meta: { permission: %s.permission }, component: ResourceDetailPage },\n", alias, item.Name+"-resource-detail", alias, alias)
+		fmt.Fprintf(&routes, "  { path: %s.route, name: %q, props: { resource: %s.name }, meta: { permission: %s.permission }, component: %s },\n", alias, item.Name+"-resource-list", alias, alias, listComponent)
+		fmt.Fprintf(&routes, "  { path: %s.route + '/new', name: %q, props: { resource: %s.name }, meta: { permission: %s.permission }, component: %s },\n", alias, item.Name+"-resource-create", alias, alias, formComponent)
+		fmt.Fprintf(&routes, "  { path: %s.route + '/:id/edit', name: %q, props: { resource: %s.name }, meta: { permission: %s.permission }, component: %s },\n", alias, item.Name+"-resource-edit", alias, alias, formComponent)
+		fmt.Fprintf(&routes, "  { path: %s.route + '/:id', name: %q, props: { resource: %s.name }, meta: { permission: %s.permission }, component: %s },\n", alias, item.Name+"-resource-detail", alias, alias, detailComponent)
 	}
 	return fmt.Sprintf(`// Code generated by admin:make-resource. DO NOT EDIT.
 import type { RouteRecordRaw } from 'vue-router'

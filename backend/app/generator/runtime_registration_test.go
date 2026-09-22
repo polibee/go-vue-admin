@@ -50,3 +50,51 @@ func TestRenderRuntimeRegistrationDiscoversExistingAndNewResource(t *testing.T) 
 		}
 	}
 }
+
+func TestRenderRuntimeRegistrationUsesExplicitCustomPageOverrides(t *testing.T) {
+	root := t.TempDir()
+	resourceRoot := filepath.Join(root, "admin", "src", "modules", "orders")
+	if err := os.MkdirAll(filepath.Join(resourceRoot, "pages"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(resourceRoot, "resource.ts"), []byte("export const resourceDefinition = { name: \"orders\", pageMode: \"custom\" }"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"OrdersListPage.vue", "OrdersFormPage.vue", "OrdersDetailPage.vue"} {
+		if err := os.WriteFile(filepath.Join(resourceRoot, "pages", name), []byte("custom"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	spec, err := Normalize(Input{Name: "posts", Fields: []string{"title:text"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	artifacts, err := RenderRuntimeRegistration(root, spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	frontend := string(artifacts[1].Content)
+	for _, fragment := range []string{"OrdersListPage.vue", "OrdersFormPage.vue", "OrdersDetailPage.vue"} {
+		if !strings.Contains(frontend, fragment) {
+			t.Fatalf("custom frontend registry missing %q: %s", fragment, frontend)
+		}
+	}
+}
+
+func TestRenderRuntimeRegistrationRejectsMissingCustomPageOverride(t *testing.T) {
+	root := t.TempDir()
+	resourceRoot := filepath.Join(root, "admin", "src", "modules", "orders")
+	if err := os.MkdirAll(resourceRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(resourceRoot, "resource.ts"), []byte("export const resourceDefinition = { name: \"orders\", pageMode: \"custom\" }"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	spec, err := Normalize(Input{Name: "posts", Fields: []string{"title:text"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := RenderRuntimeRegistration(root, spec); err == nil {
+		t.Fatal("expected missing custom page override to fail")
+	}
+}
