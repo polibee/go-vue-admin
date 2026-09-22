@@ -18,6 +18,8 @@ func Spec() map[string]any {
 				"ResourceColumn":          resourceColumnSchema(),
 				"ResourceAction":          resourceActionSchema(),
 				"ResourceManifest":        resourceManifestSchema(),
+				"ActionRequest":           actionRequestSchema(),
+				"ActionResponse":          actionResponseSchema(),
 				"GlobalSearchResult":      globalSearchResultSchema(),
 				"GlobalSearchResponse":    globalSearchResponseSchema(),
 			},
@@ -38,7 +40,8 @@ func Spec() map[string]any {
 				"get":  listOperation("listResourceRows", []map[string]any{pathParameter("resource"), queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("search", "string"), queryParameter("sort", "string"), queryParameter("dir", "string")}),
 				"post": resourceWriteOperation("createResource", "201"),
 			},
-			"/admin/{resource}/export": exportOperation(),
+			"/admin/{resource}/export":           exportOperation(),
+			"/admin/{resource}/actions/{action}": map[string]any{"post": resourceActionOperation()},
 			"/admin/{resource}/{id}": map[string]any{
 				"get":    resourceItemOperation("showResource"),
 				"put":    resourceWriteOperation("updateResource", "200", true),
@@ -48,10 +51,6 @@ func Spec() map[string]any {
 			"/admin/audit-logs":     map[string]any{"get": listOperation("auditLogs", []map[string]any{queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("action", "string"), queryParameter("user_id", "integer")})},
 			"/admin/settings":       map[string]any{"get": operation("systemSettings")},
 			"/admin/settings/{key}": map[string]any{"put": map[string]any{"operationId": "updateSystemSetting", "parameters": []map[string]any{{"name": "key", "in": "path", "required": true, "schema": map[string]any{"type": "string"}}}, "requestBody": jsonBody("SystemSettingRequest", map[string]any{"type": "object", "required": []string{"value"}, "properties": map[string]any{"value": map[string]any{"type": "string"}, "value_type": map[string]any{"type": "string", "enum": []string{"string", "boolean", "integer", "json"}}, "group": map[string]any{"type": "string"}, "description": map[string]any{"type": "string"}}}), "responses": map[string]any{"200": jsonResponse("SystemSettingResponse"), "422": errorResponse()}}},
-			"/admin/users/status": map[string]any{"put": map[string]any{
-				"operationId": "bulkSetUserStatus", "requestBody": jsonBody("BulkUserStatusRequest", map[string]any{"type": "object", "required": []string{"user_ids", "status"}, "properties": map[string]any{"user_ids": map[string]any{"type": "array", "items": map[string]any{"type": "integer", "format": "int64"}}, "status": map[string]any{"$ref": "#/components/schemas/UserStatus"}}}),
-				"responses": map[string]any{"204": map[string]any{"description": "Status updated"}, "409": errorResponse(), "422": errorResponse()},
-			}},
 			"/admin/roles/{id}/permissions": map[string]any{"put": map[string]any{
 				"operationId": "replaceRolePermissions",
 				"parameters":  []map[string]any{pathParameter("id")},
@@ -84,6 +83,20 @@ func resourceActionSchema() map[string]any {
 
 func resourceManifestSchema() map[string]any {
 	return map[string]any{"type": "object", "required": []string{"name", "label", "route", "permissions", "fields", "columns"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "route": map[string]any{"type": "string"}, "permissions": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}, "data_scope": map[string]any{"$ref": "#/components/schemas/DataScope"}, "owner_field": map[string]any{"type": "string"}, "fields": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceField"}}, "columns": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceColumn"}}, "actions": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceAction"}}}}
+}
+
+func actionRequestSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"ids"}, "properties": map[string]any{
+		"ids":    map[string]any{"type": "array", "minItems": 1, "maxItems": 100, "items": map[string]any{"type": "integer", "format": "int64"}},
+		"params": map[string]any{"type": "object", "additionalProperties": true},
+	}}
+}
+
+func actionResponseSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"action", "requested", "succeeded", "failed", "failures"}, "properties": map[string]any{
+		"action": map[string]any{"type": "string"}, "requested": map[string]any{"type": "integer"}, "succeeded": map[string]any{"type": "integer"}, "failed": map[string]any{"type": "integer"},
+		"failures": map[string]any{"type": "array", "items": map[string]any{"type": "object", "required": []string{"id", "code"}, "properties": map[string]any{"id": map[string]any{"type": "integer", "format": "int64"}, "code": map[string]any{"type": "string"}}}},
+	}}
 }
 
 func globalSearchResultSchema() map[string]any {
@@ -138,6 +151,18 @@ func exportOperation() map[string]any {
 		"responses": map[string]any{
 			"200": map[string]any{"description": "CSV export", "content": map[string]any{"text/csv": map[string]any{"schema": map[string]any{"type": "string", "format": "binary"}}}},
 			"401": errorResponse(), "403": errorResponse(), "404": errorResponse(),
+		},
+	}
+}
+
+func resourceActionOperation() map[string]any {
+	return map[string]any{
+		"operationId": "executeResourceAction",
+		"parameters":  []map[string]any{pathParameter("resource"), pathParameter("action")},
+		"requestBody": jsonBody("ActionRequest", actionRequestSchema()),
+		"responses": map[string]any{
+			"200": map[string]any{"description": "Action executed", "content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"type": "object", "properties": map[string]any{"data": map[string]any{"$ref": "#/components/schemas/ActionResponse"}}}}}},
+			"401": errorResponse(), "403": errorResponse(), "404": errorResponse(), "422": errorResponse(),
 		},
 	}
 }

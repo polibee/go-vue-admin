@@ -8,10 +8,13 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		t.Fatalf("unexpected OpenAPI version: %v", spec["openapi"])
 	}
 	paths := spec["paths"].(map[string]any)
-	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/search", "/admin/{resource}", "/admin/{resource}/export", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/settings", "/admin/settings/{key}", "/admin/users/status", "/admin/roles/{id}/permissions"} {
+	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/search", "/admin/{resource}", "/admin/{resource}/export", "/admin/{resource}/actions/{action}", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/settings", "/admin/settings/{key}", "/admin/roles/{id}/permissions"} {
 		if _, ok := paths[path]; !ok {
 			t.Fatalf("missing contract path %s", path)
 		}
+	}
+	if _, ok := paths["/admin/users/status"]; ok {
+		t.Fatal("legacy user status action remains in contract")
 	}
 	if _, ok := paths["/admin/resources/{resource}"]; ok {
 		t.Fatal("legacy resources route remains in contract")
@@ -34,10 +37,14 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		}
 	}
 	schemas := spec["components"].(map[string]any)["schemas"].(map[string]any)
-	for _, schema := range []string{"ResourceManifest", "ResourceField", "ResourceOption", "ResourceAction", "GlobalSearchResult", "GlobalSearchResponse", "DataScope"} {
+	for _, schema := range []string{"ResourceManifest", "ResourceField", "ResourceOption", "ResourceAction", "ActionRequest", "ActionResponse", "GlobalSearchResult", "GlobalSearchResponse", "DataScope"} {
 		if _, ok := schemas[schema]; !ok {
 			t.Fatalf("missing resource schema %s", schema)
 		}
+	}
+	actionContract := paths["/admin/{resource}/actions/{action}"].(map[string]any)["post"].(map[string]any)
+	if actionContract["operationId"] != "executeResourceAction" {
+		t.Fatalf("unexpected resource action operation: %v", actionContract["operationId"])
 	}
 	status := spec["components"].(map[string]any)["schemas"].(map[string]any)["UserStatus"]
 	if status == nil {

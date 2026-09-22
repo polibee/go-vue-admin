@@ -28,18 +28,18 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 - Resource Field 可声明 `visible/readable/writable/sensitive`；后端响应裁剪、查询、导出和写入保护统一使用该策略，前端隐藏仅用于改善体验。
 
 资源页面必须复用 Registry 契约，不能在页面内重新定义资源元数据。用户和角色的
-统一 CRUD 入口仍由各自 Domain Service 承担安全校验；关系操作和用户批量状态属于
-明确的业务 Action，继续使用专用关系端点。
+统一 CRUD 入口仍由各自 Domain Service 承担安全校验；关系操作继续使用专用关系端点，
+批量操作统一通过 Manifest Action 执行。
 
 用户资源写操作已通过独立的 `admin.users.manage` 权限保护：
 
 - `POST /api/v1/admin/users` 创建用户并使用 Goravel Hash 保存密码；
 - `PUT /api/v1/admin/users/:id` 编辑用户，密码留空时保持不变；
 - `DELETE /api/v1/admin/users/:id` 删除用户并清理角色关联；
-- `PUT /api/v1/admin/users/status` 批量设置用户状态，复用状态校验和最后管理员保护；
+- `POST /api/v1/admin/users/actions/set-status` 批量设置用户状态，复用状态校验和最后管理员保护；
 - 最后一个具备管理权限的活动管理员不能被删除。
 
-用户资源 Manifest 通过 `actions` 声明 `set-status` Custom Action；列表页根据清单渲染单行状态操作，并复用批量状态接口。Manifest 只描述动作名称、类型和权限，不包含可执行代码。
+资源 Manifest 通过 `actions` 声明可执行 Action；列表页根据清单和当前权限渲染行级、批量操作。统一入口为 `POST /api/v1/admin/{resource}/actions/{action}`，Manifest 只描述动作名称、类型和权限，不包含可执行代码。
 
 Admin 前端提供 `/users/new`、`/users/:id/edit`、用户详情删除确认和批量状态设置流程。系统概览作为独立 Custom Page，通过 Overview Controller/Service 提供统计卡片和资源快捷入口；roles、permissions 的通用写表单仍沿用 RBAC 专用页面。
 

@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* Generated from http://127.0.0.1:3000/api/openapi.json. DO NOT EDIT. */
-/* Contract paths: /admin/audit-logs, /admin/overview, /admin/registry, /admin/search, /admin/settings, /admin/settings/{key}, /admin/users/status, /admin/{resource}, /admin/{resource}/export, /admin/{resource}/{id}, /auth/login, /auth/logout-all, /auth/me, /auth/refresh */
+/* Contract paths: /admin/audit-logs, /admin/overview, /admin/registry, /admin/search, /admin/settings, /admin/settings/{key}, /admin/{resource}, /admin/{resource}/actions/{action}, /admin/{resource}/export, /admin/{resource}/{id}, /auth/login, /auth/logout-all, /auth/me, /auth/refresh */
 
 import { ApiError, apiDownload, apiFetch, apiFetchEnvelope } from '@/lib/api'
 
@@ -14,7 +14,9 @@ export interface RefreshResponse { access_token: string; token_type: string }
 export interface ResourceManifest { name: string; label: string; route: string; permissions: string[]; data_scope?: DataScope; owner_field?: string; fields: ResourceField[]; columns: Array<{ name: string; label: string; sortable: boolean }>; actions?: Array<{ name: string; label: string; kind: string; permission: string }> }
 export interface ResourceListMeta { page: number; per_page: number; total: number; last_page: number }
 export interface ResourceList<T = Record<string, unknown>> { data: T[]; meta: ResourceListMeta }
-export interface BulkUserStatusRequest { user_ids: number[]; status: UserStatus }
+export interface ActionRequest { ids: number[]; params?: Record<string, unknown> }
+export interface ActionFailure { id: number; code: string }
+export interface ActionResponse { action: string; requested: number; succeeded: number; failed: number; failures: ActionFailure[] }
 export interface AdminOverview { users: number; roles: number; permissions: number }
 export interface AuditLog { id: number; user_id: number; action: string; metadata: Record<string, unknown> | null; created_at: string }
 export interface GlobalSearchResult { resource: string; label: string; id: string | number; title: string; subtitle?: string; route: string }
@@ -44,6 +46,6 @@ export const generatedApi = {
   resourceCreate<T = Record<string, unknown>>(resource: string, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/' + resource, { method: 'POST', body: JSON.stringify(payload) }, token) },
   resourceUpdate<T = Record<string, unknown>>(resource: string, id: string | number, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/' + resource + '/' + id, { method: 'PUT', body: JSON.stringify(payload) }, token) },
   resourceDelete(resource: string, id: string | number, token: string) { return apiFetch<void>('/api/v1/admin/' + resource + '/' + id, { method: 'DELETE' }, token) },
-  bulkSetUserStatus(request: BulkUserStatusRequest, token: string) { return apiFetch<void>('/api/v1/admin/users/status', { method: 'PUT', body: JSON.stringify(request) }, token) },
+  resourceAction(resource: string, action: string, request: ActionRequest, token: string) { return apiFetch<ActionResponse>('/api/v1/admin/' + resource + '/actions/' + action, { method: 'POST', body: JSON.stringify(request) }, token).then((payload) => (payload as { data?: ActionResponse }).data || payload as ActionResponse) },
   replaceRolePermissions(roleID: number, permissionIDs: number[], scopes: Record<string, DataScope>, fields: Record<string, Record<string, FieldPermissionOverride>>, token: string) { return apiFetch<void>('/api/v1/admin/roles/' + roleID + '/permissions', { method: 'PUT', body: JSON.stringify({ permission_ids: permissionIDs, scopes, fields }) }, token) },
 }
