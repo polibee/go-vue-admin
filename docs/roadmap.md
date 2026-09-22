@@ -26,13 +26,15 @@ Resource Registry、字段、列、标准列表查询（分页、搜索、排序
 
 ## Phase 6：可选扩展
 
-通用数据范围权限第一阶段已完成：Resource Manifest 支持 `all/own`，角色权限可保存范围，后端统一应用到资源读取、搜索、导出和写入路径，生成器支持 owner 字段和 `--scope=own` 配置。字段权限、通用批量 Action、资源关系和复杂表单扩展仍按设计文档分阶段实现。
+通用数据范围权限第一阶段已完成：Resource Manifest 支持 `all/own`，角色权限可保存范围，后端统一应用到资源读取、搜索、导出和写入路径，生成器支持 owner 字段和 `--scope=own` 配置。
 
-字段权限阶段已完成契约、后端裁剪和 RBAC 持久化。Manifest 批量 Action 已完成统一执行入口、权限/数据范围校验、受控 Handler、OpenAPI Client 和 ResourceList 自动批量操作。字段策略包括 `visible/readable/writable/sensitive`，默认保持现有资源兼容行为。批量 Action 统一使用 Manifest 声明、权限校验、数据范围校验和受控 Handler。
+字段权限阶段已完成契约、后端裁剪和 RBAC 持久化。Manifest 批量 Action 已完成统一执行入口、权限/数据范围校验、受控 Handler、OpenAPI Client 和 ResourceList 自动批量操作。资源关系和复杂表单首期也已完成：支持 `belongsTo` 选择、`hasMany` 只读详情、关系权限/数据范围校验、表单分组、详情区块和基础联动。字段策略包括 `visible/readable/writable/sensitive`，默认保持现有资源兼容行为。批量 Action 统一使用 Manifest 声明、权限校验、数据范围校验和受控 Handler。
 
 已完成第一步：ResourceList 支持按当前搜索、筛选和排序条件导出 CSV；导出复用 Registry
 列白名单，不新增依赖或数据库变化。当前不实现通用 CSV 导入，避免把批量写入、敏感字段和领域校验混入通用资源层；后续如有明确业务需求，再按独立业务流程评估。
 Dashboard 已按 Registry 和当前权限动态生成资源入口，顶部搜索现已支持资源定位和受权限过滤的全局数据结果；后端统一搜索契约限制查询长度、结果数量并排除敏感字段。后续再评估文件管理、插件 SDK 和 AI 辅助生成。
+
+当前下一步：Redis 已恢复后，对生成的真实资源执行端到端验收，覆盖登录、菜单、列表、关系选项、表单提交、详情关联、权限和搜索。请求/响应审计脱敏、department/tenant 数据范围、通用 CSV 导入和插件系统仍是后续独立阶段，不视为当前 Resource 阶段缺陷。
 
 ## Phase 7：插件系统
 
