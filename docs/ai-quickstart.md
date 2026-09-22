@@ -10,9 +10,8 @@ This document is the operating contract for an AI agent working on Go Vue Admin.
 - Cache and session acceleration: Redis managed by Laragon.
 - Go API port: 3000.
 - Go/Vue admin port: 5180.
-- Port 5173 belongs to the separate Python admin project.
 
-Never merge the Python and Go/Vue frontends onto one port. Do not replace PostgreSQL or Redis with an in-memory fallback, and do not change backend/.env or Laragon service configuration without explicit approval.
+Do not replace PostgreSQL or Redis with an in-memory fallback, and do not change backend/.env or Laragon service configuration without explicit approval.
 
 ## 2. First checks
 

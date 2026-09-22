@@ -18,6 +18,5 @@ Modular Goravel + Vue 3 admin platform driven by Resource Manifests.
 
 - Go API: http://127.0.0.1:3000
 - Go/Vue Admin: http://127.0.0.1:5180
-- Python Admin: http://127.0.0.1:5173
 
 See the language-specific README for setup, architecture, verification, and production boundaries.

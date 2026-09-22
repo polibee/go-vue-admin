@@ -38,7 +38,6 @@ Port contract:
 
 - Go API: http://127.0.0.1:3000
 - Go/Vue admin panel: http://127.0.0.1:5180
-- Python admin panel (separate project): http://127.0.0.1:5173
 
 Review generated migrations before applying them. The generator does not silently execute migrations.
 
