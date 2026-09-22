@@ -57,11 +57,6 @@ type userPayload struct {
 	Status   string `json:"status"`
 }
 
-type userBulkStatusPayload struct {
-	UserIDs []int64 `json:"user_ids"`
-	Status  string  `json:"status"`
-}
-
 func (r *RBACController) Users(ctx http.Context) http.Response {
 	if err := parseAuthToken(ctx); err != nil {
 		return unauthorized(ctx)
@@ -109,18 +104,6 @@ func (r *RBACController) DeleteUser(ctx http.Context) http.Response {
 		return userServiceError(ctx, err)
 	}
 	recordManagementAudit(ctx, "user.delete", map[string]any{"target_user_id": targetID})
-	return ctx.Response().NoContent(204)
-}
-
-func (r *RBACController) BulkSetUserStatus(ctx http.Context) http.Response {
-	var payload userBulkStatusPayload
-	if err := ctx.Request().Bind(&payload); err != nil {
-		return rbacError(ctx, 422, "VALIDATION_ERROR")
-	}
-	if err := userservices.NewUserService().BulkSetStatus(payload.UserIDs, payload.Status); err != nil {
-		return userServiceError(ctx, err)
-	}
-	recordManagementAudit(ctx, "user.status.bulk", map[string]any{"target_user_ids": payload.UserIDs, "status": payload.Status})
 	return ctx.Response().NoContent(204)
 }
 
