@@ -34,3 +34,28 @@ func TestRegistryReturnsStableSortedManifests(t *testing.T) {
 		t.Fatalf("expected not found, got %v", err)
 	}
 }
+
+func TestRegistryValidatesDataScopeMetadata(t *testing.T) {
+	own := Manifest{
+		Name: "orders", Label: "Orders", Route: "/orders",
+		DataScope: DataScopeOwn, OwnerField: "owner_id",
+		Fields: []Field{{Name: "owner_id", Label: "Owner", Type: "integer"}},
+	}
+	if err := NewRegistry().Register(own); err != nil {
+		t.Fatalf("expected own scope manifest to register: %v", err)
+	}
+
+	unknown := own
+	unknown.Name = "unknown-scope"
+	unknown.DataScope = DataScope("department")
+	if err := NewRegistry().Register(unknown); !errors.Is(err, ErrInvalidManifest) {
+		t.Fatalf("expected unknown scope to be rejected, got %v", err)
+	}
+
+	missingOwner := own
+	missingOwner.Name = "missing-owner"
+	missingOwner.OwnerField = "missing_id"
+	if err := NewRegistry().Register(missingOwner); !errors.Is(err, ErrInvalidManifest) {
+		t.Fatalf("expected missing owner field to be rejected, got %v", err)
+	}
+}

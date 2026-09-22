@@ -11,6 +11,13 @@ var (
 	ErrNotFound        = errors.New("resource not found")
 )
 
+type DataScope string
+
+const (
+	DataScopeAll DataScope = "all"
+	DataScopeOwn DataScope = "own"
+)
+
 type Field struct {
 	Name     string   `json:"name"`
 	Label    string   `json:"label"`
@@ -38,14 +45,16 @@ type Action struct {
 }
 
 type Manifest struct {
-	Name        string   `json:"name"`
-	Label       string   `json:"label"`
-	Route       string   `json:"route"`
-	Table       string   `json:"table,omitempty"`
-	Permissions []string `json:"permissions"`
-	Fields      []Field  `json:"fields"`
-	Columns     []Column `json:"columns"`
-	Actions     []Action `json:"actions,omitempty"`
+	Name        string    `json:"name"`
+	Label       string    `json:"label"`
+	Route       string    `json:"route"`
+	Table       string    `json:"table,omitempty"`
+	Permissions []string  `json:"permissions"`
+	Fields      []Field   `json:"fields"`
+	Columns     []Column  `json:"columns"`
+	Actions     []Action  `json:"actions,omitempty"`
+	DataScope   DataScope `json:"data_scope,omitempty"`
+	OwnerField  string    `json:"owner_field,omitempty"`
 }
 
 type Registry struct{ manifests map[string]Manifest }
@@ -55,6 +64,27 @@ func NewRegistry() *Registry { return &Registry{manifests: make(map[string]Manif
 func (r *Registry) Register(manifest Manifest) error {
 	if manifest.Name == "" || manifest.Label == "" || manifest.Route == "" {
 		return ErrInvalidManifest
+	}
+	if manifest.DataScope == "" {
+		manifest.DataScope = DataScopeAll
+	}
+	if manifest.DataScope != DataScopeAll && manifest.DataScope != DataScopeOwn {
+		return ErrInvalidManifest
+	}
+	if manifest.DataScope == DataScopeOwn {
+		if manifest.OwnerField == "" {
+			return ErrInvalidManifest
+		}
+		ownerDeclared := false
+		for _, field := range manifest.Fields {
+			if field.Name == manifest.OwnerField {
+				ownerDeclared = true
+				break
+			}
+		}
+		if !ownerDeclared {
+			return ErrInvalidManifest
+		}
 	}
 	if _, exists := r.manifests[manifest.Name]; exists {
 		return ErrDuplicate
