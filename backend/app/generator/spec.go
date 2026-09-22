@@ -18,20 +18,21 @@ var supportedFieldTypes = map[string]struct{}{
 }
 
 type Input struct {
-	Name        string
-	Label       string
-	Route       string
-	PageMode    string
-	Permission  string
-	Icon        string
-	Actions     []string
-	ActionSpecs []string
-	Fields      []string
-	Scope       string
-	OwnerField  string
-	Relations   []string
-	FormGroups  []string
-	Details     []string
+	Name             string
+	Label            string
+	Route            string
+	PageMode         string
+	Permission       string
+	Icon             string
+	Actions          []string
+	ActionSpecs      []string
+	ActionFieldSpecs []string
+	Fields           []string
+	Scope            string
+	OwnerField       string
+	Relations        []string
+	FormGroups       []string
+	Details          []string
 }
 
 type Spec struct {
@@ -54,12 +55,21 @@ type Spec struct {
 }
 
 type ActionSpec struct {
-	Name       string
-	Label      string
-	Kind       string
-	Permission string
-	Batch      bool
-	Payload    string
+	Name          string
+	Label         string
+	Kind          string
+	Permission    string
+	Batch         bool
+	Payload       string
+	PayloadFields []ActionPayloadFieldSpec
+}
+
+type ActionPayloadFieldSpec struct {
+	Name     string
+	Label    string
+	Type     string
+	Required bool
+	Options  []FieldOption
 }
 
 type RelationSpec struct {
@@ -236,6 +246,23 @@ func Normalize(input Input) (Spec, error) {
 		customActions[action.Name] = action
 		customActionNames = append(customActionNames, action.Name)
 	}
+	for _, raw := range input.ActionFieldSpecs {
+		field, err := parseActionPayloadFieldSpec(raw)
+		if err != nil {
+			return Spec{}, err
+		}
+		action, exists := customActions[field.Action]
+		if !exists {
+			return Spec{}, fmt.Errorf("action payload field %q references undeclared action %q", field.Name, field.Action)
+		}
+		for _, existing := range action.PayloadFields {
+			if existing.Name == field.Name {
+				return Spec{}, fmt.Errorf("duplicate payload field %q", field.Name)
+			}
+		}
+		action.PayloadFields = append(action.PayloadFields, ActionPayloadFieldSpec{Name: field.Name, Label: field.Label, Type: field.Type, Required: field.Required, Options: field.Options})
+		customActions[field.Action] = action
+	}
 	permissionSpec, err := NormalizePermission(PermissionInput{Name: input.Name, Actions: actions})
 	if err != nil {
 		return Spec{}, err
@@ -339,6 +366,37 @@ func parseActionSpec(value string) (ActionSpec, error) {
 		return ActionSpec{}, fmt.Errorf("invalid action %q: batch and payload contract do not match", value)
 	}
 	return ActionSpec{Name: parts[0], Label: parts[1], Kind: parts[2], Permission: parts[3], Batch: batch, Payload: parts[5]}, nil
+}
+
+type actionPayloadFieldInput struct {
+	Action string
+	ActionPayloadFieldSpec
+}
+
+func parseActionPayloadFieldSpec(value string) (actionPayloadFieldInput, error) {
+	parts := strings.SplitN(value, ":", 6)
+	if len(parts) < 5 || parts[0] == "" || !fieldNamePattern.MatchString(parts[1]) || parts[2] == "" {
+		return actionPayloadFieldInput{}, fmt.Errorf("invalid action field %q: expected action:name:label:type:required[:value=Label|value=Label]", value)
+	}
+	supported := map[string]bool{"text": true, "number": true, "boolean": true, "select": true}
+	if !supported[parts[3]] {
+		return actionPayloadFieldInput{}, fmt.Errorf("unsupported action payload field type %q", parts[3])
+	}
+	required, err := strconv.ParseBool(parts[4])
+	if err != nil {
+		return actionPayloadFieldInput{}, fmt.Errorf("invalid action field %q: required must be boolean", value)
+	}
+	var options []FieldOption
+	if len(parts) == 6 && parts[5] != "" {
+		if parts[3] != "select" {
+			return actionPayloadFieldInput{}, fmt.Errorf("action field options require a select field")
+		}
+		options, err = parseFieldOptions(parts[5])
+		if err != nil {
+			return actionPayloadFieldInput{}, err
+		}
+	}
+	return actionPayloadFieldInput{Action: parts[0], ActionPayloadFieldSpec: ActionPayloadFieldSpec{Name: parts[1], Label: parts[2], Type: parts[3], Required: required, Options: options}}, nil
 }
 
 func contains(values []string, value string) bool {

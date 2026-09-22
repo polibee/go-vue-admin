@@ -130,3 +130,32 @@ func TestRenderFrontendFieldPolicies(t *testing.T) {
 	}
 	t.Fatal("resource metadata artifact not found")
 }
+
+func TestRenderFrontendActionPayloadFieldsAndRelationQuery(t *testing.T) {
+	spec, err := Normalize(Input{
+		Name:             "orders",
+		Fields:           []string{"number:text"},
+		ActionSpecs:      []string{"archive:Archive:archive:admin.orders.archive:true:archive"},
+		ActionFieldSpecs: []string{"archive:reason:Reason:text:true", "archive:mode:Mode:select:false:fast=Fast|safe=Safe"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	artifacts, err := RenderFrontend(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, artifact := range artifacts {
+		content := string(artifact.Content)
+		if artifact.Path == "admin/src/modules/orders/resource.ts" {
+			for _, fragment := range []string{"payload_fields", `name: "reason"`, `name: "mode"`, `value: "fast"`} {
+				if !strings.Contains(content, fragment) {
+					t.Fatalf("frontend payload field missing %q: %s", fragment, content)
+				}
+			}
+		}
+		if artifact.Path == "admin/src/modules/orders/api.ts" && !strings.Contains(content, "relationOptions(relation: string, query: URLSearchParams, token: string)") {
+			t.Fatalf("relation options query contract missing: %s", content)
+		}
+	}
+}

@@ -18,6 +18,7 @@ func Spec() map[string]any {
 				"ResourceFilter":          resourceFilterSchema(),
 				"ResourceColumn":          resourceColumnSchema(),
 				"ResourceAction":          resourceActionSchema(),
+				"ActionPayloadField":      actionPayloadFieldSchema(),
 				"ResourceRelation":        resourceRelationSchema(),
 				"ResourceFormGroup":       resourceFormGroupSchema(),
 				"ResourceDetailSection":   resourceDetailSectionSchema(),
@@ -93,7 +94,11 @@ func resourceFilterSchema() map[string]any {
 }
 
 func resourceActionSchema() map[string]any {
-	return map[string]any{"type": "object", "required": []string{"name", "label", "permission", "batch"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "kind": map[string]any{"type": "string"}, "permission": map[string]any{"type": "string"}, "batch": map[string]any{"type": "boolean"}, "payload": map[string]any{"type": "string"}}}
+	return map[string]any{"type": "object", "required": []string{"name", "label", "permission", "batch"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "kind": map[string]any{"type": "string"}, "permission": map[string]any{"type": "string"}, "batch": map[string]any{"type": "boolean"}, "payload": map[string]any{"type": "string"}, "payload_fields": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ActionPayloadField"}}}}
+}
+
+func actionPayloadFieldSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"name", "label", "type"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "type": map[string]any{"type": "string", "enum": []string{"text", "number", "boolean", "select"}}, "required": map[string]any{"type": "boolean"}, "options": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceOption"}}}}
 }
 
 func resourceManifestSchema() map[string]any {

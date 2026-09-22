@@ -98,8 +98,8 @@ export const resourceApi = {
   update(id: string | number, payload: ResourceRecord, token: string) {
     return generatedApi.resourceUpdate<ResourceRecord>(%q, id, payload, token);
   },
-  relationOptions(relation: string, token: string) {
-    return generatedApi.resourceRelationOptions(%q, relation, token);
+  relationOptions(relation: string, query: URLSearchParams, token: string) {
+    return generatedApi.resourceRelationOptions(%q, relation, query, token);
   },
   remove(id: string | number, token: string) {
     return generatedApi.resourceDelete(%q, id, token);
@@ -203,7 +203,19 @@ func quoteList(values []string) string {
 func frontendActionList(spec Spec) string {
 	items := make([]string, 0, len(spec.ActionSpecs))
 	for _, action := range spec.ActionSpecs {
-		items = append(items, fmt.Sprintf("{ name: %q, label: %q, kind: %q, permission: %q, batch: %t, payload: %q }", action.Name, action.Label, action.Kind, action.Permission, action.Batch, action.Payload))
+		payloadFields := make([]string, 0, len(action.PayloadFields))
+		for _, field := range action.PayloadFields {
+			options := make([]string, 0, len(field.Options))
+			for _, option := range field.Options {
+				options = append(options, fmt.Sprintf("{ value: %q, label: %q }", option.Value, option.Label))
+			}
+			payloadFields = append(payloadFields, fmt.Sprintf("{ name: %q, label: %q, type: %q, required: %t, options: [%s] }", field.Name, field.Label, field.Type, field.Required, strings.Join(options, ", ")))
+		}
+		payload := ""
+		if len(payloadFields) > 0 {
+			payload = ", payload_fields: [" + strings.Join(payloadFields, ", ") + "]"
+		}
+		items = append(items, fmt.Sprintf("{ name: %q, label: %q, kind: %q, permission: %q, batch: %t, payload: %q%s }", action.Name, action.Label, action.Kind, action.Permission, action.Batch, action.Payload, payload))
 	}
 	return "[" + strings.Join(items, ", ") + "]"
 }

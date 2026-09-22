@@ -33,6 +33,7 @@ func (ResourceGeneratorCommand) Extend() command.Extend {
 			&command.StringFlag{Name: "permission", Usage: "view permission"},
 			&command.StringFlag{Name: "icon", Usage: "menu icon"},
 			&command.StringSliceFlag{Name: "action", Usage: "action name:label:kind:permission:batch:payload"},
+			&command.StringSliceFlag{Name: "action-field", Usage: "action payload field action:name:label:type:required[:value=Label|value=Label]"},
 			&command.StringFlag{Name: "scope", Usage: "data scope: all or own"},
 			&command.StringFlag{Name: "owner-field", Usage: "integer field used by own data scope"},
 			&command.StringSliceFlag{Name: "field", Usage: "field definition name:type[:required[:value=Label|value=Label]]", Required: true},
@@ -45,19 +46,20 @@ func (ResourceGeneratorCommand) Extend() command.Extend {
 
 func (ResourceGeneratorCommand) Handle(ctx console.Context) error {
 	input := generator.Input{
-		Name:        ctx.ArgumentString("name"),
-		Label:       ctx.Option("label"),
-		Route:       ctx.Option("route"),
-		PageMode:    ctx.Option("page-mode"),
-		Permission:  ctx.Option("permission"),
-		Icon:        ctx.Option("icon"),
-		ActionSpecs: ctx.OptionSlice("action"),
-		Scope:       ctx.Option("scope"),
-		OwnerField:  ctx.Option("owner-field"),
-		Fields:      ctx.OptionSlice("field"),
-		Relations:   ctx.OptionSlice("relation"),
-		FormGroups:  ctx.OptionSlice("form-group"),
-		Details:     ctx.OptionSlice("detail-section"),
+		Name:             ctx.ArgumentString("name"),
+		Label:            ctx.Option("label"),
+		Route:            ctx.Option("route"),
+		PageMode:         ctx.Option("page-mode"),
+		Permission:       ctx.Option("permission"),
+		Icon:             ctx.Option("icon"),
+		ActionSpecs:      ctx.OptionSlice("action"),
+		ActionFieldSpecs: ctx.OptionSlice("action-field"),
+		Scope:            ctx.Option("scope"),
+		OwnerField:       ctx.Option("owner-field"),
+		Fields:           ctx.OptionSlice("field"),
+		Relations:        ctx.OptionSlice("relation"),
+		FormGroups:       ctx.OptionSlice("form-group"),
+		Details:          ctx.OptionSlice("detail-section"),
 	}
 	root, err := os.Getwd()
 	if err != nil {

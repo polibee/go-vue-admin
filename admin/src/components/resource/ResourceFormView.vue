@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Save } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -93,6 +94,7 @@ async function loadRelationOptions(relationFilter?: { name: string; field: strin
   }
 }
 function localizedError(value: unknown) { return value instanceof ApiError ? t(errorMessageKey(value.code)) : t('errors.unknown') }
+const debouncedRelationSearch = useDebounceFn((relation?: { name: string; field: string }) => { if (relation) void loadRelationOptions(relation, false) }, 300)
 function captureFieldError(value: unknown) {
   if (!(value instanceof ApiError)) return
   const match = value.message.match(/field "([a-zA-Z0-9_]+)"/)
@@ -149,7 +151,7 @@ async function submit() {
         <Field v-for="field in group.fields" v-show="fieldVisible(field)" :key="field.name">
           <FieldLabel :for="fieldId(field)">{{ field.label }}</FieldLabel>
           <Switch v-if="isBoolean(field)" :id="fieldId(field)" v-model="form[field.name] as boolean" />
-          <div v-else-if="relationForField(field)" class="grid gap-2"><Input v-model="relationSearch[relationForField(field)?.name || '']" :placeholder="`Search ${relationForField(field)?.name || 'relation'}`" @keydown.enter.prevent="loadRelationOptions(relationForField(field), false)" /><Select v-model="form[field.name] as string" :disabled="relationLoading[relationForField(field)?.name || '']"><SelectTrigger :id="fieldId(field)"><SelectValue /></SelectTrigger><SelectContent><SelectItem v-for="option in relationOptions[relationForField(field)?.name || ''] || []" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select><Button v-if="(relationMeta[relationForField(field)?.name || '']?.last_page || 1) > (relationMeta[relationForField(field)?.name || '']?.page || 1)" type="button" variant="outline" size="sm" :disabled="relationLoading[relationForField(field)?.name || '']" @click="loadRelationOptions(relationForField(field), true)">Load more</Button></div>
+          <div v-else-if="relationForField(field)" class="grid gap-2"><Input v-model="relationSearch[relationForField(field)?.name || '']" :placeholder="t('resource.relationSearch')" @input="debouncedRelationSearch(relationForField(field))" @keydown.enter.prevent="loadRelationOptions(relationForField(field), false)" /><Select v-model="form[field.name] as string" :disabled="relationLoading[relationForField(field)?.name || '']"><SelectTrigger :id="fieldId(field)"><SelectValue /></SelectTrigger><SelectContent><SelectItem v-for="option in relationOptions[relationForField(field)?.name || ''] || []" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select><Button v-if="(relationMeta[relationForField(field)?.name || '']?.last_page || 1) > (relationMeta[relationForField(field)?.name || '']?.page || 1)" type="button" variant="outline" size="sm" :disabled="relationLoading[relationForField(field)?.name || '']" @click="loadRelationOptions(relationForField(field), true)">{{ t('resource.loadMore') }}</Button></div>
           <Select v-else-if="isSelect(field)" v-model="form[field.name] as string"><SelectTrigger :id="fieldId(field)"><SelectValue /></SelectTrigger><SelectContent><SelectItem v-for="option in field.options || []" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select>
           <Input v-else :id="fieldId(field)" v-model="form[field.name] as string" :type="inputType(field)" :required="fieldRequired(field)" :step="isNumber(field) ? '1' : undefined" :aria-invalid="Boolean(fieldErrors[field.name])" />
           <p v-if="fieldErrors[field.name]" class="text-sm text-destructive">{{ fieldErrors[field.name] }}</p>

@@ -171,3 +171,24 @@ func TestNormalizeRejectsInvalidManifestActionDefinitions(t *testing.T) {
 		}
 	}
 }
+
+func TestNormalizeSupportsActionPayloadFields(t *testing.T) {
+	spec, err := Normalize(Input{
+		Name: "orders", Fields: []string{"number:text"},
+		ActionSpecs:      []string{"archive:Archive:archive:admin.orders.archive:true:archive"},
+		ActionFieldSpecs: []string{"archive:reason:Reason:text:true", "archive:mode:Mode:select:false:fast=Fast|safe=Safe"},
+	})
+	if err != nil {
+		t.Fatalf("normalize action fields: %v", err)
+	}
+	fields := spec.ActionSpecs[4].PayloadFields
+	if len(fields) != 2 || fields[1].Options[1].Value != "safe" || !fields[0].Required {
+		t.Fatalf("payload fields = %+v", fields)
+	}
+}
+
+func TestNormalizeRejectsActionPayloadFieldWithoutAction(t *testing.T) {
+	if _, err := Normalize(Input{Name: "orders", Fields: []string{"number:text"}, ActionFieldSpecs: []string{"archive:reason:Reason:text:true"}}); err == nil {
+		t.Fatal("expected payload field without action to fail")
+	}
+}

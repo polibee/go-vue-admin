@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -66,6 +67,35 @@ func TestRenderPostsGolden(t *testing.T) {
 	if !reflect.DeepEqual(artifacts, repeated) {
 		t.Fatal("render output is not deterministic")
 	}
+}
+
+func TestRenderActionPayloadFields(t *testing.T) {
+	spec, err := Normalize(Input{
+		Name:             "orders",
+		Fields:           []string{"number:text"},
+		ActionSpecs:      []string{"archive:Archive:archive:admin.orders.archive:true:archive"},
+		ActionFieldSpecs: []string{"archive:reason:Reason:text:true", "archive:mode:Mode:select:false:fast=Fast|safe=Safe"},
+	})
+	if err != nil {
+		t.Fatalf("normalize: %v", err)
+	}
+	artifacts, err := Render(spec, "20260922000000")
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	for _, artifact := range artifacts {
+		if artifact.Path != "app/modules/orders/resource/manifest.go" {
+			continue
+		}
+		content := string(artifact.Content)
+		for _, fragment := range []string{"PayloadFields", `Name: "reason"`, `Name: "mode"`, `Value: "fast"`} {
+			if !strings.Contains(content, fragment) {
+				t.Fatalf("manifest payload field missing %q: %s", fragment, content)
+			}
+		}
+		return
+	}
+	t.Fatal("manifest artifact not found")
 }
 
 func artifactPaths(artifacts []Artifact) []string {

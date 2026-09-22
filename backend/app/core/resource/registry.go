@@ -90,12 +90,21 @@ type FieldDependency struct {
 }
 
 type Action struct {
-	Name       string `json:"name"`
-	Label      string `json:"label"`
-	Kind       string `json:"kind"`
-	Permission string `json:"permission"`
-	Batch      bool   `json:"batch"`
-	Payload    string `json:"payload,omitempty"`
+	Name          string               `json:"name"`
+	Label         string               `json:"label"`
+	Kind          string               `json:"kind"`
+	Permission    string               `json:"permission"`
+	Batch         bool                 `json:"batch"`
+	Payload       string               `json:"payload,omitempty"`
+	PayloadFields []ActionPayloadField `json:"payload_fields,omitempty"`
+}
+
+type ActionPayloadField struct {
+	Name     string   `json:"name"`
+	Label    string   `json:"label"`
+	Type     string   `json:"type"`
+	Required bool     `json:"required,omitempty"`
+	Options  []Option `json:"options,omitempty"`
 }
 
 type Navigation struct {

@@ -18,6 +18,8 @@ go run . admin:make-resource posts \
   --route="/admin/posts" \
   --permission="admin.posts.view" \
   --action="archive:Archive:archive:admin.posts.archive:true:archive" \
+  --action-field="archive:reason:Reason:text:true" \
+  --action-field="archive:mode:Mode:select:false:fast=Fast|safe=Safe" \
   --field=title:text:required \
   --field=published:boolean \
   --field=status:select:required:active=Active|disabled=Disabled
@@ -25,7 +27,7 @@ go run . admin:make-resource posts \
 
 字段格式为 `name:type[:required[:value=Label|value=Label]]`；选项仅适用于 `select`，例如 `status:select:required:active=Active|disabled=Disabled`。命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、菜单、ResourceSpec、统一 API 契约、测试、README 和 Migration 文件，并更新生成专属 discovery 文件。普通资源不会生成资源专用 ListPage/FormPage/DetailPage，而是自动进入核心通用页面；`pageMode: custom` 才会生成专用页面覆盖。通用表单根据 Manifest 字段、关系、分组和依赖渲染，列表页根据字段类型自动提供搜索、筛选、排序、详情、编辑、删除和批量操作；API 契约包含 list/show/create/update/delete 五类操作；迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
 
-批量 Action 使用 `--action=name:label:kind:permission:batch:payload` 声明；例如 `archive:Archive:archive:admin.posts.archive:true:archive`。只有 `batch=true` 且服务端存在对应 Handler 和 payload 契约时才允许执行。标准 CRUD Action 默认 `batch=false`。
+批量 Action 使用 `--action=name:label:kind:permission:batch:payload` 声明；例如 `archive:Archive:archive:admin.posts.archive:true:archive`。Action 参数使用 `--action-field=action:name:label:type:required[:value=Label|value=Label]` 声明；上例会在通用批量 Action 弹窗中生成必填文本框和可选下拉框。支持 `text`、`number`、`boolean`、`select`，选项仅适用于 `select`。只有 `batch=true` 且服务端存在对应 Handler 和 payload 契约时才允许执行，Handler 仍必须在服务端重新校验参数。标准 CRUD Action 默认 `batch=false`。
 
 字段可追加权限修饰符：`sensitive` 表示默认不搜索和导出，`readonly` 表示不可写，`hidden` 表示不出现在公开资源页面；例如 `password:text:sensitive`、`owner_id:integer:readonly`。多个修饰符可组合，生成器会把完整的 `visible/readable/writable/sensitive` 策略同步写入后端 Manifest 和前端元数据。
 
@@ -90,3 +92,15 @@ Tests
 AI 只能提供字段标签、关系、筛选和布局建议，不能替复杂业务决定流程、状态机、交易规则、领域事件语义或安全策略。
 
 每个生成器必须有 Golden File/Snapshot 测试，验证输出稳定且重跑不会破坏自定义文件。
+
+### 自定义批量 Action Handler
+
+自定义批量 Action 使用 `backend/app/modules/admin/actions` 中的应用级注册表。模块 Handler 实现 `Kind`、`Payload` 和 `Execute`，并在模块启动阶段注册：
+
+```go
+if err := actions.Register(NewArchiveHandler()); err != nil {
+    panic(err)
+}
+```
+
+Handler 的 `Kind()` 必须匹配 Manifest 的 `kind`，`Payload()` 必须匹配 payload 契约。通用列表页会根据 Manifest 的 `payload_fields` 自动生成参数表单；最终授权、参数校验和数据修改安全仍由 Handler 负责。

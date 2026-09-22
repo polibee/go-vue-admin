@@ -77,4 +77,8 @@
   "actionResult": "成功 {succeeded} 项，失败 {failed} 项，跳过 {skipped} 项。"
   ,"relatedRecords": "关联记录"
   ,"noRelatedRecords": "暂无关联记录"
+  ,"relationSearch": "搜索关联记录"
+  ,"loadMore": "加载更多"
+  ,"bulkActionDescription": "确定对已选择的 {count} 项记录执行此操作？"
+  ,"actionFieldRequired": "{field}为必填项"
 }

@@ -77,4 +77,8 @@
   "actionResult": "{succeeded} succeeded, {failed} failed, {skipped} skipped."
   ,"relatedRecords": "Related records"
   ,"noRelatedRecords": "No related records"
+  ,"relationSearch": "Search related records"
+  ,"loadMore": "Load more"
+  ,"bulkActionDescription": "Apply this action to {count} selected records?"
+  ,"actionFieldRequired": "{field} is required"
 }

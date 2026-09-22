@@ -128,7 +128,8 @@ func manifestSource(spec Spec, packageName string) string {
 		fmt.Fprintf(&columns, "\t\t{Name: %q, Label: %q, Sortable: true},\n", field.Name, label)
 	}
 	for _, action := range spec.ActionSpecs {
-		fmt.Fprintf(&actions, "\t\t{Name: %q, Label: %q, Kind: %q, Permission: %q, Batch: %t, Payload: %q},\n", action.Name, action.Label, action.Kind, action.Permission, action.Batch, action.Payload)
+		payloadFields := actionPayloadFieldsSource(action.PayloadFields)
+		fmt.Fprintf(&actions, "\t\t{Name: %q, Label: %q, Kind: %q, Permission: %q, Batch: %t, Payload: %q%s},\n", action.Name, action.Label, action.Kind, action.Permission, action.Batch, action.Payload, payloadFields)
 	}
 	for _, relation := range spec.Relations {
 		fmt.Fprintf(&relations, "\t\t{Name: %q, Kind: %q, Resource: %q, Field: %q, ForeignField: %q, LabelField: %q, Selectable: %t},\n", relation.Name, relation.Kind, relation.Resource, relation.Field, relation.ForeignField, relation.LabelField, relation.Selectable)
@@ -167,6 +168,25 @@ func Manifest() resource.Manifest {
 	}
 }
 `, packageName, spec.Name, spec.Label, spec.Route, spec.Name, spec.Permission, scopeMetadata, fields.String(), columns.String(), actions.String(), relations.String(), groups.String(), details.String())
+}
+
+func actionPayloadFieldsSource(fields []ActionPayloadFieldSpec) string {
+	if len(fields) == 0 {
+		return ""
+	}
+	var values strings.Builder
+	for _, field := range fields {
+		fmt.Fprintf(&values, "{Name: %q, Label: %q, Type: %q, Required: %t", field.Name, field.Label, field.Type, field.Required)
+		if len(field.Options) > 0 {
+			values.WriteString(", Options: []resource.Option{")
+			for _, option := range field.Options {
+				fmt.Fprintf(&values, "{Value: %q, Label: %q}, ", option.Value, option.Label)
+			}
+			values.WriteString("}")
+		}
+		values.WriteString("}, ")
+	}
+	return ", PayloadFields: []resource.ActionPayloadField{" + values.String() + "}"
 }
 
 func fieldBool(value *bool) bool {
