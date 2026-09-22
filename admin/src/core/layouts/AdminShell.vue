@@ -14,6 +14,7 @@ import { useAuthStore } from '@/stores/auth'
 import { generatedApi, type GlobalSearchResult, type ResourceManifest } from '@/generated/api'
 import { dashboardResourceRoute, visibleDashboardResources } from '@/lib/dashboard-resources'
 import { groupResourceNavigation } from '@/lib/resource-navigation'
+import NotificationMenu from '@/core/notifications/NotificationMenu.vue'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -231,6 +232,7 @@ onBeforeUnmount(() => {
             <span class="sr-only">{{ t('auth.logout') }}</span>
           </Button>
         </div>
+        <NotificationMenu />
         <Button variant="ghost" size="sm" @click="toggleLocale"><Languages />{{ locale === 'zh-CN' ? 'EN' : '中文' }}</Button>
       </header>
       <CommandDialog v-model:open="searchOpen" :title="t('core.searchResources')" :description="t('core.searchResources')">

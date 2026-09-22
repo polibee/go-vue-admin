@@ -6,4 +6,9 @@
   "searchResources": "Search resources",
   "noSearchResults": "No matching resources or data",
   "searchData": "Data results"
+  ,"notifications": "Notifications"
+  ,"markAllRead": "Mark all as read"
+  ,"notificationsLoading": "Loading notifications…"
+  ,"notificationsEmpty": "No notifications"
+  ,"notificationsError": "Notifications are temporarily unavailable"
 }
