@@ -16,13 +16,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ApiError, errorMessageKey } from '@/lib/api'
 import { generatedApi, type ResourceManifest as GeneratedResourceManifest, type ResourceListMeta } from '@/generated/api'
-import { canDeleteResource } from '@/lib/resource-actions'
+import { canDeleteResource, executableBatchActions } from '@/lib/resource-actions'
 import { useAuthStore } from '@/stores/auth'
 import { USER_STATUSES, userStatusLabelKey, type UserStatus } from '@/lib/user-status'
 import { useI18n } from 'vue-i18n'
 
 interface ResourceColumn { name: string; label: string; sortable: boolean }
 interface ResourceManifest extends GeneratedResourceManifest {}
+type ResourceAction = NonNullable<ResourceManifest['actions']>[number]
 type ResourceMeta = ResourceListMeta
 
 const { t } = useI18n()
@@ -57,8 +58,8 @@ const visibleColumns = computed(() => (currentManifest.value?.columns || []).fil
   return !field || (field.visible !== false && field.readable !== false)
 }))
 const filterFields = computed(() => (currentManifest.value?.fields || []).filter((field) => field.visible !== false && field.readable !== false && !field.sensitive && (field.type === 'select' || field.type === 'boolean')))
-const canManageUsers = computed(() => auth.can('admin.users.manage'))
 const canCreate = computed(() => hasAction('create'))
+const batchActions = computed(() => executableBatchActions(currentManifest.value?.actions, (permission) => auth.can(permission)))
 const allVisibleSelected = computed(() => rows.value.length > 0 && rows.value.every((row) => selectedIds.value.includes(String(row.id))))
 
 function localizedError(value: unknown) {
@@ -144,12 +145,17 @@ function openRowStatusAction(row: Record<string, unknown>) {
   bulkStatus.value = (typeof row.status === 'string' ? row.status : 'disabled') as UserStatus
   bulkStatusDialogOpen.value = true
 }
+function openBulkAction(action: ResourceAction) {
+  if (action.kind === 'user-status') {
+    bulkStatusDialogOpen.value = true
+  }
+}
 async function applyBulkStatus() {
   if (!auth.token || !selectedIds.value.length) return
   bulkUpdating.value = true
   error.value = ''
   try {
-    await generatedApi.bulkSetUserStatus({ user_ids: selectedIds.value.map(Number), status: bulkStatus.value }, auth.token)
+    await generatedApi.resourceAction(resourceName.value, 'set-status', { ids: selectedIds.value.map(Number), params: { status: bulkStatus.value } }, auth.token)
     bulkStatusDialogOpen.value = false
     clearSelection()
     await loadRows(meta.value.page)
@@ -222,11 +228,10 @@ watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {};
     <div v-if="manifests.length" class="flex flex-wrap gap-2">
       <Button v-for="manifest in manifests" :key="manifest.name" :variant="manifest.name === resourceName ? 'default' : 'outline'" size="sm" @click="selectResource(manifest.name)">{{ manifest.label }}</Button>
     </div>
-    <div v-if="resourceName === 'users' && selectedIds.length && canManageUsers" class="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3">
-      <span class="text-sm text-muted-foreground">{{ t('resource.selectedCount', { count: selectedIds.length }) }}</span>
-      <Select v-model="bulkStatus"><SelectTrigger class="w-36" :aria-label="t('resource.bulkStatus')"><SelectValue /></SelectTrigger><SelectContent><SelectItem v-for="status in USER_STATUSES" :key="status" :value="status">{{ t(userStatusLabelKey(status)) }}</SelectItem></SelectContent></Select>
-      <Button size="sm" @click="bulkStatusDialogOpen = true">{{ t('resource.applyStatus') }}</Button>
-      <Button variant="ghost" size="sm" @click="clearSelection">{{ t('resource.clearSelection') }}</Button>
+        <div v-if="selectedIds.length && batchActions.length" class="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3">
+          <span class="text-sm text-muted-foreground">{{ t('resource.selectedCount', { count: selectedIds.length }) }}</span>
+          <Button v-for="action in batchActions" :key="action.name" size="sm" @click="openBulkAction(action)">{{ action.label }}</Button>
+          <Button variant="ghost" size="sm" @click="clearSelection">{{ t('resource.clearSelection') }}</Button>
     </div>
 
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
@@ -238,7 +243,7 @@ watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {};
       <CardContent>
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
         <Empty v-else-if="!rows.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
-        <Table v-else><TableHeader><TableRow><TableHead v-if="resourceName === 'users'" class="w-10"><Checkbox :checked="allVisibleSelected" :aria-label="t('resource.selectAll')" @click="toggleAll(!allVisibleSelected)" /></TableHead><TableHead v-for="column in visibleColumns" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead><TableHead class="w-36 text-right">{{ t('resource.actions') }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-if="resourceName === 'users'" @click.stop><Checkbox :checked="selectedIds.includes(String(row.id))" :aria-label="t('resource.selectRow', { name: row.name })" @click="toggleRow(row.id, !selectedIds.includes(String(row.id)))" /></TableCell><TableCell v-for="column in visibleColumns" :key="column.name"><Badge v-if="column.name === 'status'" variant="secondary">{{ statusLabel(row[column.name]) }}</Badge><template v-else>{{ displayValue(row[column.name]) }}</template></TableCell><TableCell class="text-right"><div v-if="row.id && (hasAction('update') || hasAction('delete') || hasAction('set-status'))" class="flex justify-end gap-1" @click.stop><Button v-if="hasAction('set-status')" variant="ghost" size="sm" :aria-label="t('resource.setStatus')" @click="openRowStatusAction(row)">{{ t('resource.setStatus') }}</Button><Button v-if="hasAction('update')" variant="ghost" size="sm" :aria-label="t('resource.edit')" @click="router.push(editPath(row))"><Pencil data-icon="inline-start" />{{ t('resource.edit') }}</Button><Button v-if="hasAction('delete')" variant="ghost" size="sm" :disabled="!canDeleteResource(resourceName, row)" :aria-label="t('resource.delete')" @click="openDelete(row)"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div></TableCell></TableRow></TableBody></Table>
+        <Table v-else><TableHeader><TableRow><TableHead v-if="batchActions.length" class="w-10"><Checkbox :checked="allVisibleSelected" :aria-label="t('resource.selectAll')" @click="toggleAll(!allVisibleSelected)" /></TableHead><TableHead v-for="column in visibleColumns" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead><TableHead class="w-36 text-right">{{ t('resource.actions') }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-if="batchActions.length" @click.stop><Checkbox :checked="selectedIds.includes(String(row.id))" :aria-label="t('resource.selectRow', { name: row.name })" @click="toggleRow(row.id, !selectedIds.includes(String(row.id)))" /></TableCell><TableCell v-for="column in visibleColumns" :key="column.name"><Badge v-if="column.name === 'status'" variant="secondary">{{ statusLabel(row[column.name]) }}</Badge><template v-else>{{ displayValue(row[column.name]) }}</template></TableCell><TableCell class="text-right"><div v-if="row.id && (hasAction('update') || hasAction('delete') || hasAction('set-status'))" class="flex justify-end gap-1" @click.stop><Button v-if="hasAction('set-status')" variant="ghost" size="sm" :aria-label="t('resource.setStatus')" @click="openRowStatusAction(row)">{{ t('resource.setStatus') }}</Button><Button v-if="hasAction('update')" variant="ghost" size="sm" :aria-label="t('resource.edit')" @click="router.push(editPath(row))"><Pencil data-icon="inline-start" />{{ t('resource.edit') }}</Button><Button v-if="hasAction('delete')" variant="ghost" size="sm" :disabled="!canDeleteResource(resourceName, row)" :aria-label="t('resource.delete')" @click="openDelete(row)"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div></TableCell></TableRow></TableBody></Table>
         <div v-if="!loading && meta.total > 0" class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between"><p class="text-sm text-muted-foreground">{{ t('resource.page', { page: meta.page }) }}</p><div class="flex items-center gap-2"><Select :model-value="pageSize" @update:model-value="changePageSize"><SelectTrigger class="w-24"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="10">{{ t('resource.perPage', { count: 10 }) }}</SelectItem><SelectItem value="20">{{ t('resource.perPage', { count: 20 }) }}</SelectItem><SelectItem value="50">{{ t('resource.perPage', { count: 50 }) }}</SelectItem></SelectContent></Select></div><Pagination v-model:page="meta.page" :items-per-page="meta.per_page" :total="meta.total" @update:page="loadRows"><PaginationContent v-slot="{ items }"><PaginationPrevious /><template v-for="(item, index) in items" :key="index"><PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === meta.page">{{ item.value }}</PaginationItem></template><PaginationNext /></PaginationContent></Pagination></div>
       </CardContent>
     </Card>
