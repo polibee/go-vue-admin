@@ -30,6 +30,9 @@
   "save": "Save",
   "cancel": "Cancel",
   "create": "New resource",
+  "createResource": "Create {resource}",
+  "editResource": "Edit {resource}",
+  "formDescription": "Review the values before saving.",
   "filterAll": "All",
   "trueValue": "Yes",
   "falseValue": "No"
@@ -52,6 +55,8 @@
   ,"selectAllFiltered": "Select all {count} filtered records"
   ,"selectAll": "Select all users"
   ,"selectRow": "Select user {name}"
+  ,"selectAllRecords": "Select all records"
+  ,"selectRecord": "Select record {name}"
   ,"bulkStatus": "Bulk status"
   ,"applyStatus": "Apply status"
   ,"clearSelection": "Clear selection"
@@ -81,4 +86,8 @@
   ,"loadMore": "Load more"
   ,"bulkActionDescription": "Apply this action to {count} selected records?"
   ,"actionFieldRequired": "{field} is required"
+  ,"labels": {"users": "Users", "roles": "Roles", "permissions": "Permissions", "departments": "Departments", "announcements": "Announcements"}
+  ,"fields": {"users": {"name": "Name", "email": "Email", "password": "Password", "locale": "Locale", "status": "Status"}, "roles": {"name": "Name", "display_name": "Display name"}, "permissions": {"name": "Name", "display_name": "Display name"}, "departments": {"name": "Name", "code": "Code", "status": "Status", "parent_id": "Parent department"}, "announcements": {"title": "Title", "status": "Status"}}
+  ,"actionLabels": {"view": "View", "create": "Create", "update": "Edit", "delete": "Delete", "bulk-delete": "Delete selected", "bulk-update": "Update selected", "set-status": "Set status", "restore": "Restore", "force-delete": "Force delete"}
+  ,"options": {"status": {"active": "Active", "disabled": "Disabled", "locked": "Locked", "draft": "Draft", "published": "Published"}}
 }

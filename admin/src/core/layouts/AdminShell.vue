@@ -15,8 +15,9 @@ import { generatedApi, type GlobalSearchResult, type ResourceManifest } from '@/
 import { dashboardResourceRoute, visibleDashboardResources } from '@/lib/dashboard-resources'
 import { groupResourceNavigation } from '@/lib/resource-navigation'
 import NotificationMenu from '@/core/notifications/NotificationMenu.vue'
+import { localizedResourceLabel } from '@/core/resource/resource-i18n'
 
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
@@ -43,8 +44,12 @@ const breadcrumbLabel = computed(() => {
   if (route.name === 'rbac') return t('rbac.title')
   if (route.name === 'audit-logs') return t('auth.auditLogs')
   const resource = resourceManifests.value.find((item) => item.name === breadcrumbResource.value)
-  return resource?.label || breadcrumbResource.value || t('auth.dashboard')
+  return resource ? localizedResourceLabel(t, te, resource.name, resource.label) : breadcrumbResource.value || t('auth.dashboard')
 })
+
+function displayResourceLabel(resource: { name: string; label: string }) {
+  return localizedResourceLabel(t, te, resource.name, resource.label)
+}
 
 function toggleLocale() {
   locale.value = locale.value === 'zh-CN' ? 'en-US' : 'zh-CN'
@@ -165,8 +170,8 @@ onBeforeUnmount(() => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem v-for="item in group.items" :key="item.name">
-                <SidebarMenuButton as-child :is-active="$route.path.startsWith(dashboardResourceRoute(item))" :tooltip="item.label">
-                  <RouterLink :to="dashboardResourceRoute(item)"><LayoutDashboard /><span>{{ item.label }}</span></RouterLink>
+                <SidebarMenuButton as-child :is-active="$route.path.startsWith(dashboardResourceRoute(item))" :tooltip="displayResourceLabel(item)">
+                  <RouterLink :to="dashboardResourceRoute(item)"><LayoutDashboard /><span>{{ displayResourceLabel(item) }}</span></RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -247,8 +252,8 @@ onBeforeUnmount(() => {
             </CommandItem>
           </CommandGroup>
           <CommandGroup :heading="t('core.searchResources')">
-            <CommandItem v-for="resource in searchResults" :key="resource.name" :value="resource.name + ' ' + resource.label" @select="openResource(resource)">
-              <span>{{ resource.label }}</span>
+            <CommandItem v-for="resource in searchResults" :key="resource.name" :value="resource.name + ' ' + displayResourceLabel(resource)" @select="openResource(resource)">
+              <span>{{ displayResourceLabel(resource) }}</span>
               <span class="ml-auto text-xs text-muted-foreground">{{ resource.name }}</span>
             </CommandItem>
           </CommandGroup>

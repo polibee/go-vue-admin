@@ -16,6 +16,7 @@ import { createResourceForm, serializeResourceForm, type ResourceFormField } fro
 import { generatedApi, type RelationOption } from '@/generated/api'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import { localizedFieldLabel, localizedOptionLabel, localizedResourceLabel } from '@/core/resource/resource-i18n'
 
 interface ResourceDefinition {
   label: string
@@ -34,7 +35,7 @@ interface ResourceFormApi {
 }
 
 const props = defineProps<{ resource: ResourceDefinition; api: ResourceFormApi }>()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
@@ -52,8 +53,12 @@ const formFields = computed(() => props.resource.fields.filter((field) => field.
 const selectableRelations = computed(() => (props.resource.relations || []).filter((relation) => relation.kind === 'belongsTo' && relation.selectable))
 const formGroups = computed(() => {
   if (props.resource.form_groups?.length) return props.resource.form_groups.map((group) => ({ ...group, fields: formFields.value.filter((field) => group.fields.includes(field.name)) }))
-  return [{ name: 'default', label: props.resource.label, columns: 1, fields: formFields.value }]
+  return [{ name: 'default', label: resourceLabel.value, columns: 1, fields: formFields.value }]
 })
+const resourceLabel = computed(() => localizedResourceLabel(t, te, props.resource.route.split('/').filter(Boolean).pop() || '', props.resource.label))
+const formTitle = computed(() => t(editing.value ? 'resource.editResource' : 'resource.createResource', { resource: resourceLabel.value }))
+function fieldLabel(field: ResourceFormField) { return localizedFieldLabel(t, te, props.resource.route.split('/').filter(Boolean).pop() || '', field.name, field.label) }
+function optionLabel(field: ResourceFormField, value: string, fallback: string) { return localizedOptionLabel(t, te, field.name, value, fallback) }
 
 function fieldId(field: ResourceFormField) { return `resource-field-${field.name}` }
 function inputType(field: ResourceFormField) { return field.type === 'email' || field.type === 'password' || field.type === 'number' || field.type === 'date' ? field.type : 'text' }
@@ -139,20 +144,20 @@ async function submit() {
   <div class="flex flex-col gap-6">
     <div class="flex items-center gap-3">
       <Button variant="ghost" size="icon" :aria-label="t('resource.back')" @click="router.back()"><ArrowLeft /></Button>
-      <div><h1 class="text-2xl font-semibold tracking-tight">{{ editing ? `Edit ${resource.label}` : `Create ${resource.label}` }}</h1><p class="text-sm text-muted-foreground">{{ resource.label }}</p></div>
+      <div><h1 class="text-2xl font-semibold tracking-tight">{{ formTitle }}</h1><p class="text-sm text-muted-foreground">{{ resourceLabel }}</p></div>
     </div>
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Card v-if="loading"><CardHeader><Skeleton class="h-6 w-40" /></CardHeader><CardContent class="flex flex-col gap-3"><Skeleton v-for="field in formFields" :key="field.name" class="h-10" /></CardContent></Card>
-    <Card v-else><CardHeader><CardTitle>{{ editing ? `Edit ${resource.label}` : `Create ${resource.label}` }}</CardTitle><CardDescription>Review the values before saving.</CardDescription></CardHeader><CardContent><form class="grid gap-5 sm:max-w-xl" @submit.prevent="submit">
+    <Card v-else><CardHeader><CardTitle>{{ formTitle }}</CardTitle><CardDescription>{{ t('resource.formDescription') }}</CardDescription></CardHeader><CardContent><form class="grid gap-5 sm:max-w-xl" @submit.prevent="submit">
       <FieldGroup>
         <div v-for="group in formGroups" :key="group.name" class="rounded-lg border p-4">
           <h3 class="mb-4 text-sm font-medium">{{ group.label }}</h3>
           <FieldGroup :class="['grid gap-5', groupClass(group.columns)]">
         <Field v-for="field in group.fields" v-show="fieldVisible(field)" :key="field.name">
-          <FieldLabel :for="fieldId(field)">{{ field.label }}</FieldLabel>
+          <FieldLabel :for="fieldId(field)">{{ fieldLabel(field) }}</FieldLabel>
           <Switch v-if="isBoolean(field)" :id="fieldId(field)" v-model="form[field.name] as boolean" />
           <div v-else-if="relationForField(field)" class="grid gap-2"><Input v-model="relationSearch[relationForField(field)?.name || '']" :placeholder="t('resource.relationSearch')" @input="debouncedRelationSearch(relationForField(field))" @keydown.enter.prevent="loadRelationOptions(relationForField(field), false)" /><Select v-model="form[field.name] as string" :disabled="relationLoading[relationForField(field)?.name || '']"><SelectTrigger :id="fieldId(field)"><SelectValue /></SelectTrigger><SelectContent><SelectItem v-for="option in relationOptions[relationForField(field)?.name || ''] || []" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select><Button v-if="(relationMeta[relationForField(field)?.name || '']?.last_page || 1) > (relationMeta[relationForField(field)?.name || '']?.page || 1)" type="button" variant="outline" size="sm" :disabled="relationLoading[relationForField(field)?.name || '']" @click="loadRelationOptions(relationForField(field), true)">{{ t('resource.loadMore') }}</Button></div>
-          <Select v-else-if="isSelect(field)" v-model="form[field.name] as string"><SelectTrigger :id="fieldId(field)"><SelectValue /></SelectTrigger><SelectContent><SelectItem v-for="option in field.options || []" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select>
+          <Select v-else-if="isSelect(field)" v-model="form[field.name] as string"><SelectTrigger :id="fieldId(field)"><SelectValue /></SelectTrigger><SelectContent><SelectItem v-for="option in field.options || []" :key="option.value" :value="option.value">{{ optionLabel(field, option.value, option.label) }}</SelectItem></SelectContent></Select>
           <Input v-else :id="fieldId(field)" v-model="form[field.name] as string" :type="inputType(field)" :required="fieldRequired(field)" :step="isNumber(field) ? '1' : undefined" :aria-invalid="Boolean(fieldErrors[field.name])" />
           <p v-if="fieldErrors[field.name]" class="text-sm text-destructive">{{ fieldErrors[field.name] }}</p>
         </Field>

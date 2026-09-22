@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button'
 import { generatedApi, type AdminOverview, type ResourceManifest } from '@/generated/api'
 import { dashboardResourceRoute, visibleDashboardResources } from '@/lib/dashboard-resources'
 import { useAuthStore } from '@/stores/auth'
+import { localizedResourceLabel } from '@/core/resource/resource-i18n'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
 const overview = ref<AdminOverview>()
@@ -19,6 +20,7 @@ const error = ref(false)
 const overviewKeys: Record<string, keyof AdminOverview> = { users: 'users', roles: 'roles', permissions: 'permissions' }
 const resources = computed(() => visibleDashboardResources(manifests.value, auth.user?.permissions || []).map((resource) => ({
   ...resource,
+  label: localizedResourceLabel(t, te, resource.name, resource.label),
   route: dashboardResourceRoute(resource),
   overviewKey: overviewKeys[resource.name],
 })))

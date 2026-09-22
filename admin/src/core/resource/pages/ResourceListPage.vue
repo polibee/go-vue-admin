@@ -21,13 +21,14 @@ import { executableBatchActions } from '@/lib/resource-actions'
 import { buildActionSelection } from '@/lib/resource-selection'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import { localizedActionLabel, localizedFieldLabel, localizedOptionLabel, localizedResourceLabel } from '@/core/resource/resource-i18n'
 
 interface ResourceColumn { name: string; label: string; sortable: boolean }
 interface ResourceManifest extends GeneratedResourceManifest {}
 type ResourceAction = NonNullable<ResourceManifest['actions']>[number]
 type ResourceMeta = ResourceListMeta
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const props = defineProps<{ resource?: string }>()
 const route = useRoute()
 const router = useRouter()
@@ -65,14 +66,15 @@ const trashed = ref('default')
 const allFilteredSelected = ref(false)
 const excludedIds = ref<string[]>([])
 const bulkStatusLabel = computed(() => statusLabel('status', bulkStatus.value))
+const currentResourceLabel = computed(() => localizedResourceLabel(t, te, resourceName.value, currentManifest.value?.label || resourceName.value))
 
 const resourceName = computed(() => props.resource || String(route.params.resource || 'users'))
 const currentManifest = computed(() => manifests.value.find((item) => item.name === resourceName.value))
 const visibleColumns = computed(() => (currentManifest.value?.columns || []).filter((column) => {
   const field = currentManifest.value?.fields.find((item) => item.name === column.name)
   return !field || (field.visible !== false && field.readable !== false)
-}))
-const filters = computed(() => currentManifest.value?.filters || [])
+}).map((column) => ({ ...column, label: fieldLabel(column.name, column.label) })))
+const filters = computed(() => (currentManifest.value?.filters || []).map((field) => ({ ...field, label: fieldLabel(field.name, field.label) })))
 const canCreate = computed(() => hasAction('create'))
 const batchActions = computed(() => {
   const actions = executableBatchActions(currentManifest.value?.actions, (permission) => auth.can(permission)).slice()
@@ -81,7 +83,7 @@ const batchActions = computed(() => {
     actions.push({ ...deleteAction, name: 'restore', label: t('resource.restore'), kind: 'builtin-restore', batch: true, payload: 'trash' })
     actions.push({ ...deleteAction, name: 'force-delete', label: t('resource.forceDelete'), kind: 'builtin-force-delete', batch: true, payload: 'trash' })
   }
-  return actions
+  return actions.map((action) => ({ ...action, label: actionLabel(action) }))
 })
 const allVisibleSelected = computed(() => rows.value.length > 0 && rows.value.every((row) => isRowSelected(row.id)))
 const headerChecked = computed({
@@ -143,11 +145,17 @@ function sortBy(column: ResourceColumn) {
   void loadRows(1)
 }
 function displayValue(value: unknown) { return value === null || value === undefined ? '—' : String(value) }
+function fieldLabel(fieldName: string, fallback: string) {
+  return localizedFieldLabel(t, te, resourceName.value, fieldName, fallback)
+}
+function actionLabel(action: ResourceAction) {
+  return localizedActionLabel(t, te, action.name, action.label)
+}
 function statusLabel(fieldName: string, value: unknown) {
   if (value === null || value === undefined) return '—'
   const field = currentManifest.value?.fields.find((item) => item.name === fieldName)
   const option = field?.options?.find((item) => item.value === String(value))
-  return option?.label || String(value)
+  return localizedOptionLabel(t, te, fieldName, String(value), option?.label || String(value))
 }
 function filterOptions(field: ResourceFilter) {
   return field.type === 'boolean' ? [{ value: 'all', label: t('resource.filterAll') }, { value: 'true', label: t('resource.trueValue') }, { value: 'false', label: t('resource.falseValue') }] : [{ value: 'all', label: t('resource.filterAll') }, ...(field.options || [])]
@@ -266,7 +274,7 @@ async function applyCustomAction() {
   error.value = ''
   const requiredField = (bulkCustomAction.value.payload_fields || []).find((field) => field.required && (bulkCustomPayload.value[field.name] === '' || bulkCustomPayload.value[field.name] === undefined))
   if (requiredField) {
-    error.value = t('resource.actionFieldRequired', { field: requiredField.label })
+    error.value = t('resource.actionFieldRequired', { field: fieldLabel(requiredField.name, requiredField.label) })
     return
   }
   try {
@@ -330,7 +338,7 @@ watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; 
   <div class="flex flex-col gap-6">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-semibold tracking-tight">{{ currentManifest?.label || t('resource.title') }}</h1>
+        <h1 class="text-2xl font-semibold tracking-tight">{{ currentResourceLabel }}</h1>
         <p class="text-sm text-muted-foreground">{{ t('resource.description') }}</p>
       </div>
       <div class="flex gap-2"><Button v-if="canCreate" variant="default" @click="router.push(`/${resourceName}/new`)">{{ t('resource.create') }}</Button><Button variant="outline" :disabled="loading || exporting" @click="exportRows"><Download data-icon="inline-start" />{{ t('resource.export') }}</Button><Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
@@ -342,7 +350,7 @@ watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; 
     <Alert v-if="lastActionResult"><AlertTitle>{{ t('resource.actionCompleted') }}</AlertTitle><AlertDescription>{{ t('resource.actionResult', { succeeded: lastActionResult.succeeded, failed: lastActionResult.failed, skipped: lastActionResult.skipped }) }}</AlertDescription></Alert>
     <Card>
       <CardHeader class="gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div><CardTitle>{{ currentManifest?.label || t('resource.resourceNotFound') }}</CardTitle><CardDescription>{{ t('resource.total', { count: meta.total }) }}</CardDescription></div>
+        <div><CardTitle>{{ currentResourceLabel }}</CardTitle><CardDescription>{{ t('resource.total', { count: meta.total }) }}</CardDescription></div>
         <form class="flex w-full flex-wrap gap-2 sm:w-auto" @submit.prevent="submitSearch"><Select v-if="currentManifest?.soft_delete" :model-value="trashed" @update:model-value="(value) => { trashed = String(value); clearSelection(); void loadRows(1) }"><SelectTrigger class="w-32" :aria-label="t('resource.trashFilter')"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">{{ t('resource.activeRecords') }}</SelectItem><SelectItem value="only">{{ t('resource.trashedRecords') }}</SelectItem><SelectItem value="with">{{ t('resource.allRecords') }}</SelectItem></SelectContent></Select><template v-for="field in filters" :key="field.name"><Select v-if="field.type === 'select' || field.type === 'multi-select' || field.type === 'boolean'" :model-value="filterValues[field.name] || 'all'" @update:model-value="changeResourceFilter(field.name, $event)"><SelectTrigger class="w-36" :aria-label="field.label"><SelectValue :placeholder="field.label" /></SelectTrigger><SelectContent><SelectItem v-for="option in filterOptions(field)" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select><Input v-else v-model="filterValues[field.name]" class="w-44" :type="field.type === 'date-range' ? 'text' : 'search'" :placeholder="field.type === 'date-range' ? `${field.label} (YYYY-MM-DD..YYYY-MM-DD)` : field.label" /></template><Input v-model="search" class="sm:w-64" :placeholder="t('resource.searchPlaceholder')" :aria-label="t('resource.search')" /><Button type="submit" size="icon" :aria-label="t('resource.search')"><Search /></Button></form>
       </CardHeader>
       <div v-if="selectedCount && batchActions.length" class="overflow-x-auto border-y bg-muted/20 px-4 py-2">
@@ -356,7 +364,7 @@ watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; 
       <CardContent>
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
         <Empty v-else-if="!rows.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
-        <Table v-else><TableHeader><TableRow><TableHead v-if="batchActions.length" class="w-10"><Checkbox v-model="headerChecked" :aria-label="t('resource.selectAll')" /></TableHead><TableHead v-for="column in visibleColumns" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead><TableHead class="w-36 text-right">{{ t('resource.actions') }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-if="batchActions.length" @click.stop><Checkbox :model-value="allFilteredSelected ? !excludedIds.includes(String(row.id)) : selectedIds.includes(String(row.id))" :aria-label="t('resource.selectRow', { name: row.name })" @update:model-value="toggleRow(row.id, $event)" /></TableCell><TableCell v-for="column in visibleColumns" :key="column.name"><Badge v-if="column.name === 'status'" variant="secondary">{{ statusLabel(column.name, row[column.name]) }}</Badge><template v-else>{{ displayValue(row[column.name]) }}</template></TableCell><TableCell class="text-right"><div v-if="row.id && (hasAction('update') || hasAction('delete') || hasActionKind('user-status'))" class="flex justify-end gap-1" @click.stop><Button v-if="hasActionKind('user-status')" variant="ghost" size="sm" :aria-label="t('resource.setStatus')" @click="openRowStatusAction(row)">{{ t('resource.setStatus') }}</Button><Button v-if="hasAction('update')" variant="ghost" size="sm" :aria-label="t('resource.edit')" @click="router.push(editPath(row))"><Pencil data-icon="inline-start" />{{ t('resource.edit') }}</Button><Button v-if="hasAction('delete')" variant="ghost" size="sm" :aria-label="t('resource.delete')" @click="openDelete(row)"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div></TableCell></TableRow></TableBody></Table>
+        <Table v-else><TableHeader><TableRow><TableHead v-if="batchActions.length" class="w-10"><Checkbox v-model="headerChecked" :aria-label="t('resource.selectAllRecords')" /></TableHead><TableHead v-for="column in visibleColumns" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead><TableHead class="w-36 text-right">{{ t('resource.actions') }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-if="batchActions.length" @click.stop><Checkbox :model-value="allFilteredSelected ? !excludedIds.includes(String(row.id)) : selectedIds.includes(String(row.id))" :aria-label="t('resource.selectRecord', { name: row.name })" @update:model-value="toggleRow(row.id, $event)" /></TableCell><TableCell v-for="column in visibleColumns" :key="column.name"><Badge v-if="column.name === 'status'" variant="secondary">{{ statusLabel(column.name, row[column.name]) }}</Badge><template v-else>{{ displayValue(row[column.name]) }}</template></TableCell><TableCell class="text-right"><div v-if="row.id && (hasAction('update') || hasAction('delete') || hasActionKind('user-status'))" class="flex justify-end gap-1" @click.stop><Button v-if="hasActionKind('user-status')" variant="ghost" size="sm" :aria-label="t('resource.setStatus')" @click="openRowStatusAction(row)">{{ t('resource.setStatus') }}</Button><Button v-if="hasAction('update')" variant="ghost" size="sm" :aria-label="t('resource.edit')" @click="router.push(editPath(row))"><Pencil data-icon="inline-start" />{{ t('resource.edit') }}</Button><Button v-if="hasAction('delete')" variant="ghost" size="sm" :aria-label="t('resource.delete')" @click="openDelete(row)"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div></TableCell></TableRow></TableBody></Table>
         <div v-if="!loading && meta.total > 0" class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between"><p class="text-sm text-muted-foreground">{{ t('resource.page', { page: meta.page }) }}</p><div class="flex items-center gap-2"><Select :model-value="pageSize" @update:model-value="changePageSize"><SelectTrigger class="w-24"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="10">{{ t('resource.perPage', { count: 10 }) }}</SelectItem><SelectItem value="20">{{ t('resource.perPage', { count: 20 }) }}</SelectItem><SelectItem value="50">{{ t('resource.perPage', { count: 50 }) }}</SelectItem></SelectContent></Select></div><Pagination v-model:page="meta.page" :items-per-page="meta.per_page" :total="meta.total" @update:page="loadRows"><PaginationContent v-slot="{ items }"><PaginationPrevious /><template v-for="(item, index) in items" :key="index"><PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === meta.page">{{ item.value }}</PaginationItem></template><PaginationNext /></PaginationContent></Pagination></div>
       </CardContent>
     </Card>
