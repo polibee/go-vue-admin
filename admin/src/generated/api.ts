@@ -6,18 +6,20 @@ import { ApiError, apiDownload, apiFetch, apiFetchEnvelope } from '@/lib/api'
 
 export type UserStatus = "active" | "disabled" | "locked"
 export type DataScope = "all" | "own"
+export interface ResourceField { name: string; label: string; type: string; required?: boolean; visible: boolean; readable: boolean; writable: boolean; sensitive: boolean; options?: Array<{ value: string; label: string }> }
 export interface AuthUser { id: number; name: string; email: string; status: UserStatus; locale: string; permissions: string[] }
 export interface LoginRequest { email: string; password: string }
 export interface LoginResponse { access_token: string; token_type: string; user: AuthUser }
 export interface RefreshResponse { access_token: string; token_type: string }
-export interface ResourceManifest { name: string; label: string; route: string; permissions: string[]; data_scope?: DataScope; owner_field?: string; fields: Array<{ name: string; label: string; type: string; options?: Array<{ value: string; label: string }> }>; columns: Array<{ name: string; label: string; sortable: boolean }>; actions?: Array<{ name: string; label: string; kind: string; permission: string }> }
+export interface ResourceManifest { name: string; label: string; route: string; permissions: string[]; data_scope?: DataScope; owner_field?: string; fields: ResourceField[]; columns: Array<{ name: string; label: string; sortable: boolean }>; actions?: Array<{ name: string; label: string; kind: string; permission: string }> }
 export interface ResourceListMeta { page: number; per_page: number; total: number; last_page: number }
 export interface ResourceList<T = Record<string, unknown>> { data: T[]; meta: ResourceListMeta }
 export interface BulkUserStatusRequest { user_ids: number[]; status: UserStatus }
 export interface AdminOverview { users: number; roles: number; permissions: number }
 export interface AuditLog { id: number; user_id: number; action: string; metadata: Record<string, unknown> | null; created_at: string }
 export interface GlobalSearchResult { resource: string; label: string; id: string | number; title: string; subtitle?: string; route: string }
-export interface RolePermissionAssignment { id: number; name: string; display_name: string; scope: DataScope }
+export interface FieldPermissionOverride { readable: boolean; writable: boolean }
+export interface RolePermissionAssignment { id: number; name: string; display_name: string; scope: DataScope; fields?: Record<string, FieldPermissionOverride> }
 
 export const generatedApi = {
   login(request: LoginRequest) { return apiFetch<LoginResponse>('/api/v1/auth/login', { method: 'POST', body: JSON.stringify(request) }) },
@@ -43,5 +45,5 @@ export const generatedApi = {
   resourceUpdate<T = Record<string, unknown>>(resource: string, id: string | number, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/' + resource + '/' + id, { method: 'PUT', body: JSON.stringify(payload) }, token) },
   resourceDelete(resource: string, id: string | number, token: string) { return apiFetch<void>('/api/v1/admin/' + resource + '/' + id, { method: 'DELETE' }, token) },
   bulkSetUserStatus(request: BulkUserStatusRequest, token: string) { return apiFetch<void>('/api/v1/admin/users/status', { method: 'PUT', body: JSON.stringify(request) }, token) },
-  replaceRolePermissions(roleID: number, permissionIDs: number[], scopes: Record<string, DataScope>, token: string) { return apiFetch<void>('/api/v1/admin/roles/' + roleID + '/permissions', { method: 'PUT', body: JSON.stringify({ permission_ids: permissionIDs, scopes }) }, token) },
+  replaceRolePermissions(roleID: number, permissionIDs: number[], scopes: Record<string, DataScope>, fields: Record<string, Record<string, FieldPermissionOverride>>, token: string) { return apiFetch<void>('/api/v1/admin/roles/' + roleID + '/permissions', { method: 'PUT', body: JSON.stringify({ permission_ids: permissionIDs, scopes, fields }) }, token) },
 }

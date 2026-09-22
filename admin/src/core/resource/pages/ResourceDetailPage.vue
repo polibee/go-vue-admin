@@ -19,7 +19,7 @@ const props = defineProps<{ resource?: string }>()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
-interface ResourceField { name: string; label: string; type: string }
+interface ResourceField { name: string; label: string; type: string; visible?: boolean; readable?: boolean }
 interface ResourceAction { name: string; permission: string }
 interface ResourceManifest { name: string; fields: ResourceField[]; actions?: ResourceAction[] }
 const data = ref<Record<string, unknown>>({})
@@ -29,6 +29,7 @@ const error = ref('')
 const deleteDialogOpen = ref(false)
 const deleting = ref(false)
 const resourceName = computed(() => props.resource || String(route.params.resource || 'users'))
+const displayData = computed(() => Object.fromEntries(Object.entries(data.value).filter(([key]) => key === 'id' || manifest.value?.fields.some((field) => field.name === key && field.visible !== false && field.readable !== false))))
 const hasAction = (name: string) => {
   const action = manifest.value?.actions?.find((item) => item.name === name)
   return Boolean(action && auth.can(action.permission))
@@ -85,7 +86,7 @@ async function deleteRecord() {
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Card v-if="loading"><CardHeader><Skeleton class="h-6 w-40" /><Skeleton class="h-4 w-64" /></CardHeader><CardContent class="flex flex-col gap-3"><Skeleton v-for="item in 4" :key="item" class="h-10" /></CardContent></Card>
     <Empty v-else-if="error"><EmptyHeader><EmptyTitle>{{ t('states.errorTitle') }}</EmptyTitle><EmptyDescription>{{ error }}</EmptyDescription></EmptyHeader></Empty>
-    <Card v-else-if="Object.keys(data).length"><CardHeader><CardTitle>{{ String(data.display_name || data.name || data.email || route.params.id) }}</CardTitle><CardDescription>{{ t('resource.detailDescription') }}</CardDescription></CardHeader><CardContent><dl class="grid gap-4 sm:grid-cols-2"> <div v-for="(value, key) in data" :key="key" class="rounded-md border p-3"><dt class="text-xs text-muted-foreground">{{ fieldLabel(String(key)) }}</dt><dd class="mt-1 break-words text-sm font-medium">{{ value === null || value === undefined ? '—' : String(value) }}</dd></div></dl></CardContent></Card>
+    <Card v-else-if="Object.keys(displayData).length"><CardHeader><CardTitle>{{ String(data.display_name || data.name || data.email || route.params.id) }}</CardTitle><CardDescription>{{ t('resource.detailDescription') }}</CardDescription></CardHeader><CardContent><dl class="grid gap-4 sm:grid-cols-2"> <div v-for="(value, key) in displayData" :key="key" class="rounded-md border p-3"><dt class="text-xs text-muted-foreground">{{ fieldLabel(String(key)) }}</dt><dd class="mt-1 break-words text-sm font-medium">{{ value === null || value === undefined ? '—' : String(value) }}</dd></div></dl></CardContent></Card>
     <Empty v-else><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
     <AlertDialog v-model:open="deleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.deleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.deleteDescription') }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="deleting" @click="deleteRecord">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>

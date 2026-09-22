@@ -108,18 +108,15 @@ func manifestSource(spec Spec, packageName string) string {
 	var actions strings.Builder
 	for _, field := range spec.Fields {
 		label := humanize(field.Name)
+		policy := fmt.Sprintf("Visible: %t, Readable: %t, Writable: %t, Sensitive: %t, PolicyConfigured: true", fieldBool(field.Visible), fieldBool(field.Readable), fieldBool(field.Writable), field.Sensitive)
 		if len(field.Options) == 0 {
-			if field.Required {
-				fmt.Fprintf(&fields, "\t\t{Name: %q, Label: %q, Type: %q, Required: true},\n", field.Name, label, field.Type)
-			} else {
-				fmt.Fprintf(&fields, "\t\t{Name: %q, Label: %q, Type: %q},\n", field.Name, label, field.Type)
-			}
+			fmt.Fprintf(&fields, "\t\t{Name: %q, Label: %q, Type: %q, Required: %t, %s},\n", field.Name, label, field.Type, field.Required, policy)
 		} else {
 			var values strings.Builder
 			for _, option := range field.Options {
 				fmt.Fprintf(&values, "{Value: %q, Label: %q}, ", option.Value, option.Label)
 			}
-			fmt.Fprintf(&fields, "\t\t{Name: %q, Label: %q, Type: %q, Required: %t, Options: []resource.Option{%s}},\n", field.Name, label, field.Type, field.Required, values.String())
+			fmt.Fprintf(&fields, "\t\t{Name: %q, Label: %q, Type: %q, Required: %t, %s, Options: []resource.Option{%s}},\n", field.Name, label, field.Type, field.Required, policy, values.String())
 		}
 		fmt.Fprintf(&columns, "\t\t{Name: %q, Label: %q, Sortable: true},\n", field.Name, label)
 	}
@@ -148,6 +145,10 @@ func Manifest() resource.Manifest {
 	}
 }
 `, packageName, spec.Name, spec.Label, spec.Route, spec.Name, spec.Permission, scopeMetadata, fields.String(), columns.String(), actions.String())
+}
+
+func fieldBool(value *bool) bool {
+	return value == nil || *value
 }
 
 func modelSource(spec Spec, packageName string) string {

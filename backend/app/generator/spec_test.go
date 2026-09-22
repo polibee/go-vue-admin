@@ -25,6 +25,24 @@ func TestParseFieldAcceptsSelectOptions(t *testing.T) {
 	}
 }
 
+func TestParseFieldAcceptsPermissionModifiers(t *testing.T) {
+	field, err := ParseField("password:text:sensitive")
+	if err != nil {
+		t.Fatalf("parse sensitive field: %v", err)
+	}
+	if !field.Sensitive || !field.PolicyConfigured || field.Writable == nil || !*field.Writable {
+		t.Fatalf("sensitive field policy = %+v", field)
+	}
+
+	readonly, err := ParseField("owner_id:integer:readonly")
+	if err != nil {
+		t.Fatalf("parse readonly field: %v", err)
+	}
+	if readonly.Writable == nil || *readonly.Writable {
+		t.Fatalf("readonly field policy = %+v", readonly)
+	}
+}
+
 func TestNormalizeRejectsUnsafeResourceName(t *testing.T) {
 	_, err := Normalize(Input{Name: "../posts", Fields: []string{"title:text"}})
 	if err == nil {

@@ -37,6 +37,7 @@ const loading = ref(editing.value)
 const saving = ref(false)
 const error = ref('')
 const form = ref<Record<string, unknown>>({})
+const formFields = computed(() => props.resource.fields.filter((field) => field.visible !== false && field.writable !== false))
 
 function fieldId(field: ResourceFormField) { return `resource-field-${field.name}` }
 function inputType(field: ResourceFormField) { return field.type === 'email' || field.type === 'password' || field.type === 'number' || field.type === 'date' ? field.type : 'text' }
@@ -50,7 +51,7 @@ onMounted(async () => {
   if (!auth.token) return
   try {
     const record = editing.value ? await props.api.show(String(route.params.id), auth.token) : {}
-    form.value = createResourceForm(props.resource.fields, record)
+    form.value = createResourceForm(formFields.value, record)
   } catch (value) {
     error.value = localizedError(value)
   } finally {
@@ -63,7 +64,7 @@ async function submit() {
   saving.value = true
   error.value = ''
   try {
-    const payload = serializeResourceForm(props.resource.fields, form.value)
+    const payload = serializeResourceForm(formFields.value, form.value)
     if (editing.value) await props.api.update(String(route.params.id), payload, auth.token)
     else await props.api.create(payload, auth.token)
     await router.push(props.resource.route)
@@ -82,10 +83,10 @@ async function submit() {
       <div><h1 class="text-2xl font-semibold tracking-tight">{{ editing ? `Edit ${resource.label}` : `Create ${resource.label}` }}</h1><p class="text-sm text-muted-foreground">{{ resource.label }}</p></div>
     </div>
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
-    <Card v-if="loading"><CardHeader><Skeleton class="h-6 w-40" /></CardHeader><CardContent class="flex flex-col gap-3"><Skeleton v-for="field in resource.fields" :key="field.name" class="h-10" /></CardContent></Card>
+    <Card v-if="loading"><CardHeader><Skeleton class="h-6 w-40" /></CardHeader><CardContent class="flex flex-col gap-3"><Skeleton v-for="field in formFields" :key="field.name" class="h-10" /></CardContent></Card>
     <Card v-else><CardHeader><CardTitle>{{ editing ? `Edit ${resource.label}` : `Create ${resource.label}` }}</CardTitle><CardDescription>Review the values before saving.</CardDescription></CardHeader><CardContent><form class="grid gap-5 sm:max-w-xl" @submit.prevent="submit">
       <FieldGroup>
-        <Field v-for="field in resource.fields" :key="field.name">
+        <Field v-for="field in formFields" :key="field.name">
           <FieldLabel :for="fieldId(field)">{{ field.label }}</FieldLabel>
           <Switch v-if="isBoolean(field)" :id="fieldId(field)" v-model="form[field.name] as boolean" />
           <Select v-else-if="isSelect(field)" v-model="form[field.name] as string"><SelectTrigger :id="fieldId(field)"><SelectValue /></SelectTrigger><SelectContent><SelectItem v-for="option in field.options || []" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select>

@@ -25,6 +25,7 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 - 排序字段按资源白名单限制，搜索使用参数绑定。
 - Resource Manifest 可声明 `data_scope: all|own`；`own` 资源必须同时声明整数型
   `owner_field`，后端列表、详情、导出和写操作会统一应用数据范围约束。
+- Resource Field 可声明 `visible/readable/writable/sensitive`；后端响应裁剪、查询、导出和写入保护统一使用该策略，前端隐藏仅用于改善体验。
 
 资源页面必须复用 Registry 契约，不能在页面内重新定义资源元数据。用户和角色的
 统一 CRUD 入口仍由各自 Domain Service 承担安全校验；关系操作和用户批量状态属于

@@ -3,6 +3,10 @@ export interface ResourceFormField {
   label: string
   type: string
   options?: readonly { value: string; label: string }[]
+  visible?: boolean
+  readable?: boolean
+  writable?: boolean
+  sensitive?: boolean
 }
 
 function valueForField(field: ResourceFormField, value: unknown) {

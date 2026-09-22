@@ -43,11 +43,16 @@ type Spec struct {
 }
 
 type FieldSpec struct {
-	Name     string
-	GoName   string
-	Type     string
-	Required bool
-	Options  []FieldOption
+	Name             string
+	GoName           string
+	Type             string
+	Required         bool
+	Options          []FieldOption
+	Visible          *bool
+	Readable         *bool
+	Writable         *bool
+	Sensitive        bool
+	PolicyConfigured bool
 }
 
 type FieldOption struct {
@@ -57,29 +62,50 @@ type FieldOption struct {
 
 func ParseField(value string) (FieldSpec, error) {
 	parts := strings.Split(value, ":")
-	if len(parts) < 2 || len(parts) > 4 || !fieldNamePattern.MatchString(parts[0]) {
+	if len(parts) < 2 || len(parts) > 5 || !fieldNamePattern.MatchString(parts[0]) {
 		return FieldSpec{}, fmt.Errorf("invalid field %q: expected name:type[:required[:value=Label|value=Label]]", value)
 	}
 	if _, ok := supportedFieldTypes[parts[1]]; !ok {
 		return FieldSpec{}, fmt.Errorf("unsupported field type %q", parts[1])
 	}
 	field := FieldSpec{Name: parts[0], GoName: pascal(parts[0]), Type: parts[1]}
-	if len(parts) == 3 {
-		if parts[2] != "required" {
-			return FieldSpec{}, fmt.Errorf("invalid field modifier %q", parts[2])
+	visible, readable, writable := true, true, true
+	field.Visible, field.Readable, field.Writable = &visible, &readable, &writable
+	modifiers := parts[2:]
+	if len(modifiers) > 0 && strings.Contains(modifiers[len(modifiers)-1], "=") {
+		if field.Type != "select" {
+			return FieldSpec{}, fmt.Errorf("field options require a select field")
 		}
-		field.Required = true
-	}
-	if len(parts) == 4 {
-		if parts[2] != "required" || field.Type != "select" {
-			return FieldSpec{}, fmt.Errorf("field options require a required select field")
-		}
-		field.Required = true
-		options, err := parseFieldOptions(parts[3])
+		options, err := parseFieldOptions(modifiers[len(modifiers)-1])
 		if err != nil {
 			return FieldSpec{}, fmt.Errorf("invalid field options: %w", err)
 		}
 		field.Options = options
+		modifiers = modifiers[:len(modifiers)-1]
+	}
+	seenModifiers := make(map[string]struct{}, len(modifiers))
+	for _, modifier := range modifiers {
+		if _, exists := seenModifiers[modifier]; exists || modifier == "" {
+			return FieldSpec{}, fmt.Errorf("invalid field modifier %q", modifier)
+		}
+		seenModifiers[modifier] = struct{}{}
+		switch modifier {
+		case "required":
+			field.Required = true
+		case "sensitive":
+			field.Sensitive = true
+			field.PolicyConfigured = true
+		case "readonly":
+			writable = false
+			field.Writable = &writable
+			field.PolicyConfigured = true
+		case "hidden":
+			visible, readable = false, false
+			field.Visible, field.Readable = &visible, &readable
+			field.PolicyConfigured = true
+		default:
+			return FieldSpec{}, fmt.Errorf("invalid field modifier %q", modifier)
+		}
 	}
 	return field, nil
 }

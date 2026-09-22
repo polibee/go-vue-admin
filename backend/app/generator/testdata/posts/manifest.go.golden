@@ -8,8 +8,8 @@ func Manifest() resource.Manifest {
 		Name: "posts", Label: "Posts", Route: "/admin/posts", Table: "posts", Permissions: []string{"admin.posts.view"},
 
 		Fields: []resource.Field{
-			{Name: "title", Label: "Title", Type: "text", Required: true},
-			{Name: "published", Label: "Published", Type: "boolean"},
+			{Name: "title", Label: "Title", Type: "text", Required: true, Visible: true, Readable: true, Writable: true, Sensitive: false, PolicyConfigured: true},
+			{Name: "published", Label: "Published", Type: "boolean", Required: false, Visible: true, Readable: true, Writable: true, Sensitive: false, PolicyConfigured: true},
 		},
 		Columns: []resource.Column{
 			{Name: "title", Label: "Title", Sortable: true},

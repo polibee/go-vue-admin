@@ -85,3 +85,26 @@ func TestRenderFrontendOwnScopeMetadata(t *testing.T) {
 	}
 	t.Fatal("resource metadata artifact not found")
 }
+
+func TestRenderFrontendFieldPolicies(t *testing.T) {
+	spec, err := Normalize(Input{Name: "users", Fields: []string{"email:email", "password:text:sensitive", "id:integer:readonly"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	artifacts, err := RenderFrontend(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, artifact := range artifacts {
+		if artifact.Path == "admin/src/modules/users/resource.ts" {
+			content := string(artifact.Content)
+			for _, fragment := range []string{"sensitive: true", "writable: false", "readable: true", "visible: true"} {
+				if !strings.Contains(content, fragment) {
+					t.Fatalf("generated field policy missing %q: %s", fragment, content)
+				}
+			}
+			return
+		}
+	}
+	t.Fatal("resource metadata artifact not found")
+}

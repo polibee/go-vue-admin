@@ -165,7 +165,7 @@ func frontendFields(spec Spec) string {
 			}
 			options = ", options: [" + strings.Join(values, ", ") + "]"
 		}
-		parts = append(parts, fmt.Sprintf("{ name: %q, label: %q, type: %q, required: %t%s }", field.Name, humanize(field.Name), field.Type, field.Required, options))
+		parts = append(parts, fmt.Sprintf("{ name: %q, label: %q, type: %q, required: %t, visible: %t, readable: %t, writable: %t, sensitive: %t%s }", field.Name, humanize(field.Name), field.Type, field.Required, fieldBool(field.Visible), fieldBool(field.Readable), fieldBool(field.Writable), field.Sensitive, options))
 	}
 	return "[" + strings.Join(parts, ", ") + "]"
 }

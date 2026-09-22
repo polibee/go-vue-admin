@@ -71,7 +71,7 @@ func resourceOptionSchema() map[string]any {
 }
 
 func resourceFieldSchema() map[string]any {
-	return map[string]any{"type": "object", "required": []string{"name", "label", "type"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "type": map[string]any{"type": "string"}, "required": map[string]any{"type": "boolean"}, "options": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceOption"}}}}
+	return map[string]any{"type": "object", "required": []string{"name", "label", "type", "visible", "readable", "writable", "sensitive"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "type": map[string]any{"type": "string"}, "required": map[string]any{"type": "boolean"}, "visible": map[string]any{"type": "boolean"}, "readable": map[string]any{"type": "boolean"}, "writable": map[string]any{"type": "boolean"}, "sensitive": map[string]any{"type": "boolean"}, "options": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceOption"}}}}
 }
 
 func resourceColumnSchema() map[string]any {
