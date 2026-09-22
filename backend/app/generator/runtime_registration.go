@@ -5,9 +5,12 @@ import (
 	"go/format"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 )
+
+var customPageModePattern = regexp.MustCompile(`\bpageMode\s*:\s*["']custom["']`)
 
 type generatedResource struct {
 	Name     string
@@ -59,7 +62,7 @@ func discoverGeneratedResources(root, current, nested, marker string) []generate
 		seen[name] = true
 		item := generatedResource{Name: name, GoName: pascal(name), Package: strings.ReplaceAll(name, "-", "_"), PageMode: "generic"}
 		if nested == "" {
-			if content, err := os.ReadFile(path); err == nil && strings.Contains(string(content), "pageMode: \"custom\"") {
+			if content, err := os.ReadFile(path); err == nil && customPageModePattern.Match(content) {
 				item.PageMode = "custom"
 			}
 		}

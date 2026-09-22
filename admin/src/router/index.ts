@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { generatedResourceRoutes } from '@/core/resource/generated'
+import ResourceListPage from '@/core/resource/pages/ResourceListPage.vue'
+import ResourceDetailPage from '@/core/resource/pages/ResourceDetailPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,12 +25,12 @@ const router = createRouter({
         { path: 'rbac', name: 'rbac', meta: { anyPermissions: ['admin.users.view', 'admin.roles.manage', 'admin.permissions.manage'] }, component: () => import('@/modules/rbac/pages/RBACPage.vue') },
         { path: 'audit-logs', name: 'audit-logs', meta: { permission: 'admin.users.view' }, component: () => import('@/modules/audit/pages/AuditLogPage.vue') },
         ...generatedResourceRoutes,
-        { path: ':resource(users|roles|permissions)', name: 'resource-list', component: () => import('@/core/resource/pages/ResourceListPage.vue') },
+        { path: ':resource(users|roles|permissions)', name: 'resource-list', component: ResourceListPage },
         { path: 'users/new', name: 'user-create', meta: { permission: 'admin.users.manage' }, component: () => import('@/modules/users/pages/UserFormPage.vue') },
         { path: 'users/:id/edit', name: 'user-edit', meta: { permission: 'admin.users.manage' }, component: () => import('@/modules/users/pages/UserFormPage.vue') },
         { path: 'roles/new', name: 'role-create', meta: { permission: 'admin.roles.manage' }, component: () => import('@/modules/roles/pages/RoleFormPage.vue') },
         { path: 'roles/:id/edit', name: 'role-edit', meta: { permission: 'admin.roles.manage' }, component: () => import('@/modules/roles/pages/RoleFormPage.vue') },
-        { path: ':resource(users|roles|permissions)/:id', name: 'resource-detail', component: () => import('@/core/resource/pages/ResourceDetailPage.vue') },
+        { path: ':resource(users|roles|permissions)/:id', name: 'resource-detail', component: ResourceDetailPage },
         { path: 'loading', name: 'loading', component: () => import('@/core/pages/LoadingPage.vue') },
         { path: 'empty', name: 'empty', component: () => import('@/core/pages/EmptyPage.vue') },
         { path: 'error', name: 'error', component: () => import('@/core/pages/ErrorPage.vue') },
