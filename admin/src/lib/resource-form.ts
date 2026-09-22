@@ -21,8 +21,8 @@ export function createResourceForm(fields: readonly ResourceFormField[], record:
   return Object.fromEntries(fields.map((field) => [field.name, valueForField(field, record[field.name])]))
 }
 
-export function serializeResourceForm(fields: readonly ResourceFormField[], form: Record<string, unknown>) {
-  return Object.fromEntries(fields.filter((field) => field.writable !== false).map((field) => {
+export function serializeResourceForm(fields: readonly ResourceFormField[], form: Record<string, unknown>, includeField: (field: ResourceFormField) => boolean = () => true) {
+  return Object.fromEntries(fields.filter((field) => field.writable !== false && includeField(field)).map((field) => {
     const value = form[field.name]
     if (field.type === 'number') return [field.name, value === '' || value === null || value === undefined ? null : Number(value)]
     if (field.type === 'boolean') return [field.name, Boolean(value)]

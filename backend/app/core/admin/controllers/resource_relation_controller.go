@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/goravel/framework/contracts/database/orm"
 	"github.com/goravel/framework/contracts/http"
@@ -15,6 +17,33 @@ import (
 type relationOption struct {
 	Value string `json:"value"`
 	Label string `json:"label"`
+}
+
+type relationOptionsQuery struct {
+	Search   string
+	Selected string
+	Page     int
+	PerPage  int
+}
+
+func normalizeRelationOptionsQuery(search, selected, pageValue, perPageValue string) relationOptionsQuery {
+	return relationOptionsQuery{
+		Search:   strings.TrimSpace(search),
+		Selected: strings.TrimSpace(selected),
+		Page:     positiveInt(pageValue, 1),
+		PerPage:  minPositiveInt(perPageValue, 100, 20),
+	}
+}
+
+func minPositiveInt(value string, maximum, fallback int) int {
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed < 1 {
+		return fallback
+	}
+	if parsed > maximum {
+		return maximum
+	}
+	return parsed
 }
 
 func (r *ResourceController) RelationOptions(ctx http.Context) http.Response {
@@ -52,8 +81,13 @@ func (r *ResourceController) RelationOptions(ctx http.Context) http.Response {
 	if scopeErr != nil {
 		return resourceScopeError(ctx, scopeErr)
 	}
+	optionsQuery := normalizeRelationOptionsQuery(ctx.Request().Query("search"), ctx.Request().Query("selected"), ctx.Request().Query("page", "1"), ctx.Request().Query("per_page", "20"))
+	if optionsQuery.Search != "" {
+		query = query.Where(labelField+" LIKE ?", "%"+optionsQuery.Search+"%")
+	}
 	var rows []map[string]any
-	if err := paginateRelationOptions(query, relation.ForeignField, labelField, &rows); err != nil {
+	var total int64
+	if err := paginateRelationOptions(query, relation.ForeignField, labelField, optionsQuery.Page, optionsQuery.PerPage, &rows, &total); err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 	}
 	options := make([]relationOption, 0, len(rows))
@@ -65,7 +99,24 @@ func (r *ResourceController) RelationOptions(ctx http.Context) http.Response {
 		}
 		options = append(options, relationOption{Value: fmt.Sprint(value), Label: fmt.Sprint(label)})
 	}
-	return ctx.Response().Success().Json(http.Json{"data": options})
+	if optionsQuery.Selected != "" && !relationOptionExists(options, optionsQuery.Selected) {
+		selectedQuery, selectedScopeErr := applyResourceScope(ctx, facades.Orm().Query().Table(target.Table), target, "view")
+		if selectedScopeErr != nil {
+			return resourceScopeError(ctx, selectedScopeErr)
+		}
+		selectedQuery = selectedQuery.Where(relation.ForeignField+" = ?", optionsQuery.Selected)
+		var selectedRows []map[string]any
+		var selectedTotal int64
+		if selectedErr := paginateRelationOptions(selectedQuery, relation.ForeignField, labelField, 1, 1, &selectedRows, &selectedTotal); selectedErr != nil {
+			return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
+		}
+		for _, row := range selectedRows {
+			if value, valueOK := row[relation.ForeignField]; valueOK && row[labelField] != nil {
+				options = append(options, relationOption{Value: fmt.Sprint(value), Label: fmt.Sprint(row[labelField])})
+			}
+		}
+	}
+	return ctx.Response().Success().Json(http.Json{"data": options, "meta": relationOptionsMeta(optionsQuery, total)})
 }
 
 func (r *ResourceController) RelationRecords(ctx http.Context) http.Response {
@@ -107,7 +158,8 @@ func (r *ResourceController) RelationRecords(ctx http.Context) http.Response {
 	}
 	query = query.Where(relation.ForeignField+" = ?", id)
 	var rows []map[string]any
-	if err := paginateRelationOptions(query, "id", relation.LabelField, &rows); err != nil {
+	var total int64
+	if err := paginateRelationOptions(query, "id", relation.LabelField, 1, 100, &rows, &total); err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 	}
 	options := make([]relationOption, 0, len(rows))
@@ -165,7 +217,24 @@ func relationLabelField(manifest resource.Manifest, name string) (string, bool) 
 	return name, targetFieldReadable(manifest, name)
 }
 
-func paginateRelationOptions(query orm.Query, valueField, labelField string, rows *[]map[string]any) error {
+func paginateRelationOptions(query orm.Query, valueField, labelField string, page, perPage int, rows *[]map[string]any, total *int64) error {
 	// Paginate keeps option payloads bounded without exposing arbitrary limits to the client.
-	return query.Select(valueField, labelField).OrderBy(labelField, "asc").Paginate(1, 100, rows, new(int64))
+	return query.Select(valueField, labelField).OrderBy(labelField, "asc").Paginate(page, perPage, rows, total)
+}
+
+func relationOptionsMeta(query relationOptionsQuery, total int64) http.Json {
+	lastPage := int((total + int64(query.PerPage) - 1) / int64(query.PerPage))
+	if lastPage == 0 {
+		lastPage = 1
+	}
+	return http.Json{"page": query.Page, "per_page": query.PerPage, "total": total, "last_page": lastPage}
+}
+
+func relationOptionExists(options []relationOption, value string) bool {
+	for _, option := range options {
+		if option.Value == value {
+			return true
+		}
+	}
+	return false
 }

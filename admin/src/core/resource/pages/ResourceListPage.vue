@@ -18,6 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ApiError, errorMessageKey } from '@/lib/api'
 import { generatedApi, type ActionResponse, type ActionRequest, type ResourceFilter, type ResourceManifest as GeneratedResourceManifest, type ResourceListMeta } from '@/generated/api'
 import { executableBatchActions } from '@/lib/resource-actions'
+import { buildActionSelection } from '@/lib/resource-selection'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 
@@ -51,6 +52,8 @@ const bulkUpdating = ref(false)
 const bulkDeleteDialogOpen = ref(false)
 const bulkDeleting = ref(false)
 const bulkDeleteAction = ref('bulk-delete')
+const bulkCustomAction = ref<ResourceAction>()
+const bulkCustomDialogOpen = ref(false)
 const bulkUpdateDialogOpen = ref(false)
 const bulkUpdateField = ref('')
 const bulkUpdateValue = ref('')
@@ -198,17 +201,18 @@ function openBulkAction(action: ResourceAction) {
     bulkUpdateField.value = writableFields.value[0]?.name || ''
     bulkUpdateValue.value = ''
     bulkUpdateDialogOpen.value = true
+  } else {
+    bulkCustomAction.value = action
+    bulkCustomDialogOpen.value = true
   }
 }
 function selectionRequest(payload?: Record<string, unknown>): ActionRequest {
-  if (allFilteredSelected.value) {
-    const query: Record<string, string> = {}
-    for (const [key, value] of buildResourceQuery().entries()) {
-      if (!['page', 'per_page', 'sort', 'dir'].includes(key)) query[key] = value
-    }
-    return { selection: { mode: 'query', query, exclude_ids: excludedIds.value.map(Number) }, payload }
+  const query: Record<string, string> = {}
+  for (const [key, value] of buildResourceQuery().entries()) {
+    if (!['page', 'per_page', 'sort', 'dir'].includes(key)) query[key] = value
   }
-  return { selection: { mode: 'ids', ids: selectedIds.value.map(Number) }, payload }
+  const selection = buildActionSelection(selectedIds.value, allFilteredSelected.value, excludedIds.value, query)
+  return { selection, payload }
 }
 async function applyBulkStatus() {
   if (!auth.token || !selectedIds.value.length) return
@@ -253,6 +257,18 @@ async function applyBulkUpdate() {
     error.value = localizedError(value)
   } finally {
     bulkUpdateSaving.value = false
+  }
+}
+async function applyCustomAction() {
+  if (!auth.token || !bulkCustomAction.value) return
+  error.value = ''
+  try {
+    lastActionResult.value = await generatedApi.resourceAction(resourceName.value, bulkCustomAction.value.name, selectionRequest(), auth.token)
+    bulkCustomDialogOpen.value = false
+    clearSelection()
+    await loadRows(meta.value.page)
+  } catch (value) {
+    error.value = localizedError(value)
   }
 }
 function editPath(row: Record<string, unknown>) { return `/${resourceName.value}/${row.id}/edit` }
@@ -341,5 +357,6 @@ watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; 
     <AlertDialog v-model:open="bulkStatusDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkStatusTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkStatusDescription', { count: selectedCount, status: bulkStatusLabel }) }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkUpdating" @click="applyBulkStatus">{{ t('resource.applyStatus') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     <AlertDialog v-model:open="bulkDeleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkDeleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkDeleteDescription', { count: selectedCount }) }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkDeleting" @click="applyBulkDelete">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     <Dialog v-model:open="bulkUpdateDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ t('resource.bulkUpdateTitle') }}</DialogTitle><DialogDescription>{{ t('resource.bulkUpdateDescription', { count: selectedCount }) }}</DialogDescription></DialogHeader><div class="grid gap-3"><Select v-model="bulkUpdateField"><SelectTrigger><SelectValue :placeholder="t('resource.bulkUpdateField')" /></SelectTrigger><SelectContent><SelectItem v-for="field in writableFields" :key="field.name" :value="field.name">{{ field.label }}</SelectItem></SelectContent></Select><Input v-model="bulkUpdateValue" :placeholder="t('resource.bulkUpdateValue')" /></div><DialogFooter><Button variant="outline" @click="bulkUpdateDialogOpen = false">{{ t('resource.cancel') }}</Button><Button :disabled="bulkUpdateSaving || !bulkUpdateField" @click="applyBulkUpdate">{{ t('resource.applyStatus') }}</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog v-model:open="bulkCustomDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ bulkCustomAction?.label }}</DialogTitle><DialogDescription>Apply this action to {{ selectedCount }} selected records?</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" @click="bulkCustomDialogOpen = false">{{ t('resource.cancel') }}</Button><Button @click="applyCustomAction">{{ bulkCustomAction?.label }}</Button></DialogFooter></DialogContent></Dialog>
   </div>
 </template>

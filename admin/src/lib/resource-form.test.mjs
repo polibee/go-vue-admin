@@ -16,3 +16,6 @@ assert.deepEqual(serializeResourceForm(fields, { name: 'Ada', status: 'active', 
   name: 'Ada',
   status: 'active',
 })
+assert.deepEqual(serializeResourceForm(fields, { name: 'Ada', status: 'active' }, (field) => field.name !== 'status'), {
+  name: 'Ada',
+})

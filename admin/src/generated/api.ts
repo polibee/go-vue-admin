@@ -18,6 +18,7 @@ export interface ResourceFormGroup { name: string; label: string; columns?: numb
 export interface ResourceDetailSection { name: string; label: string; fields: string[] }
 export interface ResourceFieldDependency { field: string; on: string; value: string }
 export interface RelationOption { value: string; label: string }
+export interface RelationOptionList { data: RelationOption[]; meta: ResourceListMeta }
 export interface ResourceListMeta { page: number; per_page: number; total: number; last_page: number }
 export interface ResourceList<T = Record<string, unknown>> { data: T[]; meta: ResourceListMeta }
 export interface ActionSelection { mode: 'ids' | 'query'; ids?: number[]; query?: Record<string, string>; exclude_ids?: number[] }
@@ -56,7 +57,7 @@ export const generatedApi = {
   resourceUpdate<T = Record<string, unknown>>(resource: string, id: string | number, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/' + resource + '/' + id, { method: 'PUT', body: JSON.stringify(payload) }, token) },
   resourceDelete(resource: string, id: string | number, token: string) { return apiFetch<void>('/api/v1/admin/' + resource + '/' + id, { method: 'DELETE' }, token) },
   resourceAction(resource: string, action: string, request: ActionRequest, token: string) { return apiFetch<ActionResponse>('/api/v1/admin/' + resource + '/actions/' + action, { method: 'POST', body: JSON.stringify(request) }, token).then((payload) => (payload as { data?: ActionResponse }).data || payload as ActionResponse) },
-  resourceRelationOptions(resource: string, relation: string, token: string) { return apiFetchEnvelope<RelationOption[]>('/api/v1/admin/' + resource + '/relations/' + relation + '/options', {}, token) },
+  resourceRelationOptions(resource: string, relation: string, query: URLSearchParams = new URLSearchParams(), token: string) { return apiFetchEnvelope<RelationOption[]>('/api/v1/admin/' + resource + '/relations/' + relation + '/options?' + query, {}, token) },
   resourceRelationRecords(resource: string, id: string | number, relation: string, token: string) { return apiFetchEnvelope<RelationOption[]>('/api/v1/admin/' + resource + '/' + id + '/relations/' + relation, {}, token) },
   replaceRolePermissions(roleID: number, permissionIDs: number[], scopes: Record<string, DataScope>, fields: Record<string, Record<string, FieldPermissionOverride>>, token: string) { return apiFetch<void>('/api/v1/admin/roles/' + roleID + '/permissions', { method: 'PUT', body: JSON.stringify({ permission_ids: permissionIDs, scopes, fields }) }, token) },
 }

@@ -23,6 +23,8 @@ func Spec() map[string]any {
 				"ResourceDetailSection":   resourceDetailSectionSchema(),
 				"ResourceFieldDependency": resourceFieldDependencySchema(),
 				"RelationOption":          relationOptionSchema(),
+				"RelationOptionList":      relationOptionListSchema(),
+				"ResourceListMeta":        resourceListMetaSchema(),
 				"ResourceManifest":        resourceManifestSchema(),
 				"ActionRequest":           actionRequestSchema(),
 				"ActionResponse":          actionResponseSchema(),
@@ -55,11 +57,11 @@ func Spec() map[string]any {
 				"put":    resourceWriteOperation("updateResource", "200", true),
 				"delete": map[string]any{"operationId": "deleteResource", "parameters": []map[string]any{pathParameter("resource"), pathParameter("id")}, "responses": map[string]any{"204": map[string]any{"description": "Resource deleted"}, "401": errorResponse(), "403": errorResponse(), "404": errorResponse()}},
 			},
-			"/admin/overview":       map[string]any{"get": operation("adminOverview")},
-			"/admin/audit-logs":     map[string]any{"get": listOperation("auditLogs", []map[string]any{queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("action", "string"), queryParameter("user_id", "integer")})},
+			"/admin/overview":           map[string]any{"get": operation("adminOverview")},
+			"/admin/audit-logs":         map[string]any{"get": listOperation("auditLogs", []map[string]any{queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("action", "string"), queryParameter("user_id", "integer")})},
 			"/admin/audit-logs/cleanup": map[string]any{"post": map[string]any{"operationId": "cleanupAuditLogs", "requestBody": jsonBody("AuditCleanupRequest", map[string]any{"type": "object", "required": []string{"retention_days"}, "properties": map[string]any{"retention_days": map[string]any{"type": "integer", "minimum": 1, "maximum": 3650}}}), "responses": map[string]any{"200": jsonResponse("AuditCleanupResponse"), "401": errorResponse(), "403": errorResponse(), "422": errorResponse()}}},
-			"/admin/settings":       map[string]any{"get": operation("systemSettings")},
-			"/admin/settings/{key}": map[string]any{"put": map[string]any{"operationId": "updateSystemSetting", "parameters": []map[string]any{{"name": "key", "in": "path", "required": true, "schema": map[string]any{"type": "string"}}}, "requestBody": jsonBody("SystemSettingRequest", map[string]any{"type": "object", "required": []string{"value"}, "properties": map[string]any{"value": map[string]any{"type": "string"}, "value_type": map[string]any{"type": "string", "enum": []string{"string", "boolean", "integer", "json"}}, "group": map[string]any{"type": "string"}, "description": map[string]any{"type": "string"}}}), "responses": map[string]any{"200": jsonResponse("SystemSettingResponse"), "422": errorResponse()}}},
+			"/admin/settings":           map[string]any{"get": operation("systemSettings")},
+			"/admin/settings/{key}":     map[string]any{"put": map[string]any{"operationId": "updateSystemSetting", "parameters": []map[string]any{{"name": "key", "in": "path", "required": true, "schema": map[string]any{"type": "string"}}}, "requestBody": jsonBody("SystemSettingRequest", map[string]any{"type": "object", "required": []string{"value"}, "properties": map[string]any{"value": map[string]any{"type": "string"}, "value_type": map[string]any{"type": "string", "enum": []string{"string", "boolean", "integer", "json"}}, "group": map[string]any{"type": "string"}, "description": map[string]any{"type": "string"}}}), "responses": map[string]any{"200": jsonResponse("SystemSettingResponse"), "422": errorResponse()}}},
 			"/admin/roles/{id}/permissions": map[string]any{"put": map[string]any{
 				"operationId": "replaceRolePermissions",
 				"parameters":  []map[string]any{pathParameter("id")},
@@ -118,11 +120,24 @@ func relationOptionSchema() map[string]any {
 	return map[string]any{"type": "object", "required": []string{"value", "label"}, "properties": map[string]any{"value": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}}}
 }
 
+func relationOptionListSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"data", "meta"}, "properties": map[string]any{
+		"data": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/RelationOption"}},
+		"meta": map[string]any{"$ref": "#/components/schemas/ResourceListMeta"},
+	}}
+}
+
+func resourceListMetaSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"page", "per_page", "total", "last_page"}, "properties": map[string]any{
+		"page": map[string]any{"type": "integer"}, "per_page": map[string]any{"type": "integer"}, "total": map[string]any{"type": "integer"}, "last_page": map[string]any{"type": "integer"},
+	}}
+}
+
 func actionRequestSchema() map[string]any {
 	return map[string]any{"type": "object", "properties": map[string]any{
-		"ids":     map[string]any{"type": "array", "minItems": 1, "maxItems": 1000, "items": map[string]any{"type": "integer", "format": "int64"}},
+		"ids":       map[string]any{"type": "array", "minItems": 1, "maxItems": 1000, "items": map[string]any{"type": "integer", "format": "int64"}},
 		"selection": map[string]any{"type": "object", "required": []string{"mode"}, "properties": map[string]any{"mode": map[string]any{"type": "string", "enum": []string{"ids", "query"}}, "ids": map[string]any{"type": "array", "items": map[string]any{"type": "integer", "format": "int64"}}, "query": map[string]any{"type": "object", "additionalProperties": map[string]any{"type": "string"}}, "exclude_ids": map[string]any{"type": "array", "items": map[string]any{"type": "integer", "format": "int64"}}}},
-		"payload": map[string]any{"type": "object", "additionalProperties": true},
+		"payload":   map[string]any{"type": "object", "additionalProperties": true},
 	}}
 }
 
@@ -203,7 +218,7 @@ func resourceActionOperation() map[string]any {
 }
 
 func relationOptionsOperation() map[string]any {
-	return map[string]any{"operationId": "resourceRelationOptions", "parameters": []map[string]any{pathParameter("resource"), pathParameter("relation")}, "responses": map[string]any{"200": map[string]any{"description": "Relation options", "content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"type": "object", "properties": map[string]any{"data": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/RelationOption"}}}}}}}, "401": errorResponse(), "403": errorResponse(), "404": errorResponse()}}
+	return map[string]any{"operationId": "resourceRelationOptions", "parameters": []map[string]any{pathParameter("resource"), pathParameter("relation"), queryParameter("search", "string"), queryParameter("selected", "string"), queryParameter("page", "integer"), queryParameter("per_page", "integer")}, "responses": map[string]any{"200": map[string]any{"description": "Relation options", "content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"$ref": "#/components/schemas/RelationOptionList"}}}}, "401": errorResponse(), "403": errorResponse(), "404": errorResponse()}}
 }
 
 func relationRecordsOperation() map[string]any {

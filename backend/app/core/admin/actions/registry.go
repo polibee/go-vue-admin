@@ -98,6 +98,17 @@ func (r *Registry) Find(kind string) (Handler, error) {
 	return handler, nil
 }
 
+func (r *Registry) FindForPayload(kind, payload string) (Handler, error) {
+	handler, err := r.Find(kind)
+	if err != nil {
+		return nil, err
+	}
+	if handler.Payload() != payload {
+		return nil, ErrPayloadContract
+	}
+	return handler, nil
+}
+
 func NormalizeRequest(request Request) (Request, error) {
 	if len(request.IDs) == 0 {
 		return Request{}, ErrEmptyIDs

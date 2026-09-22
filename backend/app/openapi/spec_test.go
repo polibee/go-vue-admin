@@ -37,7 +37,7 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		}
 	}
 	schemas := spec["components"].(map[string]any)["schemas"].(map[string]any)
-	for _, schema := range []string{"ResourceManifest", "ResourceField", "ResourceOption", "ResourceAction", "ResourceRelation", "ResourceFormGroup", "ResourceDetailSection", "ResourceFieldDependency", "RelationOption", "ActionRequest", "ActionResponse", "GlobalSearchResult", "GlobalSearchResponse", "DataScope"} {
+	for _, schema := range []string{"ResourceManifest", "ResourceField", "ResourceOption", "ResourceAction", "ResourceRelation", "ResourceFormGroup", "ResourceDetailSection", "ResourceFieldDependency", "RelationOption", "RelationOptionList", "ResourceListMeta", "ActionRequest", "ActionResponse", "GlobalSearchResult", "GlobalSearchResponse", "DataScope"} {
 		if _, ok := schemas[schema]; !ok {
 			t.Fatalf("missing resource schema %s", schema)
 		}

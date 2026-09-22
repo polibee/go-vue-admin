@@ -17,8 +17,8 @@ export const resourceApi = {
   update(id: string | number, payload: ResourceRecord, token: string) {
     return generatedApi.resourceUpdate<ResourceRecord>("departments", id, payload, token);
   },
-  relationOptions(relation: string, token: string) {
-    return generatedApi.resourceRelationOptions("departments", relation, token);
+  relationOptions(relation: string, query: URLSearchParams, token: string) {
+    return generatedApi.resourceRelationOptions("departments", relation, query, token);
   },
   remove(id: string | number, token: string) {
     return generatedApi.resourceDelete("departments", id, token);

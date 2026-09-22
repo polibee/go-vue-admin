@@ -8,6 +8,7 @@ import (
 	adminactions "goravel/app/core/admin/actions"
 	"goravel/app/core/resource"
 	"goravel/app/facades"
+	adminactionregistry "goravel/app/modules/admin/actions"
 	"goravel/app/modules/admin/registry"
 	useractions "goravel/app/modules/users/actions"
 	rbacservices "goravel/app/services/rbac"
@@ -98,12 +99,12 @@ func (r *ResourceController) Action(ctx http.Context) http.Response {
 		recordManagementAudit(ctx, "resource.action", map[string]any{"resource": resourceName, "action": actionName, "requested": result.Requested, "succeeded": result.Succeeded, "failed": result.Failed})
 		return ctx.Response().Success().Json(http.Json{"data": result})
 	}
-	handler, err := newAdminActionRegistry().Find(action.Kind)
+	handler, err := adminactionregistry.Registry().FindForPayload(action.Kind, action.Payload)
 	if err != nil {
+		if errors.Is(err, adminactions.ErrPayloadContract) {
+			return actionValidationError(ctx, adminactions.ErrPayloadContract)
+		}
 		return ctx.Response().Status(500).Json(http.Json{"code": "ACTION_HANDLER_NOT_FOUND"})
-	}
-	if handler.Payload() != action.Payload {
-		return actionValidationError(ctx, adminactions.ErrPayloadContract)
 	}
 	accessibleIDs := make([]int64, 0, len(request.IDs))
 	scopeFailures := make([]actionFailureInput, 0)
@@ -253,12 +254,6 @@ func executeBuiltinTrashAction(ctx http.Context, manifest resource.Manifest, kin
 		result.Succeeded++
 	}
 	return result, nil
-}
-
-func newAdminActionRegistry() *adminactions.Registry {
-	registry := adminactions.NewRegistry()
-	_ = registry.Register(useractions.NewSetStatusHandler())
-	return registry
 }
 
 func mergeActionResults(action string, requested int, scopeFailures []actionFailureInput, handlerResult actionResultInput) adminactions.Result {

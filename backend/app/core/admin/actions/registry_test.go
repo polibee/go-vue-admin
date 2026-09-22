@@ -68,3 +68,16 @@ func TestRegistryRejectsHandlerWithoutPayloadContract(t *testing.T) {
 		t.Fatalf("expected invalid handler to be rejected, got %v", err)
 	}
 }
+
+func TestFindForPayloadValidatesHandlerContract(t *testing.T) {
+	registry := NewRegistry()
+	if err := registry.Register(fakeHandler{kind: "archive"}); err != nil {
+		t.Fatalf("register: %v", err)
+	}
+	if _, err := registry.FindForPayload("archive", "test-payload"); err != nil {
+		t.Fatalf("find valid payload: %v", err)
+	}
+	if _, err := registry.FindForPayload("archive", "wrong"); err != ErrPayloadContract {
+		t.Fatalf("find invalid payload error = %v, want %v", err, ErrPayloadContract)
+	}
+}

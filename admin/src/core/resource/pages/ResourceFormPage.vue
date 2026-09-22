@@ -21,7 +21,7 @@ const api = computed(() => ({
   show: (id: string | number, token: string) => generatedApi.resourceShow(resourceName.value, id, token),
   create: (payload: Record<string, unknown>, token: string) => generatedApi.resourceCreate(resourceName.value, payload, token),
   update: (id: string | number, payload: Record<string, unknown>, token: string) => generatedApi.resourceUpdate(resourceName.value, id, payload, token),
-  relationOptions: (relation: string, token: string) => generatedApi.resourceRelationOptions(resourceName.value, relation, token),
+  relationOptions: (relation: string, query: URLSearchParams, token: string) => generatedApi.resourceRelationOptions(resourceName.value, relation, query, token),
 }))
 
 onMounted(async () => {

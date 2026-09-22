@@ -56,7 +56,7 @@ func (r *ResourceController) Create(ctx http.Context) http.Response {
 	}
 	values, err := bindGeneratedValues(ctx, manifest, "create")
 	if err != nil {
-		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
+		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR", "message": err.Error()})
 	}
 	if err := enforceResourceCreateOwner(ctx, manifest, values); err != nil {
 		return resourceScopeError(ctx, err)
@@ -143,7 +143,7 @@ func (r *ResourceController) Update(ctx http.Context) http.Response {
 	}
 	values, err := bindGeneratedValues(ctx, manifest, "update")
 	if err != nil {
-		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
+		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR", "message": err.Error()})
 	}
 	if err := validateResourceRelations(ctx, manifest, values); err != nil {
 		return relationWriteError(ctx, err)
