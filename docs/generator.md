@@ -13,7 +13,7 @@ Generator 的目标是减少重复代码，不是替代架构设计。生成命�
 ## `admin:make-resource`
 
 ```text
-go run . artisan admin:make-resource posts \
+go run . admin:make-resource posts \
   --label="Posts" \
   --route="/admin/posts" \
   --permission="admin.posts.view" \
