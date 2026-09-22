@@ -11,6 +11,7 @@ func Manifest() resource.Manifest {
 			{Name: "name", Label: "Name", Type: "text", Required: true, Visible: true, Readable: true, Writable: true, Sensitive: false, PolicyConfigured: true},
 			{Name: "code", Label: "Code", Type: "text", Required: true, Visible: true, Readable: true, Writable: true, Sensitive: false, PolicyConfigured: true},
 			{Name: "status", Label: "Status", Type: "select", Required: true, Visible: true, Readable: true, Writable: true, Sensitive: false, PolicyConfigured: true, Options: []resource.Option{{Value: "active", Label: "Active"}, {Value: "disabled", Label: "Disabled"}}},
+			{Name: "parent_id", Label: "Parent", Type: "integer", Required: false, Visible: true, Readable: true, Writable: true, Sensitive: false, PolicyConfigured: true},
 		},
 		Columns: []resource.Column{
 			{Name: "name", Label: "Name", Sortable: true},
@@ -23,7 +24,9 @@ func Manifest() resource.Manifest {
 			{Name: "update", Label: "Update", Kind: "", Permission: "admin.departments.update", Batch: false, Payload: ""},
 			{Name: "delete", Label: "Delete", Kind: "", Permission: "admin.departments.delete", Batch: false, Payload: ""},
 		},
-		Relations:  []resource.Relation{},
+		Relations: []resource.Relation{
+			{Name: "parent", Kind: "belongsTo", Resource: "departments", Field: "parent_id", ForeignField: "id", LabelField: "name", Selectable: true},
+		},
 		FormGroups: []resource.FormGroup{},
 		Details:    []resource.DetailSection{},
 	}

@@ -9,8 +9,8 @@ export const resourceDefinition = {
   navigation: { group: "business", order: 100 },
 
   actions: [{ name: "view", label: "View", kind: "", permission: "admin.departments.view", batch: false, payload: "" }, { name: "create", label: "Create", kind: "", permission: "admin.departments.create", batch: false, payload: "" }, { name: "update", label: "Update", kind: "", permission: "admin.departments.update", batch: false, payload: "" }, { name: "delete", label: "Delete", kind: "", permission: "admin.departments.delete", batch: false, payload: "" }],
-  relations: [],
+  relations: [{ name: "parent", kind: "belongsTo", resource: "departments", field: "parent_id", foreign_field: "id", label_field: "name", selectable: true, multiple: false }],
   form_groups: [],
   details: [],
-  fields: [{ name: "name", label: "Name", type: "text", required: true, visible: true, readable: true, writable: true, sensitive: false }, { name: "code", label: "Code", type: "text", required: true, visible: true, readable: true, writable: true, sensitive: false }, { name: "status", label: "Status", type: "select", required: true, visible: true, readable: true, writable: true, sensitive: false, options: [{ value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }] }],
+  fields: [{ name: "name", label: "Name", type: "text", required: true, visible: true, readable: true, writable: true, sensitive: false }, { name: "code", label: "Code", type: "text", required: true, visible: true, readable: true, writable: true, sensitive: false }, { name: "status", label: "Status", type: "select", required: true, visible: true, readable: true, writable: true, sensitive: false, options: [{ value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }] }, { name: "parent_id", label: "Parent", type: "integer", required: false, visible: true, readable: true, writable: true, sensitive: false }],
 } as const;

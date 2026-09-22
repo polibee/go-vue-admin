@@ -5,7 +5,8 @@ import "github.com/goravel/framework/database/orm"
 
 type Departments struct {
 	orm.Model
-	Name   string `json:"name"`
-	Code   string `json:"code"`
-	Status string `json:"status"`
+	Name     string `json:"name"`
+	Code     string `json:"code"`
+	Status   string `json:"status"`
+	ParentID *int   `json:"parent_id,omitempty"`
 }

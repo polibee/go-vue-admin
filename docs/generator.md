@@ -43,6 +43,10 @@ go run . admin:make-resource posts \
 
 关系格式为 `name:kind:target_resource:field:foreign_field:label_field[:selectable]`。关系选项由后端统一接口提供，并再次执行目标资源权限、数据范围和字段可读校验；前端不能提交任意表名或字段名。`hasMany` 首期只生成详情只读区块，不自动级联写入。
 
+### 真实关系资源验收样例
+
+`departments.parent_id` 使用 `departments.id` 作为自关联关系，作为通用关系字段的真实验收资源。对应迁移文件为 `backend/database/migrations/20260922000004_add_departments_parent_id.go`，必须先人工审阅，再手动执行迁移；未执行迁移前，不能宣称关系表单已完成浏览器验收。迁移执行后应验证：新建/编辑部门可搜索并选择上级部门、搜索输入有防抖、分页加载可继续、无权限时关系选项被拒绝、越权提交的 `parent_id` 被后端拒绝。
+
 生成文件写入 `backend/app/modules/<name>/`、`admin/src/modules/<name>/` 和 `backend/database/migrations/`。如果任一目标文件已经存在，命令会在写入前失败，不会覆盖人工文件，也不会留下半套输出。
 
 生成完成后的人工审阅顺序：

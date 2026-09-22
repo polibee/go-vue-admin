@@ -20,5 +20,6 @@ func Migrations() []schema.Migration {
 		&migrations.M20260922000001AddPermissionRoleScope{},
 		&migrations.M20260922000002CreatePermissionRoleFieldsTable{},
 		&migrations.MdepartmentsCreateDepartmentsTable{},
+		&migrations.M20260922000004AddDepartmentsParentID{},
 	}
 }

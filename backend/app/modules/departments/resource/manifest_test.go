@@ -8,4 +8,7 @@ func TestManifestHasResourceIdentity(t *testing.T) {
 	if manifest.Name != "departments" || manifest.Route != "/admin/departments" {
 		t.Fatalf("unexpected manifest: %+v", manifest)
 	}
+	if len(manifest.Relations) != 1 || manifest.Relations[0].Name != "parent" {
+		t.Fatalf("department parent relation missing: %+v", manifest.Relations)
+	}
 }
