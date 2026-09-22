@@ -28,7 +28,7 @@ Resource Registry、字段、列、标准列表查询（分页、搜索、排序
 
 通用数据范围权限第一阶段已完成：Resource Manifest 支持 `all/own`，角色权限可保存范围，后端统一应用到资源读取、搜索、导出和写入路径，生成器支持 owner 字段和 `--scope=own` 配置。字段权限、通用批量 Action、资源关系和复杂表单扩展仍按设计文档分阶段实现。
 
-字段权限阶段已完成契约、后端裁剪和 RBAC 持久化，Manifest 批量 Action 正在同步生成器、前端页面和真实资源验收。字段策略包括 `visible/readable/writable/sensitive`，默认保持现有资源兼容行为。批量 Action 统一使用 Manifest 声明、权限校验、数据范围校验和受控 Handler。
+字段权限阶段已完成契约、后端裁剪和 RBAC 持久化。Manifest 批量 Action 已完成统一执行入口、权限/数据范围校验、受控 Handler、OpenAPI Client 和 ResourceList 自动批量操作。字段策略包括 `visible/readable/writable/sensitive`，默认保持现有资源兼容行为。批量 Action 统一使用 Manifest 声明、权限校验、数据范围校验和受控 Handler。
 
 已完成第一步：ResourceList 支持按当前搜索、筛选和排序条件导出 CSV；导出复用 Registry
 列白名单，不新增依赖或数据库变化。当前不实现通用 CSV 导入，避免把批量写入、敏感字段和领域校验混入通用资源层；后续如有明确业务需求，再按独立业务流程评估。
