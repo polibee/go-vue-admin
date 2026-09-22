@@ -107,7 +107,7 @@ func (s *NotificationService) UnreadCount(userID uint) (int64, error) {
 	if userID == 0 {
 		return 0, ErrInvalidNotification
 	}
-	return facades.Orm().Query().Where("user_id = ?", userID).WhereNull("read_at").Count()
+	return facades.Orm().Query().Table("notifications").Where("user_id = ?", userID).WhereNull("read_at").Count()
 }
 
 func (s *NotificationService) MarkRead(userID, id uint) error {
