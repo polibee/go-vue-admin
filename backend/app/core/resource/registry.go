@@ -19,11 +19,16 @@ const (
 )
 
 type Field struct {
-	Name     string   `json:"name"`
-	Label    string   `json:"label"`
-	Type     string   `json:"type"`
-	Required bool     `json:"required,omitempty"`
-	Options  []Option `json:"options,omitempty"`
+	Name             string   `json:"name"`
+	Label            string   `json:"label"`
+	Type             string   `json:"type"`
+	Required         bool     `json:"required,omitempty"`
+	Options          []Option `json:"options,omitempty"`
+	Visible          bool     `json:"visible"`
+	Readable         bool     `json:"readable"`
+	Writable         bool     `json:"writable"`
+	Sensitive        bool     `json:"sensitive"`
+	PolicyConfigured bool     `json:"-"`
 }
 
 type Option struct {
@@ -86,11 +91,27 @@ func (r *Registry) Register(manifest Manifest) error {
 			return ErrInvalidManifest
 		}
 	}
+	manifest = NormalizeManifestFields(manifest)
 	if _, exists := r.manifests[manifest.Name]; exists {
 		return ErrDuplicate
 	}
 	r.manifests[manifest.Name] = manifest
 	return nil
+}
+
+// NormalizeManifestFields preserves the legacy behavior for fields that do not
+// declare a policy while allowing generated or explicit restricted fields to
+// retain false values.
+func NormalizeManifestFields(manifest Manifest) Manifest {
+	for index, field := range manifest.Fields {
+		if !field.PolicyConfigured && !field.Visible && !field.Readable && !field.Writable && !field.Sensitive {
+			field.Visible = true
+			field.Readable = true
+			field.Writable = true
+		}
+		manifest.Fields[index] = field
+	}
+	return manifest
 }
 
 func (r *Registry) Find(name string) (Manifest, error) {

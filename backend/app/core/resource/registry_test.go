@@ -59,3 +59,29 @@ func TestRegistryValidatesDataScopeMetadata(t *testing.T) {
 		t.Fatalf("expected missing owner field to be rejected, got %v", err)
 	}
 }
+
+func TestFieldPolicyDefaultsPreserveExistingManifestBehavior(t *testing.T) {
+	manifest := Manifest{
+		Name: "posts", Label: "Posts", Route: "/posts",
+		Fields: []Field{{Name: "title", Label: "Title", Type: "text"}},
+	}
+
+	normalized := NormalizeManifestFields(manifest)
+	field := normalized.Fields[0]
+	if !field.Visible || !field.Readable || !field.Writable || field.Sensitive {
+		t.Fatalf("unexpected default field policy: %+v", field)
+	}
+}
+
+func TestFieldPolicyPreservesExplicitRestrictions(t *testing.T) {
+	manifest := Manifest{
+		Name: "users", Label: "Users", Route: "/users",
+		Fields: []Field{{Name: "password", Label: "Password", Type: "password", Visible: false, Readable: false, Writable: false, Sensitive: true}},
+	}
+
+	normalized := NormalizeManifestFields(manifest)
+	field := normalized.Fields[0]
+	if field.Visible || field.Readable || field.Writable || !field.Sensitive {
+		t.Fatalf("explicit field policy was not preserved: %+v", field)
+	}
+}
