@@ -5,7 +5,7 @@ import "goravel/app/core/resource"
 
 func Manifest() resource.Manifest {
 	return resource.Manifest{
-		Name: "posts", Label: "Posts", Route: "/admin/posts", Table: "posts", Permissions: []string{"admin.posts.view"},
+		Name: "posts", Label: "Posts", Route: "/admin/posts", Table: "posts", Permissions: []string{"admin.posts.view"}, Navigation: resource.Navigation{Group: "business", Order: 100},
 
 		Fields: []resource.Field{
 			{Name: "title", Label: "Title", Type: "text", Required: true, Visible: true, Readable: true, Writable: true, Sensitive: false, PolicyConfigured: true},

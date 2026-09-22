@@ -5,7 +5,7 @@ import "goravel/app/core/resource"
 
 func Manifest() resource.Manifest {
 	return resource.Manifest{
-		Name: "announcements", Label: "Announcements", Route: "/admin/announcements", Table: "announcements", Permissions: []string{"admin.announcements.view"}, DataScope: resource.DataScopeAll,
+		Name: "announcements", Label: "Announcements", Route: "/admin/announcements", Table: "announcements", Permissions: []string{"admin.announcements.view"}, DataScope: resource.DataScopeAll, Navigation: resource.Navigation{Group: "business", Order: 100},
 		Fields: []resource.Field{
 			{Name: "title", Label: "Title", Type: "text", Required: true},
 			{Name: "status", Label: "Status", Type: "select", Required: true, Options: []resource.Option{{Value: "draft", Label: "Draft"}, {Value: "published", Label: "Published"}}},

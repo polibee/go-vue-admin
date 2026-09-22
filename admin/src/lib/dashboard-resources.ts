@@ -11,6 +11,5 @@ export function visibleDashboardResources(resources: DashboardResource[], permis
 }
 
 export function dashboardResourceRoute(resource: Pick<DashboardResource, 'name' | 'route'>) {
-  if (resource.name === 'roles' || resource.name === 'permissions') return '/rbac'
   return resource.route.replace(/^\/admin(?=\/|$)/, '') || '/' + resource.name
 }

@@ -30,6 +30,8 @@ modules/             业务页面
 
 后台壳层统一提供 Sidebar、Header、Breadcrumb 和 Page Content。标准页面包括 Resource List、Resource Create/Edit、Resource Detail 和 Custom Business Page。自定义页面可以自由布局，但必须复用 shadcn-vue 官方组件和已有 API、权限、状态处理。
 
+资源导航采用“单资源单入口”约定：每个 Resource Manifest 只生成一个规范列表入口，资源列表页只展示当前资源，不再提供跨资源切换器。Manifest 的 `navigation.group`、`navigation.order` 和 `navigation.hidden` 决定侧边栏分组、顺序和可见性；内置用户、角色、权限属于 `system`，生成资源默认属于 `business`。Dashboard 卡片和全局搜索是发现入口，不替代侧边栏，也不得重复生成资源菜单。
+
 ```text
 admin/src/modules/users/
 ├── index.ts

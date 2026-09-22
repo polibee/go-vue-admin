@@ -35,6 +35,20 @@ func TestRegistryReturnsStableSortedManifests(t *testing.T) {
 	}
 }
 
+func TestRegistryDefaultsNavigationMetadata(t *testing.T) {
+	registry := NewRegistry()
+	if err := registry.Register(Manifest{Name: "posts", Label: "Posts", Route: "/admin/posts"}); err != nil {
+		t.Fatalf("register: %v", err)
+	}
+	manifest, err := registry.Find("posts")
+	if err != nil {
+		t.Fatalf("find: %v", err)
+	}
+	if manifest.Navigation.Group != "business" || manifest.Navigation.Hidden {
+		t.Fatalf("unexpected default navigation: %+v", manifest.Navigation)
+	}
+}
+
 func TestRegistryValidatesDataScopeMetadata(t *testing.T) {
 	own := Manifest{
 		Name: "orders", Label: "Orders", Route: "/orders",

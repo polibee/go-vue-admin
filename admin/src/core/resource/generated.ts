@@ -11,6 +11,7 @@ export interface GeneratedResourceDefinition {
   route: string
   permission: string
   icon: string
+  navigation: { group: string; order: number; hidden?: boolean }
 }
 
 export const generatedResourceDefinitions = [

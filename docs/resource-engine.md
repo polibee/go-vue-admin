@@ -59,7 +59,17 @@ data_scope
 owner_field
 ```
 
-标准能力：分页、搜索、排序、筛选、CSV 导出、新增、编辑、查看、删除、行操作、批量操作、字段权限和审计钩子。
+## Navigation contract
+
+Registry 返回的 Resource Manifest 同时携带导航元数据：
+
+- `navigation.group`：侧边栏分组，内置资源使用 `system`，生成资源默认使用 `business`；
+- `navigation.order`：组内稳定排序；
+- `navigation.hidden`：只隐藏菜单，不影响 API、路由或权限契约。
+
+每个资源只有一个规范菜单和列表路由。`ResourceListPage` 是共享渲染组件，但只渲染路由对应的当前资源，不承担资源目录或跨资源切换职责。
+
+标准能力：分页、搜索、排序、筛选、CSV 导出、新增、编辑、查看、删除、行操作、批量操作、字段权限和审计钩子。  
 
 多步骤流程、审批和状态机、实时数据、图表分析、复杂联动表单和高度定制详情页直接使用 Custom Page。
 

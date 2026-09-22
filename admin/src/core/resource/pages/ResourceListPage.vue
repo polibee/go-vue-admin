@@ -70,9 +70,6 @@ function localizedError(value: unknown) {
 async function loadManifests() {
   if (!auth.token) return
   manifests.value = await generatedApi.resourceRegistry(auth.token)
-  if (!currentManifest.value && manifests.value.length) {
-    await router.replace(`/${manifests.value[0].name}`)
-  }
 }
 
 async function loadRows(page = 1) {
@@ -118,7 +115,6 @@ function sortBy(column: ResourceColumn) {
   else { sort.value = column.name; direction.value = 'asc' }
   void loadRows(1)
 }
-function selectResource(name: string) { void router.push(`/${name}`) }
 function displayValue(value: unknown) { return value === null || value === undefined ? '—' : String(value) }
 function statusLabel(value: unknown) { return typeof value === 'string' ? t(userStatusLabelKey(value as UserStatus)) : '—' }
 function changeStatusFilter(value: unknown) { statusFilter.value = String(value); void loadRows(1) }
@@ -229,9 +225,6 @@ watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {};
       </Button></div>
     </div>
 
-    <div v-if="manifests.length" class="flex flex-wrap gap-2">
-      <Button v-for="manifest in manifests" :key="manifest.name" :variant="manifest.name === resourceName ? 'default' : 'outline'" size="sm" @click="selectResource(manifest.name)">{{ manifest.label }}</Button>
-    </div>
         <div v-if="selectedIds.length && batchActions.length" class="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3">
           <span class="text-sm text-muted-foreground">{{ t('resource.selectedCount', { count: selectedIds.length }) }}</span>
           <Button v-for="action in batchActions" :key="action.name" size="sm" @click="openBulkAction(action)">{{ action.label }}</Button>

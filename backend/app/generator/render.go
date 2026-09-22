@@ -150,7 +150,7 @@ import "goravel/app/core/resource"
 
 func Manifest() resource.Manifest {
 	return resource.Manifest{
-		Name: %q, Label: %q, Route: %q, Table: %q, Permissions: []string{%q},
+		Name: %q, Label: %q, Route: %q, Table: %q, Permissions: []string{%q}, Navigation: resource.Navigation{Group: "business", Order: 100},
 %s
 		Fields: []resource.Field{
 %s		},

@@ -11,9 +11,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Separator } from '@/components/ui/separator'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/auth'
-import { generatedResourceDefinitions } from '@/core/resource/generated'
 import { generatedApi, type GlobalSearchResult, type ResourceManifest } from '@/generated/api'
 import { dashboardResourceRoute, visibleDashboardResources } from '@/lib/dashboard-resources'
+import { groupResourceNavigation } from '@/lib/resource-navigation'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -22,6 +22,7 @@ const auth = useAuthStore()
 const resourceManifests = ref<ResourceManifest[]>([])
 const searchOpen = ref(false)
 const searchResults = computed(() => visibleDashboardResources(resourceManifests.value, auth.user?.permissions || []))
+const resourceNavigationGroups = computed(() => groupResourceNavigation(resourceManifests.value, auth.user?.permissions || []))
 const globalSearchResults = ref<GlobalSearchResult[]>([])
 const globalSearchLoading = ref(false)
 let globalSearchTimer: ReturnType<typeof setTimeout> | undefined
@@ -67,6 +68,12 @@ function openResource(resource: { name: string; route: string }) {
 function openSearchResult(result: GlobalSearchResult) {
   searchOpen.value = false
   void router.push(result.route)
+}
+
+function resourceGroupLabel(name: string) {
+  if (name === 'system') return locale.value === 'zh-CN' ? '系统管理' : 'System'
+  if (name === 'business') return locale.value === 'zh-CN' ? '业务管理' : 'Business'
+  return name
 }
 
 function handleSearchInput(value: string) {
@@ -149,16 +156,16 @@ onBeforeUnmount(() => {
                   <RouterLink to="/audit-logs"><ClipboardList /><span>{{ t('auth.auditLogs') }}</span></RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <template v-for="item in generatedResourceDefinitions" :key="item.name">
-                <SidebarMenuItem v-if="auth.can(item.permission)">
-                  <SidebarMenuButton as-child :is-active="$route.path.startsWith(item.route)" :tooltip="item.label">
-                    <RouterLink :to="item.route"><LayoutDashboard /><span>{{ item.label }}</span></RouterLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </template>
-              <SidebarMenuItem v-if="auth.can('admin.users.view')">
-                <SidebarMenuButton as-child :is-active="$route.name === 'resource-list'" :tooltip="t('resource.title')">
-                  <RouterLink to="/users"><LayoutDashboard /><span>{{ t('resource.title') }}</span></RouterLink>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup v-for="group in resourceNavigationGroups" :key="group.name">
+          <SidebarGroupLabel>{{ resourceGroupLabel(group.name) }}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem v-for="item in group.items" :key="item.name">
+                <SidebarMenuButton as-child :is-active="$route.path.startsWith(dashboardResourceRoute(item))" :tooltip="item.label">
+                  <RouterLink :to="dashboardResourceRoute(item)"><LayoutDashboard /><span>{{ item.label }}</span></RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

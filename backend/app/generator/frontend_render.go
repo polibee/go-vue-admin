@@ -39,6 +39,7 @@ export const resourceDefinition = {
   route: %q,
   permission: %q,
   icon: %q,
+  navigation: { group: "business", order: 100 },
 %s
   actions: %s,
   relations: %s,
@@ -58,6 +59,7 @@ export const menuEntry = {
   route: resourceDefinition.route,
   permission: resourceDefinition.permission,
   icon: resourceDefinition.icon,
+  navigation: resourceDefinition.navigation,
 } as const;
 `)
 }

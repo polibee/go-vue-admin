@@ -13,5 +13,5 @@ test('dashboard only exposes resources covered by the current permissions', () =
 
 test('dashboard maps resource routes to admin frontend routes', () => {
   assert.equal(dashboardResourceRoute(resources[0]), '/users')
-  assert.equal(dashboardResourceRoute({ name: 'roles', route: '/admin/roles' }), '/rbac')
+  assert.equal(dashboardResourceRoute({ name: 'roles', route: '/admin/roles' }), '/roles')
 })

@@ -83,6 +83,12 @@ type Action struct {
 	Payload    string `json:"payload,omitempty"`
 }
 
+type Navigation struct {
+	Group  string `json:"group"`
+	Order  int    `json:"order"`
+	Hidden bool   `json:"hidden,omitempty"`
+}
+
 type Manifest struct {
 	Name         string            `json:"name"`
 	Label        string            `json:"label"`
@@ -98,6 +104,7 @@ type Manifest struct {
 	Dependencies []FieldDependency `json:"dependencies,omitempty"`
 	DataScope    DataScope         `json:"data_scope,omitempty"`
 	OwnerField   string            `json:"owner_field,omitempty"`
+	Navigation   Navigation        `json:"navigation"`
 }
 
 type Registry struct{ manifests map[string]Manifest }
@@ -110,6 +117,9 @@ func (r *Registry) Register(manifest Manifest) error {
 	}
 	if manifest.DataScope == "" {
 		manifest.DataScope = DataScopeAll
+	}
+	if manifest.Navigation.Group == "" {
+		manifest.Navigation.Group = "business"
 	}
 	if manifest.DataScope != DataScopeAll && manifest.DataScope != DataScopeOwn {
 		return ErrInvalidManifest
