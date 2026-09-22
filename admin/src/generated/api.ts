@@ -23,7 +23,7 @@ export interface ActionRequest { ids: number[]; payload?: Record<string, unknown
 export interface ActionFailure { id: number; code: string }
 export interface ActionResponse { action: string; requested: number; succeeded: number; failed: number; skipped: number; failures: ActionFailure[]; skips: ActionFailure[] }
 export interface AdminOverview { users: number; roles: number; permissions: number }
-export interface AuditLog { id: number; user_id: number; action: string; metadata: Record<string, unknown> | null; created_at: string }
+export interface AuditLog { id: number; user_id: number; action: string; metadata: Record<string, unknown> | string | null; created_at: string }
 export interface GlobalSearchResult { resource: string; label: string; id: string | number; title: string; subtitle?: string; route: string }
 export interface FieldPermissionOverride { readable: boolean; writable: boolean }
 export interface RolePermissionAssignment { id: number; name: string; display_name: string; scope: DataScope; fields?: Record<string, FieldPermissionOverride> }

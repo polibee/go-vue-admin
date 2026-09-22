@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"strconv"
-
 	"github.com/goravel/framework/contracts/http"
 
 	"goravel/app/facades"
@@ -11,12 +9,12 @@ import (
 )
 
 func (r *ResourceController) Show(ctx http.Context) http.Response {
-	id, err := strconv.ParseInt(ctx.Request().Route("id"), 10, 64)
-	if err != nil || id < 1 {
+	id := resourceID(ctx)
+	if id < 1 {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
 
-	resourceName := ctx.Request().Route("resource")
+	resourceName := resourceName(ctx)
 	manifest, manifestErr := registry.AdminRegistry().Find(resourceName)
 	if manifestErr != nil || manifest.Table == "" {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
@@ -32,7 +30,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if scopeErr != nil {
 			return resourceScopeError(ctx, scopeErr)
 		}
-		if err := q.Where("id", id).First(&user); err != nil {
+		if err := q.Where("id = ?", id).First(&user); err != nil {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
 		return ctx.Response().Success().Json(http.Json{"data": projectResourceValueWithPolicies(user.Public(), manifest, fieldPolicies, false)})
@@ -42,7 +40,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if scopeErr != nil {
 			return resourceScopeError(ctx, scopeErr)
 		}
-		if err := q.Where("id", id).First(&role); err != nil {
+		if err := q.Where("id = ?", id).First(&role); err != nil {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
 		return ctx.Response().Success().Json(http.Json{"data": projectResourceValueWithPolicies(role, manifest, fieldPolicies, false)})
@@ -52,7 +50,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if scopeErr != nil {
 			return resourceScopeError(ctx, scopeErr)
 		}
-		if err := q.Where("id", id).First(&permission); err != nil {
+		if err := q.Where("id = ?", id).First(&permission); err != nil {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
 		return ctx.Response().Success().Json(http.Json{"data": projectResourceValueWithPolicies(permission, manifest, fieldPolicies, false)})

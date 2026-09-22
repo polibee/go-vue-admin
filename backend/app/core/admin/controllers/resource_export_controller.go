@@ -17,7 +17,7 @@ import (
 )
 
 func (r *ResourceController) Export(ctx http.Context) http.Response {
-	resourceName := ctx.Request().Route("resource")
+	resourceName := resourceName(ctx)
 	manifest, err := registry.AdminRegistry().Find(resourceName)
 	if err != nil || manifest.Table == "" {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})

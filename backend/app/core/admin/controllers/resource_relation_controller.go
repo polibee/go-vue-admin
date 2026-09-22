@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/goravel/framework/contracts/database/orm"
 	"github.com/goravel/framework/contracts/http"
@@ -19,7 +18,7 @@ type relationOption struct {
 }
 
 func (r *ResourceController) RelationOptions(ctx http.Context) http.Response {
-	source, err := registry.AdminRegistry().Find(ctx.Request().Route("resource"))
+	source, err := registry.AdminRegistry().Find(resourceName(ctx))
 	if err != nil || source.Table == "" {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
@@ -70,7 +69,7 @@ func (r *ResourceController) RelationOptions(ctx http.Context) http.Response {
 }
 
 func (r *ResourceController) RelationRecords(ctx http.Context) http.Response {
-	source, err := registry.AdminRegistry().Find(ctx.Request().Route("resource"))
+	source, err := registry.AdminRegistry().Find(resourceName(ctx))
 	if err != nil || source.Table == "" {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
@@ -78,8 +77,8 @@ func (r *ResourceController) RelationRecords(ctx http.Context) http.Response {
 	if !ok || relation.Kind != "hasMany" {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RELATION_NOT_FOUND"})
 	}
-	id, parseErr := strconv.ParseInt(ctx.Request().Route("id"), 10, 64)
-	if parseErr != nil || id < 1 || !hasResourceViewPermission(ctx, source) {
+	id := resourceID(ctx)
+	if id < 1 || !hasResourceViewPermission(ctx, source) {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
 	if allowed, scopeErr := resourceCanAccess(ctx, source, "view", id); scopeErr != nil {

@@ -24,7 +24,7 @@ type resourceListQuery struct {
 }
 
 func (r *ResourceController) List(ctx http.Context) http.Response {
-	manifest, manifestErr := registry.AdminRegistry().Find(ctx.Request().Route("resource"))
+	manifest, manifestErr := registry.AdminRegistry().Find(resourceName(ctx))
 	if manifestErr != nil || manifest.Table == "" {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
@@ -50,7 +50,7 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 	var rows any
 	var q orm.Query
 	var total int64
-	switch ctx.Request().Route("resource") {
+	switch resourceName(ctx) {
 	case "users":
 		rows = &[]models.User{}
 		q = facades.Orm().Query()

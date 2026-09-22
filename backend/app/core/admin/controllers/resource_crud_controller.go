@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/goravel/framework/contracts/http"
@@ -100,8 +99,8 @@ func (r *ResourceController) Update(ctx http.Context) http.Response {
 	if !ok {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
-	id, err := strconv.ParseInt(ctx.Request().Route("id"), 10, 64)
-	if err != nil || id < 1 {
+	id := resourceID(ctx)
+	if id < 1 {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
 	allowed, scopeErr := resourceCanAccess(ctx, manifest, "update", id)
@@ -160,8 +159,8 @@ func (r *ResourceController) Delete(ctx http.Context) http.Response {
 	if !ok {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
-	id, err := strconv.ParseInt(ctx.Request().Route("id"), 10, 64)
-	if err != nil || id < 1 {
+	id := resourceID(ctx)
+	if id < 1 {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
 	allowed, scopeErr := resourceCanAccess(ctx, manifest, "delete", id)
@@ -203,7 +202,7 @@ func resourceDeleteStrategy(manifest resource.Manifest) string {
 }
 
 func generatedManifest(ctx http.Context) (resource.Manifest, bool) {
-	manifest, err := registry.AdminRegistry().Find(ctx.Request().Route("resource"))
+	manifest, err := registry.AdminRegistry().Find(resourceName(ctx))
 	return manifest, err == nil && manifest.Table != ""
 }
 

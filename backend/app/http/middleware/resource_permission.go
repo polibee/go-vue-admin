@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"strings"
+
 	"goravel/app/core/resource"
 	"goravel/app/facades"
 	"goravel/app/modules/admin/registry"
@@ -62,7 +64,7 @@ func (m resourcePermissionMiddleware) Handle(ctx http.Context) {
 	if !parseAuthenticatedRequest(ctx) {
 		return
 	}
-	manifest, err := registry.AdminRegistry().Find(ctx.Request().Route("resource"))
+	manifest, err := registry.AdminRegistry().Find(resourceNameFromRequest(ctx))
 	if err != nil {
 		ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"}).Abort()
 		return
@@ -122,4 +124,17 @@ func resourceViewPermissions(manifests []resource.Manifest) []string {
 		}
 	}
 	return permissions
+}
+
+func resourceNameFromRequest(ctx http.Context) string {
+	if name := ctx.Request().Route("resource"); name != "" {
+		return name
+	}
+	parts := strings.Split(strings.Trim(ctx.Request().Path(), "/"), "/")
+	for index, part := range parts {
+		if part == "admin" && index+1 < len(parts) {
+			return parts[index+1]
+		}
+	}
+	return ""
 }

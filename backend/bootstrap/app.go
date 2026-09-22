@@ -27,6 +27,7 @@ func Boot() contractsfoundation.Application {
 		}).
 		WithMiddleware(func(middleware contractsconfiguration.Middleware) {
 			middleware.Append(adminmiddleware.CORS())
+			middleware.Append(adminmiddleware.HTTPAudit())
 		}).
 		WithProviders(Providers).
 		WithConfig(config.Boot).

@@ -30,7 +30,7 @@ type actionResultInput struct {
 }
 
 func (r *ResourceController) Action(ctx http.Context) http.Response {
-	resourceName := ctx.Request().Route("resource")
+	resourceName := resourceName(ctx)
 	actionName := ctx.Request().Route("action")
 	manifest, err := registry.AdminRegistry().Find(resourceName)
 	if err != nil || manifest.Table == "" {

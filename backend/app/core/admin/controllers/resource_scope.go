@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/goravel/framework/contracts/database/orm"
 	"github.com/goravel/framework/contracts/http"
@@ -9,6 +11,34 @@ import (
 	"goravel/app/core/resource"
 	rbacservices "goravel/app/services/rbac"
 )
+
+func resourceID(ctx http.Context) int64 {
+	if id := ctx.Request().RouteInt64("id"); id > 0 {
+		return id
+	}
+	parts := strings.Split(strings.Trim(ctx.Request().Path(), "/"), "/")
+	if len(parts) == 0 {
+		return 0
+	}
+	id, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
+	if err != nil || id < 1 {
+		return 0
+	}
+	return id
+}
+
+func resourceName(ctx http.Context) string {
+	if name := ctx.Request().Route("resource"); name != "" {
+		return name
+	}
+	parts := strings.Split(strings.Trim(ctx.Request().Path(), "/"), "/")
+	for index, part := range parts {
+		if part == "admin" && index+1 < len(parts) {
+			return parts[index+1]
+		}
+	}
+	return ""
+}
 
 func applyResourceScope(ctx http.Context, query orm.Query, manifest resource.Manifest, action string) (orm.Query, error) {
 	return rbacservices.NewResourceScopeService().Apply(ctx, query, manifest, action)
