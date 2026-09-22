@@ -39,6 +39,7 @@ export const resourceDefinition = {
   route: %q,
   permission: %q,
   icon: %q,
+  pageMode: %q,
   navigation: { group: "business", order: 100 },
 %s
   actions: %s,
@@ -47,7 +48,7 @@ export const resourceDefinition = {
   details: %s,
   fields: %s,
 } as const;
-`, spec.Name, spec.Label, spec.FrontendRoute, spec.Permission, spec.Icon, scopeMetadata, frontendActionList(spec), frontendRelations(spec), frontendFormGroups(spec), frontendDetails(spec), frontendFields(spec))
+`, spec.Name, spec.Label, spec.FrontendRoute, spec.Permission, spec.Icon, spec.PageMode, scopeMetadata, frontendActionList(spec), frontendRelations(spec), frontendFormGroups(spec), frontendDetails(spec), frontendFields(spec))
 }
 
 func frontendMenuSource(spec Spec) string {

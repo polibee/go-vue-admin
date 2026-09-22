@@ -5,6 +5,7 @@ export const resourceDefinition = {
   route: "/announcements",
   permission: "admin.announcements.view",
   icon: "box",
+  pageMode: "generic",
   navigation: { group: "business", order: 100 },
   actions: [{ name: "view", label: "View", kind: "", permission: "admin.announcements.view", batch: false, payload: "" }, { name: "create", label: "Create", kind: "", permission: "admin.announcements.create", batch: false, payload: "" }, { name: "update", label: "Update", kind: "", permission: "admin.announcements.update", batch: false, payload: "" }, { name: "delete", label: "Delete", kind: "", permission: "admin.announcements.delete", batch: false, payload: "" }],
   fields: [{ name: "title", label: "Title", type: "text", required: true }, { name: "status", label: "Status", type: "select", required: true, options: [{ value: "draft", label: "Draft" }, { value: "published", label: "Published" }] }],
