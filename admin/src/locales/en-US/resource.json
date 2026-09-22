@@ -69,12 +69,6 @@
   ,"activeRecords": "Active records"
   ,"trashedRecords": "Trash"
   ,"allRecords": "All records"
-  ,"views": "View settings"
-  ,"viewsDescription": "Save the current filters, sorting, and visible columns."
-  ,"viewName": "View name"
-  ,"saveView": "Save view"
-  ,"visibleColumns": "Visible columns"
-  ,"savedViews": "Saved views"
   ,"setStatus": "Set status"
   ,"deleteUser": "Delete user",
   "deleteUserTitle": "Delete this user?",

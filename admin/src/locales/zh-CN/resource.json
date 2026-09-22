@@ -69,12 +69,6 @@
   ,"activeRecords": "正常记录"
   ,"trashedRecords": "回收站"
   ,"allRecords": "全部记录"
-  ,"views": "视图设置"
-  ,"viewsDescription": "保存当前筛选、排序和列显示设置。"
-  ,"viewName": "视图名称"
-  ,"saveView": "保存视图"
-  ,"visibleColumns": "显示列"
-  ,"savedViews": "已保存视图"
   ,"setStatus": "设置状态"
   ,"deleteUser": "删除用户",
   "deleteUserTitle": "确认删除用户？",

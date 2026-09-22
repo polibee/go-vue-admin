@@ -20,7 +20,6 @@ import { generatedApi, type ActionResponse, type ActionRequest, type ResourceFil
 import { canDeleteResource, executableBatchActions } from '@/lib/resource-actions'
 import { useAuthStore } from '@/stores/auth'
 import { userStatusLabelKey, type UserStatus } from '@/lib/user-status'
-import { deleteResourceView, loadResourceViews, saveResourceView, type ResourceViewState } from '@/core/resource/lib/views'
 import { useI18n } from 'vue-i18n'
 
 interface ResourceColumn { name: string; label: string; sortable: boolean }
@@ -57,10 +56,6 @@ const bulkUpdateDialogOpen = ref(false)
 const bulkUpdateField = ref('')
 const bulkUpdateValue = ref('')
 const bulkUpdateSaving = ref(false)
-const viewDialogOpen = ref(false)
-const viewName = ref('')
-const savedViews = ref<ResourceViewState[]>([])
-const hiddenColumns = ref<string[]>([])
 const lastActionResult = ref<ActionResponse>()
 const filterValues = ref<Record<string, string>>({})
 const trashed = ref('default')
@@ -71,7 +66,7 @@ const resourceName = computed(() => props.resource || String(route.params.resour
 const currentManifest = computed(() => manifests.value.find((item) => item.name === resourceName.value))
 const visibleColumns = computed(() => (currentManifest.value?.columns || []).filter((column) => {
   const field = currentManifest.value?.fields.find((item) => item.name === column.name)
-  return !hiddenColumns.value.includes(column.name) && (!field || (field.visible !== false && field.readable !== false))
+  return !field || (field.visible !== false && field.readable !== false)
 }))
 const filters = computed(() => currentManifest.value?.filters || [])
 const canCreate = computed(() => hasAction('create'))
@@ -84,7 +79,11 @@ const batchActions = computed(() => {
   }
   return actions
 })
-const allVisibleSelected = computed(() => rows.value.length > 0 && rows.value.every((row) => selectedIds.value.includes(String(row.id))))
+const allVisibleSelected = computed(() => rows.value.length > 0 && rows.value.every((row) => isRowSelected(row.id)))
+const headerChecked = computed({
+  get: () => allVisibleSelected.value,
+  set: (value: boolean | 'indeterminate') => toggleAll(value),
+})
 const selectedCount = computed(() => allFilteredSelected.value ? Math.max(0, meta.value.total - excludedIds.value.length) : selectedIds.value.length)
 const writableFields = computed(() => (currentManifest.value?.fields || []).filter((field) => field.writable !== false && field.visible !== false && !field.sensitive && field.name !== 'password'))
 
@@ -156,6 +155,10 @@ function toggleRow(id: unknown, checked: boolean | 'indeterminate') {
   }
   selectedIds.value = checked === true ? [...new Set([...selectedIds.value, value])] : selectedIds.value.filter((item) => item !== value)
 }
+function isRowSelected(id: unknown) {
+  const value = String(id)
+  return allFilteredSelected.value ? !excludedIds.value.includes(value) : selectedIds.value.includes(value)
+}
 function toggleAll(checked: boolean | 'indeterminate') {
   if (allFilteredSelected.value) {
     if (checked === true) excludedIds.value = excludedIds.value.filter((id) => !rows.value.some((row) => String(row.id) === id))
@@ -167,28 +170,6 @@ function toggleAll(checked: boolean | 'indeterminate') {
 }
 function selectAllFiltered() { allFilteredSelected.value = true; selectedIds.value = []; excludedIds.value = [] }
 function clearSelection() { selectedIds.value = []; allFilteredSelected.value = false; excludedIds.value = [] }
-function openViews() { savedViews.value = loadResourceViews(resourceName.value); viewDialogOpen.value = true }
-function saveCurrentView() {
-  const name = viewName.value.trim()
-  if (!name) return
-  saveResourceView(resourceName.value, { name, search: search.value, filters: { ...filterValues.value }, sort: sort.value, direction: direction.value, pageSize: pageSize.value, hiddenColumns: [...hiddenColumns.value] })
-  savedViews.value = loadResourceViews(resourceName.value)
-  viewName.value = ''
-}
-function applyView(view: ResourceViewState) {
-  search.value = view.search || ''
-  filterValues.value = { ...(view.filters || {}) }
-  sort.value = view.sort || 'id'
-  direction.value = view.direction || 'desc'
-  pageSize.value = view.pageSize || '10'
-  hiddenColumns.value = [...(view.hiddenColumns || [])]
-  viewDialogOpen.value = false
-  void loadRows(1)
-}
-function removeView(name: string) {
-  deleteResourceView(resourceName.value, name)
-  savedViews.value = loadResourceViews(resourceName.value)
-}
 function hasAction(name: string) {
   const action = currentManifest.value?.actions?.find((action) => action.name === name)
   return Boolean(action && auth.can(action.permission))
@@ -307,14 +288,13 @@ async function exportRows() {
 onMounted(async () => {
   try {
     await loadManifests()
-    savedViews.value = loadResourceViews(resourceName.value)
     await loadRows()
   } catch (value) {
     error.value = localizedError(value)
     loading.value = false
   }
 })
-watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; hiddenColumns.value = []; savedViews.value = loadResourceViews(resourceName.value); clearSelection(); void loadRows(1) })
+watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; clearSelection(); void loadRows(1) })
 </script>
 
 <template>
@@ -324,7 +304,7 @@ watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; 
         <h1 class="text-2xl font-semibold tracking-tight">{{ currentManifest?.label || t('resource.title') }}</h1>
         <p class="text-sm text-muted-foreground">{{ t('resource.description') }}</p>
       </div>
-      <div class="flex gap-2"><Button v-if="canCreate" variant="default" @click="router.push(`/${resourceName}/new`)">{{ resourceName === 'users' ? t('resource.createUser') : resourceName === 'roles' ? t('rbac.createRole') : t('resource.create') }}</Button><Button variant="outline" @click="openViews">{{ t('resource.views') }}</Button><Button variant="outline" :disabled="loading || exporting" @click="exportRows"><Download data-icon="inline-start" />{{ t('resource.export') }}</Button><Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
+      <div class="flex gap-2"><Button v-if="canCreate" variant="default" @click="router.push(`/${resourceName}/new`)">{{ resourceName === 'users' ? t('resource.createUser') : resourceName === 'roles' ? t('rbac.createRole') : t('resource.create') }}</Button><Button variant="outline" :disabled="loading || exporting" @click="exportRows"><Download data-icon="inline-start" />{{ t('resource.export') }}</Button><Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
         <RefreshCw data-icon="inline-start" />{{ t('resource.refresh') }}
       </Button></div>
     </div>
@@ -346,7 +326,7 @@ watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; 
       <CardContent>
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
         <Empty v-else-if="!rows.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
-        <Table v-else><TableHeader><TableRow><TableHead v-if="batchActions.length" class="w-10"><Checkbox :checked="allVisibleSelected" :aria-label="t('resource.selectAll')" @click="toggleAll(!allVisibleSelected)" /></TableHead><TableHead v-for="column in visibleColumns" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead><TableHead class="w-36 text-right">{{ t('resource.actions') }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-if="batchActions.length" @click.stop><Checkbox :checked="selectedIds.includes(String(row.id))" :aria-label="t('resource.selectRow', { name: row.name })" @click="toggleRow(row.id, !selectedIds.includes(String(row.id)))" /></TableCell><TableCell v-for="column in visibleColumns" :key="column.name"><Badge v-if="column.name === 'status'" variant="secondary">{{ statusLabel(row[column.name]) }}</Badge><template v-else>{{ displayValue(row[column.name]) }}</template></TableCell><TableCell class="text-right"><div v-if="row.id && (hasAction('update') || hasAction('delete') || hasActionKind('user-status'))" class="flex justify-end gap-1" @click.stop><Button v-if="hasActionKind('user-status')" variant="ghost" size="sm" :aria-label="t('resource.setStatus')" @click="openRowStatusAction(row)">{{ t('resource.setStatus') }}</Button><Button v-if="hasAction('update')" variant="ghost" size="sm" :aria-label="t('resource.edit')" @click="router.push(editPath(row))"><Pencil data-icon="inline-start" />{{ t('resource.edit') }}</Button><Button v-if="hasAction('delete')" variant="ghost" size="sm" :disabled="!canDeleteResource(resourceName, row)" :aria-label="t('resource.delete')" @click="openDelete(row)"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div></TableCell></TableRow></TableBody></Table>
+        <Table v-else><TableHeader><TableRow><TableHead v-if="batchActions.length" class="w-10"><Checkbox v-model="headerChecked" :aria-label="t('resource.selectAll')" /></TableHead><TableHead v-for="column in visibleColumns" :key="column.name"><Button v-if="column.sortable" variant="ghost" size="sm" class="-ml-3" @click="sortBy(column)">{{ column.label }}<ArrowDownUp data-icon="inline-end" /></Button><span v-else>{{ column.label }}</span></TableHead><TableHead class="w-36 text-right">{{ t('resource.actions') }}</TableHead></TableRow></TableHeader><TableBody><TableRow v-for="(row, index) in rows" :key="String(row.id || index)" class="cursor-pointer" @click="row.id && router.push(`/${resourceName}/${row.id}`)"><TableCell v-if="batchActions.length" @click.stop><Checkbox :model-value="allFilteredSelected ? !excludedIds.includes(String(row.id)) : selectedIds.includes(String(row.id))" :aria-label="t('resource.selectRow', { name: row.name })" @update:model-value="toggleRow(row.id, $event)" /></TableCell><TableCell v-for="column in visibleColumns" :key="column.name"><Badge v-if="column.name === 'status'" variant="secondary">{{ statusLabel(row[column.name]) }}</Badge><template v-else>{{ displayValue(row[column.name]) }}</template></TableCell><TableCell class="text-right"><div v-if="row.id && (hasAction('update') || hasAction('delete') || hasActionKind('user-status'))" class="flex justify-end gap-1" @click.stop><Button v-if="hasActionKind('user-status')" variant="ghost" size="sm" :aria-label="t('resource.setStatus')" @click="openRowStatusAction(row)">{{ t('resource.setStatus') }}</Button><Button v-if="hasAction('update')" variant="ghost" size="sm" :aria-label="t('resource.edit')" @click="router.push(editPath(row))"><Pencil data-icon="inline-start" />{{ t('resource.edit') }}</Button><Button v-if="hasAction('delete')" variant="ghost" size="sm" :disabled="!canDeleteResource(resourceName, row)" :aria-label="t('resource.delete')" @click="openDelete(row)"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div></TableCell></TableRow></TableBody></Table>
         <div v-if="!loading && meta.total > 0" class="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between"><p class="text-sm text-muted-foreground">{{ t('resource.page', { page: meta.page }) }}</p><div class="flex items-center gap-2"><Select :model-value="pageSize" @update:model-value="changePageSize"><SelectTrigger class="w-24"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="10">{{ t('resource.perPage', { count: 10 }) }}</SelectItem><SelectItem value="20">{{ t('resource.perPage', { count: 20 }) }}</SelectItem><SelectItem value="50">{{ t('resource.perPage', { count: 50 }) }}</SelectItem></SelectContent></Select></div><Pagination v-model:page="meta.page" :items-per-page="meta.per_page" :total="meta.total" @update:page="loadRows"><PaginationContent v-slot="{ items }"><PaginationPrevious /><template v-for="(item, index) in items" :key="index"><PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === meta.page">{{ item.value }}</PaginationItem></template><PaginationNext /></PaginationContent></Pagination></div>
       </CardContent>
     </Card>
@@ -354,6 +334,5 @@ watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; 
     <AlertDialog v-model:open="bulkStatusDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkStatusTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkStatusDescription', { count: selectedCount, status: t(userStatusLabelKey(bulkStatus)) }) }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkUpdating" @click="applyBulkStatus">{{ t('resource.applyStatus') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     <AlertDialog v-model:open="bulkDeleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkDeleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkDeleteDescription', { count: selectedCount }) }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkDeleting" @click="applyBulkDelete">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     <Dialog v-model:open="bulkUpdateDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ t('resource.bulkUpdateTitle') }}</DialogTitle><DialogDescription>{{ t('resource.bulkUpdateDescription', { count: selectedCount }) }}</DialogDescription></DialogHeader><div class="grid gap-3"><Select v-model="bulkUpdateField"><SelectTrigger><SelectValue :placeholder="t('resource.bulkUpdateField')" /></SelectTrigger><SelectContent><SelectItem v-for="field in writableFields" :key="field.name" :value="field.name">{{ field.label }}</SelectItem></SelectContent></Select><Input v-model="bulkUpdateValue" :placeholder="t('resource.bulkUpdateValue')" /></div><DialogFooter><Button variant="outline" @click="bulkUpdateDialogOpen = false">{{ t('resource.cancel') }}</Button><Button :disabled="bulkUpdateSaving || !bulkUpdateField" @click="applyBulkUpdate">{{ t('resource.applyStatus') }}</Button></DialogFooter></DialogContent></Dialog>
-    <Dialog v-model:open="viewDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ t('resource.views') }}</DialogTitle><DialogDescription>{{ t('resource.viewsDescription') }}</DialogDescription></DialogHeader><div class="grid gap-3"><div class="flex gap-2"><Input v-model="viewName" :placeholder="t('resource.viewName')" /><Button @click="saveCurrentView">{{ t('resource.saveView') }}</Button></div><div class="grid gap-2"><label class="text-sm font-medium">{{ t('resource.visibleColumns') }}</label><label v-for="column in currentManifest?.columns || []" :key="column.name" class="flex items-center gap-2 text-sm"><Checkbox :checked="!hiddenColumns.includes(column.name)" @click="hiddenColumns = hiddenColumns.includes(column.name) ? hiddenColumns.filter((name) => name !== column.name) : hiddenColumns.filter((name) => name !== column.name).concat(column.name)" />{{ column.label }}</label></div><div v-if="savedViews.length" class="grid gap-2"><label class="text-sm font-medium">{{ t('resource.savedViews') }}</label><div v-for="view in savedViews" :key="view.name" class="flex items-center justify-between rounded border p-2 text-sm"><Button variant="ghost" size="sm" @click="applyView(view)">{{ view.name }}</Button><Button variant="ghost" size="sm" @click="removeView(view.name)">{{ t('resource.delete') }}</Button></div></div></div></DialogContent></Dialog>
   </div>
 </template>
