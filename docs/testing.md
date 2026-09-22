@@ -45,7 +45,9 @@ Golden File
 ## 审计日志生命周期
 
 - 后台审计页可由具备 `admin.settings.manage` 权限的管理员手动清理；
-- 手动清理通过 `POST /api/v1/admin/audit-logs/cleanup`，请求体使用 `retention_days`，范围为 1 到 3650 天；
-- 定期清理使用 `go run . artisan admin:prune-audit-logs --days=365`，由 Laragon 或操作系统任务计划按需调度；
-- 清理动作只删除早于保留窗口的记录，并返回删除数量；清理本身保留一条摘要审计事件；
+- 手动清理通过 `POST /api/v1/admin/audit-logs/cleanup`，支持 `retention`、`selected`、`filtered`、`all` 四种范围；
+- `selected` 需要传 `ids`，`filtered` 使用当前 `action`/`user_id` 筛选条件且不受分页限制，`all` 删除全部日志；三种破坏性范围都必须传入 `confirmation: "DELETE"`；
+- `filtered` 至少需要一个有效筛选条件，空筛选不会退化成全量删除；
+- 定期清理使用 `go run . artisan admin:prune-audit-logs --days=365`；应用内默认每天 02:30 注册保留期清理任务，也可由 Laragon 或操作系统任务计划调用该命令；
+- 清理动作返回删除数量，并在交互式后台清理完成后保留一条摘要审计事件；定期命令只执行保留期清理，不执行全量删除；
 - 清理失败不得通过 HTTP 请求影响其他业务数据。

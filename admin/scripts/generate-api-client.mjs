@@ -41,8 +41,8 @@ export interface ActionFailure { id: number; code: string }
 export interface ActionResponse { action: string; requested: number; succeeded: number; failed: number; skipped: number; failures: ActionFailure[]; skips: ActionFailure[] }
 export interface AdminOverview { users: number; roles: number; permissions: number }
 export interface AuditLog { id: number; user_id: number; action: string; metadata: Record<string, unknown> | null; created_at: string }
-export type AuditCleanupMode = 'retention' | 'all'
-export interface AuditCleanupRequest { mode?: AuditCleanupMode; retention_days?: number }
+export type AuditCleanupMode = 'retention' | 'selected' | 'filtered' | 'all'
+export interface AuditCleanupRequest { mode?: AuditCleanupMode; retention_days?: number; ids?: number[]; action?: string; user_id?: string; confirmation?: string }
 export interface AuditCleanupResponse { deleted: number; mode: AuditCleanupMode; retention_days?: number; cutoff?: string | null }
 export interface GlobalSearchResult { resource: string; label: string; id: string | number; title: string; subtitle?: string; route: string }
 export interface FieldPermissionOverride { readable: boolean; writable: boolean }

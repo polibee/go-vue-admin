@@ -18,5 +18,9 @@
   "RELATION_FORBIDDEN": "You do not have permission to use this related record.",
   "SETTINGS_INVALID": "The system setting parameters are invalid.",
   "SETTINGS_ERROR": "System settings are temporarily unavailable.",
-  "INTERNAL_ERROR": "The service is temporarily unavailable. Please try again later."
+  "INTERNAL_ERROR": "The service is temporarily unavailable. Please try again later.",
+  "AUDIT_CLEANUP_CONFIRMATION_REQUIRED": "Enter DELETE to confirm cleanup",
+  "AUDIT_CLEANUP_SELECTION_REQUIRED": "Select at least one log",
+  "AUDIT_CLEANUP_SELECTION_TOO_LARGE": "You can clean at most 1000 logs at once",
+  "AUDIT_CLEANUP_FILTER_REQUIRED": "Set at least one filter first"
 }

@@ -31,7 +31,7 @@ func Spec() map[string]any {
 				"ActionResponse":          actionResponseSchema(),
 				"GlobalSearchResult":      globalSearchResultSchema(),
 				"GlobalSearchResponse":    globalSearchResponseSchema(),
-				"AuditCleanupMode":        map[string]any{"type": "string", "enum": []string{"retention", "all"}},
+				"AuditCleanupMode":        map[string]any{"type": "string", "enum": []string{"retention", "selected", "filtered", "all"}},
 				"AuditCleanupRequest":     auditCleanupRequestSchema(),
 				"AuditCleanupResponse":    auditCleanupResponseSchema(),
 			},
@@ -108,6 +108,10 @@ func auditCleanupRequestSchema() map[string]any {
 	return map[string]any{"type": "object", "properties": map[string]any{
 		"mode":           map[string]any{"$ref": "#/components/schemas/AuditCleanupMode"},
 		"retention_days": map[string]any{"type": "integer", "minimum": 1, "maximum": 3650},
+		"ids":            map[string]any{"type": "array", "items": map[string]any{"type": "integer", "format": "int64"}, "maxItems": 1000},
+		"action":         map[string]any{"type": "string"},
+		"user_id":        map[string]any{"type": "string"},
+		"confirmation":   map[string]any{"type": "string", "description": "Must be DELETE for destructive scopes."},
 	}}
 }
 

@@ -45,8 +45,12 @@ func (a *AuditController) Index(ctx http.Context) http.Response {
 }
 
 type auditCleanupPayload struct {
-	Mode          string `json:"mode"`
-	RetentionDays int    `json:"retention_days"`
+	Mode          string  `json:"mode"`
+	RetentionDays int     `json:"retention_days"`
+	IDs           []int64 `json:"ids"`
+	Action        string  `json:"action"`
+	UserID        string  `json:"user_id"`
+	Confirmation  string  `json:"confirmation"`
 }
 
 func (a *AuditController) Cleanup(ctx http.Context) http.Response {
@@ -60,11 +64,27 @@ func (a *AuditController) Cleanup(ctx http.Context) http.Response {
 	if err := auditservices.ValidateCleanupMode(payload.Mode); err != nil {
 		return ctx.Response().Status(422).Json(http.Json{"code": "AUDIT_CLEANUP_MODE_INVALID"})
 	}
+	if err := auditservices.ValidateCleanupConfirmation(payload.Mode, payload.Confirmation); err != nil {
+		return ctx.Response().Status(422).Json(http.Json{"code": "AUDIT_CLEANUP_CONFIRMATION_REQUIRED"})
+	}
+	if payload.Mode == auditservices.CleanupModeSelected && len(payload.IDs) == 0 {
+		return ctx.Response().Status(422).Json(http.Json{"code": "AUDIT_CLEANUP_SELECTION_REQUIRED"})
+	}
+	if payload.Mode == auditservices.CleanupModeFiltered && strings.TrimSpace(payload.Action) == "" && strings.TrimSpace(payload.UserID) == "" {
+		return ctx.Response().Status(422).Json(http.Json{"code": "AUDIT_CLEANUP_FILTER_REQUIRED"})
+	}
+	if len(payload.IDs) > 1000 {
+		return ctx.Response().Status(422).Json(http.Json{"code": "AUDIT_CLEANUP_SELECTION_TOO_LARGE"})
+	}
 	var deleted int64
 	var cutoff time.Time
 	var err error
 	if payload.Mode == auditservices.CleanupModeAll {
 		deleted, err = auditservices.NewAuditService().CleanupAll()
+	} else if payload.Mode == auditservices.CleanupModeSelected {
+		deleted, err = auditservices.NewAuditService().CleanupSelected(payload.IDs)
+	} else if payload.Mode == auditservices.CleanupModeFiltered {
+		deleted, err = auditservices.NewAuditService().CleanupFiltered(strings.TrimSpace(payload.Action), strings.TrimSpace(payload.UserID))
 	} else {
 		if payload.RetentionDays == 0 {
 			payload.RetentionDays = auditservices.DefaultAuditRetentionDays
@@ -84,6 +104,13 @@ func (a *AuditController) Cleanup(ctx http.Context) http.Response {
 				"mode":           payload.Mode,
 				"retention_days": payload.RetentionDays,
 				"deleted":        deleted,
+			}
+			if payload.Mode == auditservices.CleanupModeSelected {
+				metadata["selected_count"] = len(payload.IDs)
+			}
+			if payload.Mode == auditservices.CleanupModeFiltered {
+				metadata["action"] = payload.Action
+				metadata["user_id"] = payload.UserID
 			}
 			if payload.Mode == auditservices.CleanupModeRetention {
 				metadata["cutoff"] = cutoff.Format(time.RFC3339)

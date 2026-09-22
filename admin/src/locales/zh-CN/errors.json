@@ -18,5 +18,9 @@
   "RELATION_FORBIDDEN": "没有权限使用该关联记录",
   "SETTINGS_INVALID": "系统设置参数无效",
   "SETTINGS_ERROR": "系统设置暂时无法加载",
-  "INTERNAL_ERROR": "服务暂时不可用，请稍后重试"
+  "INTERNAL_ERROR": "服务暂时不可用，请稍后重试",
+  "AUDIT_CLEANUP_CONFIRMATION_REQUIRED": "请输入 DELETE 确认清理",
+  "AUDIT_CLEANUP_SELECTION_REQUIRED": "请至少选择一条日志",
+  "AUDIT_CLEANUP_SELECTION_TOO_LARGE": "一次最多清理 1000 条日志",
+  "AUDIT_CLEANUP_FILTER_REQUIRED": "请先设置至少一个筛选条件"
 }

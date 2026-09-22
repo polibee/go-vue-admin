@@ -15,6 +15,7 @@ func Boot() contractsfoundation.Application {
 	return foundation.Setup().
 		WithSeeders(Seeders).
 		WithMigrations(Migrations).
+		WithSchedule(Schedule).
 		WithCommands(func() []contractsconsole.Command {
 			return []contractsconsole.Command{
 				adminconsole.ResourceGeneratorCommand{},

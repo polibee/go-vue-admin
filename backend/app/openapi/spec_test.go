@@ -51,6 +51,11 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 	if _, ok := cleanupProperties["mode"]; !ok {
 		t.Fatal("audit cleanup contract must expose mode")
 	}
+	for _, property := range []string{"ids", "action", "user_id", "confirmation"} {
+		if _, ok := cleanupProperties[property]; !ok {
+			t.Fatalf("audit cleanup contract must expose %s", property)
+		}
+	}
 	actionContract := paths["/admin/{resource}/actions/{action}"].(map[string]any)["post"].(map[string]any)
 	if actionContract["operationId"] != "executeResourceAction" {
 		t.Fatalf("unexpected resource action operation: %v", actionContract["operationId"])
