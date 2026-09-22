@@ -15,10 +15,23 @@ func RenderFrontend(spec Spec) ([]Artifact, error) {
 	}{
 		{filepath.Join(base, "resource.ts"), frontendResourceSource(spec)},
 		{filepath.Join(base, "api.ts"), frontendAPISource(spec)},
-		{filepath.Join(pageBase, spec.GoName+"ListPage.vue"), frontendListPageSource(spec)},
-		{filepath.Join(pageBase, spec.GoName+"FormPage.vue"), frontendFormPageSource(spec)},
-		{filepath.Join(pageBase, spec.GoName+"DetailPage.vue"), frontendDetailPageSource(spec)},
 		{filepath.Join(base, spec.Name+".test.ts"), frontendTestSource(spec)},
+	}
+	if spec.PageMode == "custom" {
+		files = append(files,
+			struct {
+				path string
+				body string
+			}{filepath.Join(pageBase, spec.GoName+"ListPage.vue"), frontendListPageSource(spec)},
+			struct {
+				path string
+				body string
+			}{filepath.Join(pageBase, spec.GoName+"FormPage.vue"), frontendFormPageSource(spec)},
+			struct {
+				path string
+				body string
+			}{filepath.Join(pageBase, spec.GoName+"DetailPage.vue"), frontendDetailPageSource(spec)},
+		)
 	}
 	artifacts := make([]Artifact, 0, len(files))
 	for _, file := range files {

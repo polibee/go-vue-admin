@@ -14,16 +14,13 @@ func TestRenderFrontendArtifactsFromResourceSpec(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(artifacts) != 6 {
-		t.Fatalf("artifact count = %d, want 6", len(artifacts))
+	if len(artifacts) != 3 {
+		t.Fatalf("artifact count = %d, want 3", len(artifacts))
 	}
 	paths := artifactPaths(artifacts)
 	for _, want := range []string{
 		"admin/src/modules/orders/resource.ts",
 		"admin/src/modules/orders/api.ts",
-		"admin/src/modules/orders/pages/OrdersListPage.vue",
-		"admin/src/modules/orders/pages/OrdersFormPage.vue",
-		"admin/src/modules/orders/pages/OrdersDetailPage.vue",
 		"admin/src/modules/orders/orders.test.ts",
 	} {
 		found := false
@@ -51,12 +48,9 @@ func TestRenderFrontendArtifactsFromResourceSpec(t *testing.T) {
 				}
 			}
 		}
-		if artifact.Path == "admin/src/modules/orders/pages/OrdersFormPage.vue" && !strings.Contains(string(artifact.Content), "ResourceFormView") {
-			t.Fatal("generated form page does not use ResourceFormView")
-		}
 		if artifact.Path == "admin/src/modules/orders/resource.ts" {
 			content := string(artifact.Content)
-			for _, fragment := range []string{"name: \"state\"", "value: \"open\"", "label: \"Closed\""} {
+			for _, fragment := range []string{"pageMode: \"generic\"", "name: \"state\"", "value: \"open\"", "label: \"Closed\""} {
 				if !strings.Contains(content, fragment) {
 					t.Fatalf("generated resource metadata missing %q", fragment)
 				}
@@ -84,6 +78,34 @@ func TestRenderFrontendOwnScopeMetadata(t *testing.T) {
 		}
 	}
 	t.Fatal("resource metadata artifact not found")
+}
+
+func TestRenderFrontendCustomResourceIncludesDedicatedPages(t *testing.T) {
+	spec, err := Normalize(Input{Name: "orders", PageMode: "custom", Fields: []string{"number:text"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	artifacts, err := RenderFrontend(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	paths := artifactPaths(artifacts)
+	for _, want := range []string{
+		"admin/src/modules/orders/pages/OrdersListPage.vue",
+		"admin/src/modules/orders/pages/OrdersFormPage.vue",
+		"admin/src/modules/orders/pages/OrdersDetailPage.vue",
+	} {
+		found := false
+		for _, path := range paths {
+			if path == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("missing custom page artifact %q in %v", want, paths)
+		}
+	}
 }
 
 func TestRenderFrontendFieldPolicies(t *testing.T) {

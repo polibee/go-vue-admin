@@ -11,8 +11,8 @@ func TestRenderResourcePipelineComposesAllResourceArtifacts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("render resource pipeline: %v", err)
 	}
-	if len(artifacts) != 21 {
-		t.Fatalf("artifact count = %d, want 21", len(artifacts))
+	if len(artifacts) != 18 {
+		t.Fatalf("artifact count = %d, want 18", len(artifacts))
 	}
 	if artifacts[0].Path != "app/modules/orders/resource/manifest.go" || artifacts[11].Path != "app/modules/orders/permissions/permissions.go" || artifacts[13].Path != "app/modules/orders/menu/menu.go" || artifacts[15].Path != "admin/src/modules/orders/resource.ts" {
 		t.Fatalf("unexpected pipeline boundaries: %v, %v, %v, %v", artifacts[0].Path, artifacts[11].Path, artifacts[13].Path, artifacts[15].Path)

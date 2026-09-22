@@ -29,6 +29,7 @@ func (ResourceGeneratorCommand) Extend() command.Extend {
 		Flags: []command.Flag{
 			&command.StringFlag{Name: "label", Usage: "resource label"},
 			&command.StringFlag{Name: "route", Usage: "admin route"},
+			&command.StringFlag{Name: "page-mode", Usage: "page mode: generic or custom"},
 			&command.StringFlag{Name: "permission", Usage: "view permission"},
 			&command.StringFlag{Name: "icon", Usage: "menu icon"},
 			&command.StringFlag{Name: "scope", Usage: "data scope: all or own"},
@@ -46,6 +47,7 @@ func (ResourceGeneratorCommand) Handle(ctx console.Context) error {
 		Name:       ctx.ArgumentString("name"),
 		Label:      ctx.Option("label"),
 		Route:      ctx.Option("route"),
+		PageMode:   ctx.Option("page-mode"),
 		Permission: ctx.Option("permission"),
 		Icon:       ctx.Option("icon"),
 		Scope:      ctx.Option("scope"),

@@ -39,9 +39,14 @@ func TestRenderRuntimeRegistrationDiscoversExistingAndNewResource(t *testing.T) 
 		}
 	}
 	frontend := string(artifacts[1].Content)
-	for _, fragment := range []string{"ordersResource", "postsResource", "generatedResourceRoutes"} {
+	for _, fragment := range []string{"ResourceListPage", "ResourceFormPage", "ResourceDetailPage", "ordersResource", "postsResource", "generatedResourceRoutes"} {
 		if !strings.Contains(frontend, fragment) {
 			t.Fatalf("frontend registry missing %q: %s", fragment, frontend)
+		}
+	}
+	for _, forbidden := range []string{"OrdersListPage.vue", "PostsListPage.vue", "OrdersFormPage.vue", "PostsFormPage.vue"} {
+		if strings.Contains(frontend, forbidden) {
+			t.Fatalf("generic frontend registry imported dedicated page %q: %s", forbidden, frontend)
 		}
 	}
 }
