@@ -37,9 +37,19 @@ type Spec struct {
 	Permission    string
 	Icon          string
 	Actions       []string
+	ActionSpecs   []ActionSpec
 	Fields        []FieldSpec
 	DataScope     string
 	OwnerField    string
+}
+
+type ActionSpec struct {
+	Name       string
+	Label      string
+	Kind       string
+	Permission string
+	Batch      bool
+	Payload    string
 }
 
 type FieldSpec struct {
@@ -185,6 +195,9 @@ func Normalize(input Input) (Spec, error) {
 		return Spec{}, err
 	}
 	spec.Actions = permissionSpec.Actions
+	for _, action := range spec.Actions {
+		spec.ActionSpecs = append(spec.ActionSpecs, ActionSpec{Name: action, Label: humanize(action), Permission: "admin." + spec.Name + "." + action})
+	}
 
 	seen := make(map[string]struct{}, len(input.Fields))
 	for _, raw := range input.Fields {

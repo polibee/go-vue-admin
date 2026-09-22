@@ -13,8 +13,9 @@ import (
 )
 
 type resourceActionPayload struct {
-	IDs    []int64        `json:"ids"`
-	Params map[string]any `json:"params"`
+	IDs     []int64        `json:"ids"`
+	Payload map[string]any `json:"payload"`
+	Params  map[string]any `json:"params"`
 }
 
 type actionFailureInput struct {
@@ -25,6 +26,7 @@ type actionFailureInput struct {
 type actionResultInput struct {
 	Succeeded int
 	Failures  []adminactions.Failure
+	Skips     []adminactions.Failure
 }
 
 func (r *ResourceController) Action(ctx http.Context) http.Response {
@@ -38,6 +40,9 @@ func (r *ResourceController) Action(ctx http.Context) http.Response {
 	if !ok || action.Permission == "" {
 		return ctx.Response().Status(404).Json(http.Json{"code": "ACTION_NOT_FOUND"})
 	}
+	if !action.Batch || action.Kind == "" || action.Payload == "" {
+		return actionValidationError(ctx, adminactions.ErrActionNotBatch)
+	}
 	allowed, err := rbacservices.NewRBACService().UserHasPermission(ctx, action.Permission)
 	if err != nil {
 		return ctx.Response().Status(401).Json(http.Json{"code": "AUTH_UNAUTHORIZED"})
@@ -49,13 +54,19 @@ func (r *ResourceController) Action(ctx http.Context) http.Response {
 	if err := ctx.Request().Bind(&payload); err != nil {
 		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
 	}
-	request, err := adminactions.NormalizeRequest(adminactions.Request{Action: actionName, IDs: payload.IDs, Params: payload.Params})
+	if payload.Params != nil {
+		return actionValidationError(ctx, adminactions.ErrPayloadContract)
+	}
+	request, err := adminactions.NormalizeRequest(adminactions.Request{Action: actionName, IDs: payload.IDs, Payload: payload.Payload})
 	if err != nil {
 		return actionValidationError(ctx, err)
 	}
 	handler, err := newAdminActionRegistry().Find(action.Kind)
 	if err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "ACTION_HANDLER_NOT_FOUND"})
+	}
+	if handler.Payload() != action.Payload {
+		return actionValidationError(ctx, adminactions.ErrPayloadContract)
 	}
 	accessibleIDs := make([]int64, 0, len(request.IDs))
 	scopeFailures := make([]actionFailureInput, 0)
@@ -65,7 +76,7 @@ func (r *ResourceController) Action(ctx http.Context) http.Response {
 			return resourceScopeError(ctx, scopeErr)
 		}
 		if !canAccess {
-			scopeFailures = append(scopeFailures, actionFailureInput{ID: id, Code: "RESOURCE_NOT_FOUND"})
+			scopeFailures = append(scopeFailures, actionFailureInput{ID: id, Code: "OUT_OF_SCOPE"})
 			continue
 		}
 		accessibleIDs = append(accessibleIDs, id)
@@ -79,8 +90,9 @@ func (r *ResourceController) Action(ctx http.Context) http.Response {
 		}
 		handlerResult.Succeeded = result.Succeeded
 		handlerResult.Failures = result.Failures
+		handlerResult.Skips = result.Skips
 	}
-	result := mergeActionResults(actionName, len(payload.IDs), scopeFailures, handlerResult)
+	result := mergeActionResults(actionName, len(request.IDs)+len(scopeFailures), scopeFailures, handlerResult)
 	recordManagementAudit(ctx, "resource.action", map[string]any{"resource": resourceName, "action": actionName, "requested": result.Requested, "succeeded": result.Succeeded, "failed": result.Failed})
 	return ctx.Response().Success().Json(http.Json{"data": result})
 }
@@ -101,16 +113,17 @@ func newAdminActionRegistry() *adminactions.Registry {
 }
 
 func mergeActionResults(action string, requested int, scopeFailures []actionFailureInput, handlerResult actionResultInput) adminactions.Result {
-	failures := make([]adminactions.Failure, 0, len(scopeFailures)+len(handlerResult.Failures))
-	for _, failure := range scopeFailures {
-		failures = append(failures, adminactions.Failure{ID: failure.ID, Code: failure.Code})
+	failures := append([]adminactions.Failure(nil), handlerResult.Failures...)
+	skips := make([]adminactions.Failure, 0, len(scopeFailures)+len(handlerResult.Skips))
+	for _, skip := range scopeFailures {
+		skips = append(skips, adminactions.Failure{ID: skip.ID, Code: skip.Code})
 	}
-	failures = append(failures, handlerResult.Failures...)
-	return adminactions.Result{Action: action, Requested: requested, Succeeded: handlerResult.Succeeded, Failed: len(failures), Failures: failures}
+	skips = append(skips, handlerResult.Skips...)
+	return adminactions.Result{Action: action, Requested: requested, Succeeded: handlerResult.Succeeded, Failed: len(failures), Skipped: len(skips), Failures: failures, Skips: skips}
 }
 
 func actionValidationError(ctx http.Context, err error) http.Response {
-	if errors.Is(err, adminactions.ErrEmptyIDs) || errors.Is(err, adminactions.ErrInvalidID) || errors.Is(err, adminactions.ErrTooManyIDs) {
+	if errors.Is(err, adminactions.ErrEmptyIDs) || errors.Is(err, adminactions.ErrInvalidID) || errors.Is(err, adminactions.ErrTooManyIDs) || errors.Is(err, adminactions.ErrActionNotBatch) || errors.Is(err, adminactions.ErrPayloadContract) {
 		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
 	}
 	return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})

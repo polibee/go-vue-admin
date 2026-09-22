@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ApiError, errorMessageKey } from '@/lib/api'
-import { generatedApi, type ResourceManifest as GeneratedResourceManifest, type ResourceListMeta } from '@/generated/api'
+import { generatedApi, type ActionResponse, type ResourceManifest as GeneratedResourceManifest, type ResourceListMeta } from '@/generated/api'
 import { canDeleteResource, executableBatchActions } from '@/lib/resource-actions'
 import { useAuthStore } from '@/stores/auth'
 import { USER_STATUSES, userStatusLabelKey, type UserStatus } from '@/lib/user-status'
@@ -49,6 +49,7 @@ const selectedIds = ref<string[]>([])
 const bulkStatus = ref<UserStatus>('disabled')
 const bulkStatusDialogOpen = ref(false)
 const bulkUpdating = ref(false)
+const lastActionResult = ref<ActionResponse>()
 const filterValues = ref<Record<string, string>>({})
 
 const resourceName = computed(() => props.resource || String(route.params.resource || 'users'))
@@ -158,7 +159,7 @@ async function applyBulkStatus() {
   bulkUpdating.value = true
   error.value = ''
   try {
-    await generatedApi.resourceAction(resourceName.value, 'set-status', { ids: selectedIds.value.map(Number), params: { status: bulkStatus.value } }, auth.token)
+    lastActionResult.value = await generatedApi.resourceAction(resourceName.value, 'set-status', { ids: selectedIds.value.map(Number), payload: { status: bulkStatus.value } }, auth.token)
     bulkStatusDialogOpen.value = false
     clearSelection()
     await loadRows(meta.value.page)
@@ -238,6 +239,7 @@ watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {};
     </div>
 
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <Alert v-if="lastActionResult"><AlertTitle>{{ t('resource.actionCompleted') }}</AlertTitle><AlertDescription>{{ t('resource.actionResult', { succeeded: lastActionResult.succeeded, failed: lastActionResult.failed, skipped: lastActionResult.skipped }) }}</AlertDescription></Alert>
     <Card>
       <CardHeader class="gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div><CardTitle>{{ currentManifest?.label || t('resource.resourceNotFound') }}</CardTitle><CardDescription>{{ t('resource.total', { count: meta.total }) }}</CardDescription></div>

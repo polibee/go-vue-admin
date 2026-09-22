@@ -11,12 +11,12 @@ export interface AuthUser { id: number; name: string; email: string; status: Use
 export interface LoginRequest { email: string; password: string }
 export interface LoginResponse { access_token: string; token_type: string; user: AuthUser }
 export interface RefreshResponse { access_token: string; token_type: string }
-export interface ResourceManifest { name: string; label: string; route: string; permissions: string[]; data_scope?: DataScope; owner_field?: string; fields: ResourceField[]; columns: Array<{ name: string; label: string; sortable: boolean }>; actions?: Array<{ name: string; label: string; kind: string; permission: string }> }
+export interface ResourceManifest { name: string; label: string; route: string; permissions: string[]; data_scope?: DataScope; owner_field?: string; fields: ResourceField[]; columns: Array<{ name: string; label: string; sortable: boolean }>; actions?: Array<{ name: string; label: string; kind: string; permission: string; batch: boolean; payload?: string }> }
 export interface ResourceListMeta { page: number; per_page: number; total: number; last_page: number }
 export interface ResourceList<T = Record<string, unknown>> { data: T[]; meta: ResourceListMeta }
-export interface ActionRequest { ids: number[]; params?: Record<string, unknown> }
+export interface ActionRequest { ids: number[]; payload?: Record<string, unknown> }
 export interface ActionFailure { id: number; code: string }
-export interface ActionResponse { action: string; requested: number; succeeded: number; failed: number; failures: ActionFailure[] }
+export interface ActionResponse { action: string; requested: number; succeeded: number; failed: number; skipped: number; failures: ActionFailure[]; skips: ActionFailure[] }
 export interface AdminOverview { users: number; roles: number; permissions: number }
 export interface AuditLog { id: number; user_id: number; action: string; metadata: Record<string, unknown> | null; created_at: string }
 export interface GlobalSearchResult { resource: string; label: string; id: string | number; title: string; subtitle?: string; route: string }

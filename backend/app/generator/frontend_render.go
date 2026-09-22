@@ -43,7 +43,7 @@ export const resourceDefinition = {
   actions: %s,
   fields: %s,
 } as const;
-`, spec.Name, spec.Label, spec.FrontendRoute, spec.Permission, spec.Icon, scopeMetadata, quoteList(spec.Actions), frontendFields(spec))
+`, spec.Name, spec.Label, spec.FrontendRoute, spec.Permission, spec.Icon, scopeMetadata, frontendActionList(spec), frontendFields(spec))
 }
 
 func frontendMenuSource(spec Spec) string {
@@ -151,7 +151,7 @@ func frontendTestSource(spec Spec) string {
 if (resourceDefinition.name !== %q) throw new Error('generated resource name mismatch');
 if (resourceDefinition.route !== %q) throw new Error('generated resource route mismatch');
 if (JSON.stringify(resourceDefinition.actions) !== JSON.stringify(%s)) throw new Error('generated resource actions mismatch');
-`, spec.Name, spec.FrontendRoute, quoteList(spec.Actions))
+`, spec.Name, spec.FrontendRoute, frontendActionList(spec))
 }
 
 func frontendFields(spec Spec) string {
@@ -176,4 +176,12 @@ func quoteList(values []string) string {
 		quoted = append(quoted, fmt.Sprintf("%q", value))
 	}
 	return "[" + strings.Join(quoted, ", ") + "]"
+}
+
+func frontendActionList(spec Spec) string {
+	items := make([]string, 0, len(spec.ActionSpecs))
+	for _, action := range spec.ActionSpecs {
+		items = append(items, fmt.Sprintf("{ name: %q, label: %q, kind: %q, permission: %q, batch: %t, payload: %q }", action.Name, action.Label, action.Kind, action.Permission, action.Batch, action.Payload))
+	}
+	return "[" + strings.Join(items, ", ") + "]"
 }

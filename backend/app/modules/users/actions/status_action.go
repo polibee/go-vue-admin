@@ -21,15 +21,17 @@ func NewSetStatusHandler() *SetStatusHandler { return &SetStatusHandler{} }
 
 func (h *SetStatusHandler) Kind() string { return "user-status" }
 
-func ParseStatusParams(params map[string]any) (string, error) {
-	if len(params) != 1 {
-		for name := range params {
+func (h *SetStatusHandler) Payload() string { return "user-status" }
+
+func ParseStatusParams(payload map[string]any) (string, error) {
+	if len(payload) != 1 {
+		for name := range payload {
 			if name != "status" {
 				return "", ErrUnknownParameter
 			}
 		}
 	}
-	value, ok := params["status"].(string)
+	value, ok := payload["status"].(string)
 	if !ok {
 		return "", ErrInvalidStatus
 	}
@@ -43,7 +45,7 @@ func ParseStatusParams(params map[string]any) (string, error) {
 }
 
 func (h *SetStatusHandler) Execute(_ http.Context, request adminactions.Request) (adminactions.Result, error) {
-	status, err := ParseStatusParams(request.Params)
+	status, err := ParseStatusParams(request.Payload)
 	if err != nil {
 		return adminactions.Result{}, err
 	}

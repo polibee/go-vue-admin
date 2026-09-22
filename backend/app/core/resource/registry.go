@@ -47,6 +47,8 @@ type Action struct {
 	Label      string `json:"label"`
 	Kind       string `json:"kind"`
 	Permission string `json:"permission"`
+	Batch      bool   `json:"batch"`
+	Payload    string `json:"payload,omitempty"`
 }
 
 type Manifest struct {

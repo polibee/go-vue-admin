@@ -31,7 +31,7 @@
 
 ## 核心契约
 
-Manifest 继续使用现有 Action：
+Manifest Action 现在补充 `batch` 和 `payload` 元数据：
 
 ```go
 type Action struct {
@@ -53,7 +53,7 @@ POST /api/v1/admin/{resource}/actions/{action}
 ```json
 {
   "ids": [1, 2, 3],
-  "params": {
+  "payload": {
     "status": "disabled"
   }
 }
@@ -65,7 +65,7 @@ POST /api/v1/admin/{resource}/actions/{action}
 - Action 必须存在于目标 Manifest；
 - 当前用户必须拥有 Action 声明的权限；
 - 每个 ID 必须通过该 Action 的数据范围校验；
-- `params` 只由对应 Handler 解析，未知参数拒绝；
+- `payload` 只由对应 Handler 的服务端契约解析，未知字段拒绝；旧 `params` 不作为兼容入口；
 - 返回结果不得泄露无权限记录的存在性。
 
 响应：

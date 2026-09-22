@@ -78,7 +78,7 @@ func resourceColumnSchema() map[string]any {
 }
 
 func resourceActionSchema() map[string]any {
-	return map[string]any{"type": "object", "required": []string{"name", "label", "permission"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "kind": map[string]any{"type": "string"}, "permission": map[string]any{"type": "string"}}}
+	return map[string]any{"type": "object", "required": []string{"name", "label", "permission", "batch"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "kind": map[string]any{"type": "string"}, "permission": map[string]any{"type": "string"}, "batch": map[string]any{"type": "boolean"}, "payload": map[string]any{"type": "string"}}}
 }
 
 func resourceManifestSchema() map[string]any {
@@ -87,15 +87,16 @@ func resourceManifestSchema() map[string]any {
 
 func actionRequestSchema() map[string]any {
 	return map[string]any{"type": "object", "required": []string{"ids"}, "properties": map[string]any{
-		"ids":    map[string]any{"type": "array", "minItems": 1, "maxItems": 100, "items": map[string]any{"type": "integer", "format": "int64"}},
-		"params": map[string]any{"type": "object", "additionalProperties": true},
+		"ids":     map[string]any{"type": "array", "minItems": 1, "maxItems": 100, "items": map[string]any{"type": "integer", "format": "int64"}},
+		"payload": map[string]any{"type": "object", "additionalProperties": true},
 	}}
 }
 
 func actionResponseSchema() map[string]any {
-	return map[string]any{"type": "object", "required": []string{"action", "requested", "succeeded", "failed", "failures"}, "properties": map[string]any{
-		"action": map[string]any{"type": "string"}, "requested": map[string]any{"type": "integer"}, "succeeded": map[string]any{"type": "integer"}, "failed": map[string]any{"type": "integer"},
+	return map[string]any{"type": "object", "required": []string{"action", "requested", "succeeded", "failed", "skipped", "failures", "skips"}, "properties": map[string]any{
+		"action": map[string]any{"type": "string"}, "requested": map[string]any{"type": "integer"}, "succeeded": map[string]any{"type": "integer"}, "failed": map[string]any{"type": "integer"}, "skipped": map[string]any{"type": "integer"},
 		"failures": map[string]any{"type": "array", "items": map[string]any{"type": "object", "required": []string{"id", "code"}, "properties": map[string]any{"id": map[string]any{"type": "integer", "format": "int64"}, "code": map[string]any{"type": "string"}}}},
+		"skips":    map[string]any{"type": "array", "items": map[string]any{"type": "object", "required": []string{"id", "code"}, "properties": map[string]any{"id": map[string]any{"type": "integer", "format": "int64"}, "code": map[string]any{"type": "string"}}}},
 	}}
 }
 

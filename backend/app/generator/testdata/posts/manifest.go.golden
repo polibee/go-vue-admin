@@ -16,10 +16,10 @@ func Manifest() resource.Manifest {
 			{Name: "published", Label: "Published", Sortable: true},
 		},
 		Actions: []resource.Action{
-			{Name: "view", Label: "View", Permission: "admin.posts.view"},
-			{Name: "create", Label: "Create", Permission: "admin.posts.create"},
-			{Name: "update", Label: "Update", Permission: "admin.posts.update"},
-			{Name: "delete", Label: "Delete", Permission: "admin.posts.delete"},
+			{Name: "view", Label: "View", Kind: "", Permission: "admin.posts.view", Batch: false, Payload: ""},
+			{Name: "create", Label: "Create", Kind: "", Permission: "admin.posts.create", Batch: false, Payload: ""},
+			{Name: "update", Label: "Update", Kind: "", Permission: "admin.posts.update", Batch: false, Payload: ""},
+			{Name: "delete", Label: "Delete", Kind: "", Permission: "admin.posts.delete", Batch: false, Payload: ""},
 		},
 	}
 }

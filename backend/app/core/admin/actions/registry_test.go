@@ -8,7 +8,8 @@ import (
 
 type fakeHandler struct{ kind string }
 
-func (h fakeHandler) Kind() string { return h.kind }
+func (h fakeHandler) Kind() string  { return h.kind }
+func (fakeHandler) Payload() string { return "test-payload" }
 
 func (h fakeHandler) Execute(_ http.Context, request Request) (Result, error) {
 	return Result{Action: request.Action, Requested: len(request.IDs), Succeeded: len(request.IDs)}, nil
@@ -51,5 +52,19 @@ func TestRegistryRejectsDuplicateAndFindsHandler(t *testing.T) {
 	}
 	if _, err := registry.Find("missing"); err != ErrHandlerNotFound {
 		t.Fatalf("expected missing handler error, got %v", err)
+	}
+}
+
+func TestNormalizeRequestCarriesPayload(t *testing.T) {
+	request, err := NormalizeRequest(Request{Action: "set-status", IDs: []int64{2}, Payload: map[string]any{"status": "active"}})
+	if err != nil || request.Payload["status"] != "active" {
+		t.Fatalf("expected payload to be preserved, request=%+v err=%v", request, err)
+	}
+}
+
+func TestRegistryRejectsHandlerWithoutPayloadContract(t *testing.T) {
+	registry := NewRegistry()
+	if err := registry.Register(fakeHandler{kind: ""}); err != ErrHandlerNotFound {
+		t.Fatalf("expected invalid handler to be rejected, got %v", err)
 	}
 }

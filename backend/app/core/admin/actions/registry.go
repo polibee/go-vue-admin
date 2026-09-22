@@ -13,14 +13,16 @@ var (
 	ErrTooManyIDs       = errors.New("too many action IDs")
 	ErrDuplicateHandler = errors.New("action handler kind already registered")
 	ErrHandlerNotFound  = errors.New("action handler not found")
+	ErrActionNotBatch   = errors.New("action does not support batch execution")
+	ErrPayloadContract  = errors.New("action payload contract is invalid")
 )
 
 const MaxIDs = 100
 
 type Request struct {
-	Action string
-	IDs    []int64
-	Params map[string]any
+	Action  string
+	IDs     []int64
+	Payload map[string]any
 }
 
 type Failure struct {
@@ -33,11 +35,14 @@ type Result struct {
 	Requested int       `json:"requested"`
 	Succeeded int       `json:"succeeded"`
 	Failed    int       `json:"failed"`
+	Skipped   int       `json:"skipped"`
 	Failures  []Failure `json:"failures,omitempty"`
+	Skips     []Failure `json:"skips,omitempty"`
 }
 
 type Handler interface {
 	Kind() string
+	Payload() string
 	Execute(ctx http.Context, request Request) (Result, error)
 }
 

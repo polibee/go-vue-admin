@@ -59,5 +59,7 @@
   ,"setStatus": "设置状态"
   ,"deleteUser": "删除用户",
   "deleteUserTitle": "确认删除用户？",
-  "deleteUserDescription": "删除后将解除该用户的角色关联，且无法恢复。"
+  "deleteUserDescription": "删除后将解除该用户的角色关联，且无法恢复。",
+  "actionCompleted": "批量操作完成",
+  "actionResult": "成功 {succeeded} 项，失败 {failed} 项，跳过 {skipped} 项。"
 }

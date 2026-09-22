@@ -59,5 +59,7 @@
   ,"setStatus": "Set status"
   ,"deleteUser": "Delete user",
   "deleteUserTitle": "Delete this user?",
-  "deleteUserDescription": "The user's role links will be removed and this action cannot be undone."
+  "deleteUserDescription": "The user's role links will be removed and this action cannot be undone.",
+  "actionCompleted": "Batch action completed",
+  "actionResult": "{succeeded} succeeded, {failed} failed, {skipped} skipped."
 }

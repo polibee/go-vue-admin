@@ -15,7 +15,7 @@ func AdminRegistry() *resource.Registry {
 			}},
 		},
 		Columns: []resource.Column{{Name: "name", Label: "Name", Sortable: true}, {Name: "email", Label: "Email", Sortable: true}, {Name: "status", Label: "Status", Sortable: true}},
-		Actions: append(standardActions("admin.users.manage"), resource.Action{Name: "set-status", Label: "Set status", Kind: "user-status", Permission: "admin.users.manage"}),
+		Actions: append(standardActions("admin.users.manage"), resource.Action{Name: "set-status", Label: "Set status", Kind: "user-status", Permission: "admin.users.manage", Batch: true, Payload: "user-status"}),
 	})
 	_ = registry.Register(resource.Manifest{
 		Name: "roles", Label: "Roles", Route: "/admin/roles", Table: "roles", Permissions: []string{"admin.roles.manage"}, DataScope: resource.DataScopeAll,
