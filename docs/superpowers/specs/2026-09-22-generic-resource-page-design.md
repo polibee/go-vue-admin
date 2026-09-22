@@ -157,3 +157,97 @@ admin:make-resource <name> 作为普通资源的唯一公开入口：
 - departments 端到端验收通过。
 - 全量后端测试、前端类型检查、前端测试和生产构建通过。
 - 文档、生成器 Golden File 和示例输出同步更新。
+
+## 最终决策：双模式 Resource Engine
+
+本项目采用一个 Resource Engine、两种页面模式，不建立两套生成流程。
+
+### 普通资源模式
+
+普通资源默认使用：
+
+~~~text
+Resource Manifest
+    -> Resource Registry
+    -> Generic Resource List
+    -> Generic Resource Form
+    -> Generic Resource Detail
+~~~
+
+执行 admin:make-resource 后，普通资源只生成 ResourceSpec、后端资源契约、迁移、权限、菜单、测试和 README。前端路由根据 Manifest 的 resource name 进入核心通用页面，不生成资源专用的 ListPage、FormPage 或 DetailPage。
+
+普通资源必须通过 Manifest 支持以下能力：
+
+- 列表、分页、搜索、筛选、排序。
+- 创建、编辑、详情和删除。
+- 导出和统一批量 Action。
+- 字段权限、数据范围和敏感字段处理。
+- 资源菜单、权限守卫和错误状态。
+
+### 复杂资源模式
+
+复杂资源仍然使用同一份 Manifest 和同一套 API、权限、审计及 Action 契约，只允许替换页面表现层：
+
+~~~text
+Resource Manifest
+    -> Resource Registry
+    -> Custom Resource List/Form/Detail
+~~~
+
+复杂资源必须在 ResourceSpec 中显式声明 pageMode: custom，并在自身模块目录内提供覆盖页面。不能通过扫描文件是否存在来自动切换模式，也不能在通用页面中增加针对某个业务名称的分支。
+
+### 页面解析优先级
+
+页面解析顺序固定为：
+
+1. 读取 Resource Manifest。
+2. 未声明 pageMode 时使用 generic。
+3. pageMode 为 generic 时强制使用核心通用页面。
+4. pageMode 为 custom 时读取该资源模块声明的页面覆盖。
+5. 覆盖页面缺失、导出错误或权限配置无效时，启动检查和测试必须失败，不能静默回退成半可用页面。
+
+### 统一契约边界
+
+无论使用 generic 还是 custom，以下能力都不能被页面覆盖绕过：
+
+- 后端认证和资源权限。
+- 数据范围和字段权限。
+- Manifest 字段可读、可写、可搜索和可排序约束。
+- 批量选择协议及 query selection 的服务端校验。
+- 审计记录、敏感字段脱敏和错误响应契约。
+- 统一 URL 规则和权限路由守卫。
+
+### 选择标准
+
+满足以下条件的资源使用 generic：
+
+- 标准表格列表。
+- 标准字段类型和筛选器。
+- 标准 CRUD。
+- 标准批量操作。
+- 没有复杂状态流转或多步骤交互。
+
+满足任意条件的资源才使用 custom：
+
+- 多步骤或强业务约束表单。
+- 订单、支付、审批、工作流等状态机。
+- 复杂关系编辑或拖拽编排。
+- 需要业务专属时间线、统计面板或实时交互。
+- 通用表格无法表达的领域操作。
+
+### 结果
+
+最终开发者体验为：
+
+~~~text
+admin:make-resource departments
+    -> 生成契约
+    -> 自动进入菜单和路由
+    -> 自动使用通用列表、表单、详情
+
+orders 模块显式声明 pageMode: custom
+    -> 仍复用同一份 Manifest、权限、API 和 Action
+    -> 仅替换订单专用页面
+~~~
+
+因此，普通资源不会产生重复页面，复杂资源也不会被通用页面限制；两者共享同一个 Resource Engine 和安全边界。
