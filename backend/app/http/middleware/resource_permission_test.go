@@ -15,3 +15,9 @@ func TestResourceViewPermissionsAreUnique(t *testing.T) {
 		t.Fatalf("unexpected resource permissions: %#v", permissions)
 	}
 }
+
+func TestRequireAuthenticationHasDedicatedMiddleware(t *testing.T) {
+	if RequireAuthentication().Signature() != "admin:authentication" {
+		t.Fatalf("unexpected authentication middleware signature: %s", RequireAuthentication().Signature())
+	}
+}

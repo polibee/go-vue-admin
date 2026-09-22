@@ -17,6 +17,20 @@ func RequireAnyResourcePermission() http.Middleware {
 	return anyResourcePermissionMiddleware{}
 }
 
+func RequireAuthentication() http.Middleware {
+	return authenticationMiddleware{}
+}
+
+type authenticationMiddleware struct{}
+
+func (m authenticationMiddleware) Signature() string { return "admin:authentication" }
+
+func (m authenticationMiddleware) Handle(ctx http.Context) {
+	if parseAuthenticatedRequest(ctx) {
+		ctx.Request().Next()
+	}
+}
+
 type anyResourcePermissionMiddleware struct{}
 
 func (m anyResourcePermissionMiddleware) Signature() string {
