@@ -23,6 +23,10 @@ type resourceListQuery struct {
 }
 
 func (r *ResourceController) List(ctx http.Context) http.Response {
+	manifest, manifestErr := registry.AdminRegistry().Find(ctx.Request().Route("resource"))
+	if manifestErr != nil || manifest.Table == "" {
+		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
+	}
 	query := resourceListQuery{
 		Page:    positiveInt(ctx.Request().Query("page", "1"), 1),
 		PerPage: positiveInt(ctx.Request().Query("per_page", "20"), 20),
@@ -45,6 +49,10 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 	case "users":
 		rows = &[]models.User{}
 		q = facades.Orm().Query()
+		q, manifestErr = applyResourceScope(ctx, q, manifest, "view")
+		if manifestErr != nil {
+			return resourceScopeError(ctx, manifestErr)
+		}
 		q = applyResourceSearch(q, query.Search, "name", "email")
 		if query.Status != "" {
 			q = q.Where("status = ?", query.Status)
@@ -53,20 +61,28 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 	case "roles":
 		rows = &[]models.Role{}
 		q = facades.Orm().Query()
+		q, manifestErr = applyResourceScope(ctx, q, manifest, "view")
+		if manifestErr != nil {
+			return resourceScopeError(ctx, manifestErr)
+		}
 		q = applyResourceSearch(q, query.Search, "name", "display_name")
 		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "display_name": true}, "id")
 	case "permissions":
 		rows = &[]models.Permission{}
 		q = facades.Orm().Query()
+		q, manifestErr = applyResourceScope(ctx, q, manifest, "view")
+		if manifestErr != nil {
+			return resourceScopeError(ctx, manifestErr)
+		}
 		q = applyResourceSearch(q, query.Search, "name", "display_name")
 		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "display_name": true}, "id")
 	default:
-		manifest, err := registry.AdminRegistry().Find(ctx.Request().Route("resource"))
-		if err != nil || manifest.Table == "" {
-			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
-		}
 		rows = &[]map[string]any{}
 		q = facades.Orm().Query().Table(manifest.Table)
+		q, manifestErr = applyResourceScope(ctx, q, manifest, "view")
+		if manifestErr != nil {
+			return resourceScopeError(ctx, manifestErr)
+		}
 		searchColumns := make([]string, 0, len(manifest.Columns))
 		allowedColumns := make(map[string]bool, len(manifest.Columns)+1)
 		allowedColumns["id"] = true

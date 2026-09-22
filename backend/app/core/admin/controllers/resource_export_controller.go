@@ -37,6 +37,10 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 	case "users":
 		var records []models.User
 		q = facades.Orm().Query()
+		q, err = applyResourceScope(ctx, q, manifest, "view")
+		if err != nil {
+			return resourceScopeError(ctx, err)
+		}
 		q = applyResourceSearch(q, query.Search, "name", "email")
 		if query.Status != "" {
 			q = q.Where("status = ?", query.Status)
@@ -52,6 +56,10 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 	case "roles":
 		var records []models.Role
 		q = facades.Orm().Query()
+		q, err = applyResourceScope(ctx, q, manifest, "view")
+		if err != nil {
+			return resourceScopeError(ctx, err)
+		}
 		q = applyResourceSearch(q, query.Search, "name", "display_name")
 		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "display_name": true}, "id")
 		q = q.OrderBy(query.Sort, query.Dir)
@@ -64,6 +72,10 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 	case "permissions":
 		var records []models.Permission
 		q = facades.Orm().Query()
+		q, err = applyResourceScope(ctx, q, manifest, "view")
+		if err != nil {
+			return resourceScopeError(ctx, err)
+		}
 		q = applyResourceSearch(q, query.Search, "name", "display_name")
 		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "display_name": true}, "id")
 		q = q.OrderBy(query.Sort, query.Dir)
@@ -75,6 +87,10 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 		}
 	default:
 		q = facades.Orm().Query().Table(manifest.Table)
+		q, err = applyResourceScope(ctx, q, manifest, "view")
+		if err != nil {
+			return resourceScopeError(ctx, err)
+		}
 		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFields(manifest))...)
 		for _, field := range resourceFilterFields(manifest) {
 			value := strings.TrimSpace(ctx.Request().Query(field.Name))

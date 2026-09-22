@@ -20,6 +20,9 @@ func (r *ResourceController) Create(ctx http.Context) http.Response {
 	if !ok {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
+	if err := validateResourceActionScope(ctx, manifest, "create"); err != nil {
+		return resourceScopeError(ctx, err)
+	}
 	if manifest.Name == "users" {
 		var payload userPayload
 		if err := ctx.Request().Bind(&payload); err != nil {
@@ -47,6 +50,9 @@ func (r *ResourceController) Create(ctx http.Context) http.Response {
 	values, err := bindGeneratedValues(ctx, manifest)
 	if err != nil {
 		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
+	}
+	if err := enforceResourceCreateOwner(ctx, manifest, values); err != nil {
+		return resourceScopeError(ctx, err)
 	}
 	createdID, err := insertGeneratedResource(manifest, values)
 	if err != nil {
@@ -86,6 +92,13 @@ func (r *ResourceController) Update(ctx http.Context) http.Response {
 	}
 	id, err := strconv.ParseInt(ctx.Request().Route("id"), 10, 64)
 	if err != nil || id < 1 {
+		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
+	}
+	allowed, scopeErr := resourceCanAccess(ctx, manifest, "update", id)
+	if scopeErr != nil {
+		return resourceScopeError(ctx, scopeErr)
+	}
+	if !allowed {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
 	if manifest.Name == "users" {
@@ -130,6 +143,13 @@ func (r *ResourceController) Delete(ctx http.Context) http.Response {
 	}
 	id, err := strconv.ParseInt(ctx.Request().Route("id"), 10, 64)
 	if err != nil || id < 1 {
+		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
+	}
+	allowed, scopeErr := resourceCanAccess(ctx, manifest, "delete", id)
+	if scopeErr != nil {
+		return resourceScopeError(ctx, scopeErr)
+	}
+	if !allowed {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
 	switch resourceDeleteStrategy(manifest) {
