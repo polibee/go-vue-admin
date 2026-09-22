@@ -52,3 +52,18 @@ func MarshalBounded(value any) ([]byte, bool, error) {
 	})
 	return bounded, true, err
 }
+
+func BoundedValue(value any) any {
+	encoded, err := json.Marshal(RedactValue(value))
+	if err != nil || len(encoded) <= auditPayloadLimitBytes {
+		return RedactValue(value)
+	}
+	return map[string]any{"truncated": true, "original_bytes": len(encoded)}
+}
+
+func BoundedBytes(value []byte) ([]byte, bool) {
+	if len(value) <= auditPayloadLimitBytes {
+		return append([]byte(nil), value...), false
+	}
+	return append([]byte(nil), value[:auditPayloadLimitBytes]...), true
+}

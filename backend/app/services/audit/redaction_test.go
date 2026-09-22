@@ -46,3 +46,10 @@ func TestMarshalBoundedMarksOversizedPayload(t *testing.T) {
 		t.Fatalf("truncated marker missing: %s", encoded)
 	}
 }
+
+func TestBoundedBytesCopiesOnlyTheConfiguredLimit(t *testing.T) {
+	body, truncated := BoundedBytes([]byte(strings.Repeat("x", auditPayloadLimitBytes+10)))
+	if !truncated || len(body) != auditPayloadLimitBytes {
+		t.Fatalf("unexpected bounded body: truncated=%v len=%d", truncated, len(body))
+	}
+}

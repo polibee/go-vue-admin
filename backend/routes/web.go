@@ -50,6 +50,7 @@ func Web() {
 	facades.Route().Middleware(adminmiddleware.RequireAnyResourcePermission()).Get("/api/v1/admin/search", globalSearchController.Index)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/overview", overviewController.Index)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.users.view")).Get("/api/v1/admin/audit-logs", auditController.Index)
+	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.settings.manage")).Post("/api/v1/admin/audit-logs/cleanup", auditController.Cleanup)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.settings.manage")).Get("/api/v1/admin/settings", settingsController.Index)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.settings.manage")).Put("/api/v1/admin/settings/{key}", settingsController.Upsert)
 	facades.Route().Middleware(adminmiddleware.RequirePermission("admin.roles.manage")).Put("/api/v1/admin/roles/{id}/permissions", rbacController.ReplaceRolePermissions)

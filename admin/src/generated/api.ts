@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* Generated from http://127.0.0.1:3000/api/openapi.json. DO NOT EDIT. */
-/* Contract paths: /admin/audit-logs, /admin/overview, /admin/registry, /admin/search, /admin/settings, /admin/settings/{key}, /admin/{resource}, /admin/{resource}/actions/{action}, /admin/{resource}/export, /admin/{resource}/relations/{relation}/options, /admin/{resource}/{id}, /admin/{resource}/{id}/relations/{relation}, /auth/login, /auth/logout-all, /auth/me, /auth/refresh */
+/* Contract paths: /admin/audit-logs, /admin/audit-logs/cleanup, /admin/overview, /admin/registry, /admin/search, /admin/settings, /admin/settings/{key}, /admin/{resource}, /admin/{resource}/actions/{action}, /admin/{resource}/export, /admin/{resource}/relations/{relation}/options, /admin/{resource}/{id}, /admin/{resource}/{id}/relations/{relation}, /auth/login, /auth/logout-all, /auth/me, /auth/refresh */
 
 import { ApiError, apiDownload, apiFetch, apiFetchEnvelope } from '@/lib/api'
 
@@ -24,6 +24,7 @@ export interface ActionFailure { id: number; code: string }
 export interface ActionResponse { action: string; requested: number; succeeded: number; failed: number; skipped: number; failures: ActionFailure[]; skips: ActionFailure[] }
 export interface AdminOverview { users: number; roles: number; permissions: number }
 export interface AuditLog { id: number; user_id: number; action: string; metadata: Record<string, unknown> | string | null; created_at: string }
+export interface AuditCleanupResponse { deleted: number; retention_days: number; cutoff: string }
 export interface GlobalSearchResult { resource: string; label: string; id: string | number; title: string; subtitle?: string; route: string }
 export interface FieldPermissionOverride { readable: boolean; writable: boolean }
 export interface RolePermissionAssignment { id: number; name: string; display_name: string; scope: DataScope; fields?: Record<string, FieldPermissionOverride> }
@@ -45,6 +46,7 @@ export const generatedApi = {
   },
   overview(token: string) { return apiFetch<AdminOverview>('/api/v1/admin/overview', {}, token) },
   auditLogs(token: string, query: URLSearchParams) { return apiFetchEnvelope<AuditLog[]>('/api/v1/admin/audit-logs?' + query, {}, token) as unknown as Promise<ResourceList<AuditLog>> },
+  cleanupAuditLogs(retentionDays: number, token: string) { return apiFetch<AuditCleanupResponse>('/api/v1/admin/audit-logs/cleanup', { method: 'POST', body: JSON.stringify({ retention_days: retentionDays }) }, token) },
   resourceList<T = Record<string, unknown>>(resource: string, query: URLSearchParams, token: string) { return apiFetchEnvelope<T[]>('/api/v1/admin/' + resource + '?' + query, {}, token) as unknown as Promise<ResourceList<T>> },
   resourceExport(resource: string, query: URLSearchParams, token: string) { return apiDownload('/api/v1/admin/' + resource + '/export?' + query, {}, token) },
   resourceShow<T = Record<string, unknown>>(resource: string, id: string | number, token: string) { return apiFetch<T>('/api/v1/admin/' + resource + '/' + id, {}, token) },

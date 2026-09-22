@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { RefreshCw } from '@lucide/vue'
+import { computed, onMounted, ref } from 'vue'
+import { RefreshCw, Trash2 } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
@@ -27,6 +27,11 @@ const userFilter = ref('')
 const selectedEntry = ref<AuditLog | null>(null)
 const loading = ref(true)
 const error = ref('')
+const cleanupOpen = ref(false)
+const cleanupDays = ref('365')
+const cleaning = ref(false)
+const cleanupResult = ref<number | null>(null)
+const canCleanup = computed(() => auth.can('admin.settings.manage'))
 
 function localizedError(value: unknown) {
   return value instanceof ApiError ? t(errorMessageKey(value.code)) : t('errors.unknown')
@@ -68,6 +73,27 @@ function resetFilters() {
   void load(1)
 }
 
+async function cleanupLogs() {
+  if (!auth.token) return
+  const days = Number(cleanupDays.value)
+  if (!Number.isInteger(days) || days < 1 || days > 3650) {
+    error.value = t('auth.auditRetentionInvalid')
+    return
+  }
+  cleaning.value = true
+  error.value = ''
+  try {
+    const result = await generatedApi.cleanupAuditLogs(days, auth.token)
+    cleanupResult.value = result.deleted
+    cleanupOpen.value = false
+    await load(1)
+  } catch (value) {
+    error.value = localizedError(value)
+  } finally {
+    cleaning.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -78,7 +104,7 @@ onMounted(load)
         <h1 class="text-2xl font-semibold tracking-tight">{{ t('auth.auditLogs') }}</h1>
         <p class="text-sm text-muted-foreground">{{ t('auth.auditDescription') }}</p>
       </div>
-      <Button variant="outline" :disabled="loading" @click="load"><RefreshCw data-icon="inline-start" />{{ t('resource.refresh') }}</Button>
+      <div class="flex gap-2"><Button v-if="canCleanup" variant="outline" :disabled="loading" @click="cleanupOpen = true"><Trash2 data-icon="inline-start" />{{ t('auth.auditCleanup') }}</Button><Button variant="outline" :disabled="loading" @click="load"><RefreshCw data-icon="inline-start" />{{ t('resource.refresh') }}</Button></div>
     </div>
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Card>
@@ -91,5 +117,7 @@ onMounted(load)
       </CardContent>
     </Card>
     <Dialog :open="selectedEntry !== null" @update:open="(open) => { if (!open) selectedEntry = null }"><DialogContent><DialogHeader><DialogTitle>{{ t('auth.auditDetail') }}</DialogTitle><DialogDescription>{{ selectedEntry?.action }} · {{ selectedEntry ? formatDate(selectedEntry.created_at) : '' }}</DialogDescription></DialogHeader><dl v-if="selectedEntry" class="grid gap-3 text-sm"><div class="flex justify-between gap-4"><dt class="text-muted-foreground">{{ t('auth.auditUser') }}</dt><dd>{{ selectedEntry.user_id }}</dd></div><div><dt class="mb-2 text-muted-foreground">{{ t('auth.auditMetadata') }}</dt><dd v-if="formatAuditMetadata(selectedEntry.metadata)" class="overflow-auto rounded-md bg-muted p-3"><pre class="whitespace-pre-wrap break-words text-xs">{{ formatAuditMetadata(selectedEntry.metadata) }}</pre></dd><dd v-else class="text-muted-foreground">{{ t('auth.auditNoMetadata') }}</dd></div></dl></DialogContent></Dialog>
+    <Dialog v-model:open="cleanupOpen"><DialogContent><DialogHeader><DialogTitle>{{ t('auth.auditCleanup') }}</DialogTitle><DialogDescription>{{ t('auth.auditCleanupDescription') }}</DialogDescription></DialogHeader><div class="grid gap-2"><label for="audit-retention-days" class="text-sm font-medium">{{ t('auth.auditRetentionDays') }}</label><Input id="audit-retention-days" v-model="cleanupDays" type="number" min="1" max="3650" /></div><DialogFooter><Button variant="outline" @click="cleanupOpen = false">{{ t('resource.cancel') }}</Button><Button :disabled="cleaning" @click="cleanupLogs">{{ t('auth.auditCleanupConfirm') }}</Button></DialogFooter></DialogContent></Dialog>
+    <Alert v-if="cleanupResult !== null"><AlertTitle>{{ t('auth.auditCleanupDone') }}</AlertTitle><AlertDescription>{{ t('auth.auditCleanupResult', { count: cleanupResult }) }}</AlertDescription></Alert>
   </div>
 </template>

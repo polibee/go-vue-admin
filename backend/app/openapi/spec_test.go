@@ -8,7 +8,7 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		t.Fatalf("unexpected OpenAPI version: %v", spec["openapi"])
 	}
 	paths := spec["paths"].(map[string]any)
-	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/search", "/admin/{resource}", "/admin/{resource}/export", "/admin/{resource}/actions/{action}", "/admin/{resource}/relations/{relation}/options", "/admin/{resource}/{id}/relations/{relation}", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/settings", "/admin/settings/{key}", "/admin/roles/{id}/permissions"} {
+	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/search", "/admin/{resource}", "/admin/{resource}/export", "/admin/{resource}/actions/{action}", "/admin/{resource}/relations/{relation}/options", "/admin/{resource}/{id}/relations/{relation}", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/audit-logs/cleanup", "/admin/settings", "/admin/settings/{key}", "/admin/roles/{id}/permissions"} {
 		if _, ok := paths[path]; !ok {
 			t.Fatalf("missing contract path %s", path)
 		}

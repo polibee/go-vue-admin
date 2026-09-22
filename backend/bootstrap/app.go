@@ -19,6 +19,7 @@ func Boot() contractsfoundation.Application {
 			return []contractsconsole.Command{
 				adminconsole.ResourceGeneratorCommand{},
 				adminconsole.ModuleCheckCommand{},
+				adminconsole.AuditPruneCommand{},
 			}
 		}).
 		WithRouting(func() {

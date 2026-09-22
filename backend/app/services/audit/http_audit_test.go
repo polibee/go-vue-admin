@@ -48,3 +48,17 @@ func TestBuildHTTPAuditMetadataContainsRequestAndResponseSummary(t *testing.T) {
 		t.Fatalf("HTTP audit metadata leaked sensitive data: %s", encoded)
 	}
 }
+
+func TestBuildHTTPAuditMetadataOmitsNonJSONResponseBody(t *testing.T) {
+	metadata := BuildHTTPAuditMetadata(HTTPAuditInput{
+		Method: "GET", Path: "/api/v1/admin/users/export", Status: 200,
+		ContentType: "text/csv", ResponseBody: []byte("email,password\na@example.com,secret"),
+	})
+	response := metadata["response"].(map[string]any)
+	if _, exists := response["body"]; exists {
+		t.Fatalf("non-JSON response body should not be retained: %#v", response)
+	}
+	if response["body_bytes"] != 35 {
+		t.Fatalf("unexpected non-JSON body size: %#v", response["body_bytes"])
+	}
+}

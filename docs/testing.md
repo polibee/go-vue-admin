@@ -41,3 +41,11 @@ Golden File
 - HTTP 验收：资源详情、权限过滤、搜索、CSV 导出，以及关系不存在/无权限边界；
 - 真实关系成功路径需要 Registry 中存在带 `Relations` 的业务资源 fixture，当前内置资源暂未提供该 fixture；
 - 请求/响应审计脱敏不作为本阶段 Resource E2E 的阻塞项，单独维护其测试和验收边界。
+
+## 审计日志生命周期
+
+- 后台审计页可由具备 `admin.settings.manage` 权限的管理员手动清理；
+- 手动清理通过 `POST /api/v1/admin/audit-logs/cleanup`，请求体使用 `retention_days`，范围为 1 到 3650 天；
+- 定期清理使用 `go run . artisan admin:prune-audit-logs --days=365`，由 Laragon 或操作系统任务计划按需调度；
+- 清理动作只删除早于保留窗口的记录，并返回删除数量；清理本身保留一条摘要审计事件；
+- 清理失败不得通过 HTTP 请求影响其他业务数据。
