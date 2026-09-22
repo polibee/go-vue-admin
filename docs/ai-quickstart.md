@@ -41,14 +41,14 @@ Do not create misc, common, other, generated, or catch-all folders. Do not scatt
 
 ## 4. Resource workflow
 
-The public generator entry point is admin:make-resource. It consumes one ResourceSpec and generates the resource backend contract, migration file, permissions, menu metadata, frontend list/form/detail views, tests, and README as defined by the current design.
+The public generator entry point is admin:make-resource. It consumes one ResourceSpec and generates the resource backend contract, migration file, permissions, menu metadata, frontend ResourceSpec, tests, and README. Ordinary resources use the core generic list/form/detail pages; only an explicit pageMode custom resource receives dedicated page overrides.
 
 The generator must:
 
 1. Validate the resource name and fields.
 2. Preflight conflicts and never overwrite manual files.
 3. Generate migrations without executing them.
-4. Make the generated resource discoverable by the admin panel.
+4. Make the generated resource discoverable by the admin panel and generic pages.
 5. Keep custom business logic in the module boundary.
 
 Review the migration, apply it through the project migration process, then verify menu, list, form, detail, permissions, search, export, relations, and batch actions end to end.

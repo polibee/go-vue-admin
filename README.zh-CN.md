@@ -15,7 +15,7 @@
 - 资源关系、分组表单和字段依赖扩展点。
 - 全局搜索、菜单分组、权限过滤。
 - 请求/响应审计、敏感字段脱敏、手动清理和定期清理。
-- admin:make-resource 生成后端 Resource、迁移、权限、菜单、前端页面、测试和 README。
+- admin:make-resource 生成后端 Resource、迁移、权限、菜单、前端 ResourceSpec、测试和 README；普通资源默认复用通用页面，复杂资源可显式覆盖。
 
 ## 本地运行
 

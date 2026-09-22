@@ -6,7 +6,7 @@ Generator 的目标是减少重复代码，不是替代架构设计。生成命�
 
 ## 当前主流程方向
 
-`admin:make-resource` 是唯一主入口，由同一份 ResourceSpec 统一生成后端、权限、菜单、前端列表/表单/详情页面、路由描述、迁移、测试和 README。Permission/Menu 只作为内部渲染器存在，不提供独立命令；`admin:make-crud` 已移除，避免形成第二套生成流程。
+`admin:make-resource` 是唯一主入口，由同一份 ResourceSpec 统一生成后端、权限、菜单、前端 ResourceSpec、路由描述、迁移、测试和 README。普通资源默认使用 `Manifest + 通用列表/表单/详情页面`；只有显式声明 `pageMode: custom` 的复杂资源才生成并接入专用页面。Permission/Menu 只作为内部渲染器存在，不提供独立命令；`admin:make-crud` 已移除，避免形成第二套生成流程。
 
 当前生成器采用自动发现：生成代码后更新生成专属 discovery 文件，资源自动进入后台 Registry、router 和 Sidebar；不修改人工维护文件，不写权限/角色数据，不执行迁移。
 
@@ -22,7 +22,7 @@ go run . artisan admin:make-resource posts \
   --field=status:select:required:active=Active|disabled=Disabled
 ```
 
-字段格式为 `name:type[:required[:value=Label|value=Label]]`；选项仅适用于 `select`，例如 `status:select:required:active=Active|disabled=Disabled`。命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、菜单、前端列表/表单/详情页、路由描述、统一 API 契约、测试、README 和 Migration 文件，并更新生成专属 discovery 文件。表单页复用共享 `ResourceFormView`，列表页根据字段类型自动提供文本搜索、select/boolean 筛选、排序、详情、编辑和删除入口；API 契约包含 list/show/create/update/delete 五类操作；迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
+字段格式为 `name:type[:required[:value=Label|value=Label]]`；选项仅适用于 `select`，例如 `status:select:required:active=Active|disabled=Disabled`。命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、菜单、ResourceSpec、统一 API 契约、测试、README 和 Migration 文件，并更新生成专属 discovery 文件。普通资源不会生成资源专用 ListPage/FormPage/DetailPage，而是自动进入核心通用页面；`pageMode: custom` 才会生成专用页面覆盖。通用表单根据 Manifest 字段、关系、分组和依赖渲染，列表页根据字段类型自动提供搜索、筛选、排序、详情、编辑、删除和批量操作；API 契约包含 list/show/create/update/delete 五类操作；迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
 
 字段可追加权限修饰符：`sensitive` 表示默认不搜索和导出，`readonly` 表示不可写，`hidden` 表示不出现在公开资源页面；例如 `password:text:sensitive`、`owner_id:integer:readonly`。多个修饰符可组合，生成器会把完整的 `visible/readable/writable/sensitive` 策略同步写入后端 Manifest 和前端元数据。
 
@@ -43,7 +43,7 @@ go run . artisan admin:make-resource posts \
 生成完成后的人工审阅顺序：
 
 1. 审阅生成的接口骨架、字段和迁移；
-2. 检查生成专属 discovery 文件是否包含新资源；资源会通过该文件自动进入 Registry、路由和 Admin Shell；
+2. 检查生成专属 discovery 文件是否包含新资源；普通资源会通过该文件自动进入 Registry、通用路由和 Admin Shell；
 3. 手动审阅并执行数据库迁移；
 4. 按业务需要补充非通用动作和授权规则。
 
@@ -76,9 +76,9 @@ Repository
 Service
 Controller
 Routes
-Resource
+Resource Manifest
 Permission
-Vue Pages
+Generic Page Registration
 Tests
 ```
 

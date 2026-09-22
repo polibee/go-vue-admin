@@ -15,7 +15,7 @@ A modular general-purpose admin platform built with Goravel, Vue 3, TypeScript, 
 - Resource relations, grouped forms, and field-dependency extension points.
 - Global search, menu grouping, and permission filtering.
 - Request/response audit logging, sensitive-field redaction, manual cleanup, and scheduled cleanup.
-- admin:make-resource generates the backend Resource, migration, permissions, menu, frontend pages, tests, and README.
+- admin:make-resource generates the backend Resource, migration, permissions, menu, frontend ResourceSpec, tests, and README; ordinary resources reuse generic pages by default and complex resources may explicitly override them.
 
 ## Local development
 

@@ -2,12 +2,11 @@
 
 Resource Engine 是标准 CRUD 加速器，不是强制所有业务使用的低代码平台。
 
-## 三种使用等级
+## 两种页面模式
 
 ```text
-Simple Resource    标准列表、表单、详情和基础操作
-Extended Resource  标准资源 + 自定义 Action、Slot 或详情区
-Custom Page        普通 Vue 页面 + Goravel Controller/Service
+Generic Resource   Manifest + 通用列表、表单、详情和基础操作
+Custom Resource    Manifest + 显式声明的专用列表、表单或详情页面
 ```
 
 ## 当前实现
@@ -17,7 +16,7 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 
 - `GET /api/v1/admin/registry` 返回当前 Admin 资源清单；
 - 清单接口要求当前用户至少拥有一个已注册资源的 view 权限，结果中的每个资源仍按自身权限过滤；
-- 当前登记 `users`、`roles`、`permissions` 三个基础资源；
+- 当前登记 `users`、`roles`、`permissions` 和 `departments` 资源；`departments` 是无专用 Vue 页面通用资源验收样例；
 - 列表、详情、新增、编辑、删除和 CSV 导出统一使用 `/api/v1/admin/{resource}` 与
   `/api/v1/admin/{resource}/{id}`；
 - 导出接口为 `/api/v1/admin/{resource}/export`，复用搜索、筛选和排序参数；
@@ -27,7 +26,9 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
   `owner_field`，后端列表、详情、导出和写操作会统一应用数据范围约束。
 - Resource Field 可声明 `visible/readable/writable/sensitive`；后端响应裁剪、查询、导出和写入保护统一使用该策略，前端隐藏仅用于改善体验。
 
-资源页面必须复用 Registry 契约，不能在页面内重新定义资源元数据。用户和角色的
+资源页面必须复用 Registry 契约，不能在页面内重新定义资源元数据。普通资源默认使用
+`admin/src/core/resource/pages/` 下的通用列表、表单和详情页面；只有 Manifest 显式声明
+`pageMode: custom` 时才使用资源模块下的专用页面。用户和角色的
 统一 CRUD 入口仍由各自 Domain Service 承担安全校验；关系操作继续使用专用关系端点，
 批量操作统一通过 Manifest Action 执行。
 
@@ -71,7 +72,7 @@ Registry 返回的 Resource Manifest 同时携带导航元数据：
 
 标准能力：分页、搜索、排序、筛选、CSV 导出、新增、编辑、查看、删除、行操作、批量操作、字段权限和审计钩子。  
 
-多步骤流程、审批和状态机、实时数据、图表分析、复杂联动表单和高度定制详情页直接使用 Custom Page。
+多步骤流程、审批和状态机、实时数据、图表分析、复杂联动表单和高度定制详情页才使用 Custom Resource；专用页面仍必须复用统一权限、数据范围、字段权限、Action 和审计契约。
 
 扩展优先使用明确的 Go 接口和 Vue slot/component，而不是无限增加 JSON 字段。禁止把任意可执行代码序列化进 Resource Manifest。
 
