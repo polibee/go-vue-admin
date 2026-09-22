@@ -31,7 +31,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if err := q.Where("id", id).First(&user); err != nil {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
-		return ctx.Response().Success().Json(http.Json{"data": user.Public()})
+		return ctx.Response().Success().Json(http.Json{"data": projectResourceValue(user.Public(), manifest, false)})
 	case "roles":
 		var role models.Role
 		q, scopeErr := applyResourceScope(ctx, facades.Orm().Query(), manifest, "view")
@@ -41,7 +41,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if err := q.Where("id", id).First(&role); err != nil {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
-		return ctx.Response().Success().Json(http.Json{"data": role})
+		return ctx.Response().Success().Json(http.Json{"data": projectResourceValue(role, manifest, false)})
 	case "permissions":
 		var permission models.Permission
 		q, scopeErr := applyResourceScope(ctx, facades.Orm().Query(), manifest, "view")
@@ -51,7 +51,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if err := q.Where("id", id).First(&permission); err != nil {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
-		return ctx.Response().Success().Json(http.Json{"data": permission})
+		return ctx.Response().Success().Json(http.Json{"data": projectResourceValue(permission, manifest, false)})
 	default:
 		var rows []map[string]any
 		q, scopeErr := applyResourceScope(ctx, facades.Orm().Query().Table(manifest.Table), manifest, "view")
@@ -61,6 +61,6 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if err := q.Where("id = ?", id).Get(&rows); err != nil || len(rows) == 0 {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
-		return ctx.Response().Success().Json(http.Json{"data": rows[0]})
+		return ctx.Response().Success().Json(http.Json{"data": projectResourceRecord(rows[0], manifest, false)})
 	}
 }

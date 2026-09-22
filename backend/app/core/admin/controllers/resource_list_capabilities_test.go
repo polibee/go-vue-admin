@@ -26,6 +26,19 @@ func TestResourceListCapabilitiesDeriveFromManifestFields(t *testing.T) {
 	}
 }
 
+func TestResourceListCapabilitiesExcludeRestrictedFields(t *testing.T) {
+	manifest := resource.Manifest{
+		Fields: []resource.Field{
+			{Name: "title", Type: "text", Visible: true, Readable: true, Writable: true, PolicyConfigured: true},
+			{Name: "secret", Type: "text", Visible: true, Readable: true, Writable: true, Sensitive: true, PolicyConfigured: true},
+			{Name: "hidden", Type: "text", Visible: false, Readable: false, Writable: false, PolicyConfigured: true},
+		},
+	}
+	if got, want := joinFieldNames(resourceSearchFields(manifest)), "title"; got != want {
+		t.Fatalf("restricted search fields = %q, want %q", got, want)
+	}
+}
+
 func joinFieldNames(fields []resource.Field) string {
 	result := ""
 	for index, field := range fields {

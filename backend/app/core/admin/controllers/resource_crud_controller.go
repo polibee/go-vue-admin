@@ -197,7 +197,11 @@ func bindGeneratedValues(ctx http.Context, manifest resource.Manifest) (map[stri
 	for _, field := range manifest.Fields {
 		allowed[field.Name] = true
 	}
-	return validateGeneratedValues(payload, manifest)
+	values, err := validateGeneratedValues(payload, manifest)
+	if err != nil {
+		return nil, err
+	}
+	return rbacservices.NewFieldPermissionService().ValidateWritablePayload(values, manifest, resourceFieldPolicies(manifest))
 }
 
 func validateGeneratedValues(payload map[string]any, manifest resource.Manifest) (map[string]any, error) {

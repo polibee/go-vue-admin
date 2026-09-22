@@ -51,7 +51,7 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 			return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 		}
 		for _, record := range records {
-			rows = append(rows, record.Public())
+			rows = append(rows, projectResourceValue(record.Public(), manifest, true))
 		}
 	case "roles":
 		var records []models.Role
@@ -67,7 +67,7 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 			return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 		}
 		for _, record := range records {
-			rows = append(rows, map[string]any{"id": record.ID, "name": record.Name, "display_name": record.DisplayName})
+			rows = append(rows, projectResourceValue(map[string]any{"id": record.ID, "name": record.Name, "display_name": record.DisplayName}, manifest, true))
 		}
 	case "permissions":
 		var records []models.Permission
@@ -83,7 +83,7 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 			return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 		}
 		for _, record := range records {
-			rows = append(rows, map[string]any{"id": record.ID, "name": record.Name, "display_name": record.DisplayName})
+			rows = append(rows, projectResourceValue(map[string]any{"id": record.ID, "name": record.Name, "display_name": record.DisplayName}, manifest, true))
 		}
 	default:
 		q = facades.Orm().Query().Table(manifest.Table)
@@ -107,6 +107,7 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 		if err := q.Get(&rows); err != nil {
 			return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 		}
+		rows = projectResourceRows(rows, manifest, true)
 	}
 
 	body, err := renderResourceCSV(columns, rows)
@@ -119,9 +120,14 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 
 func exportColumns(manifest resource.Manifest) []resource.Column {
 	columns := []resource.Column{{Name: "id", Label: "ID"}}
+	policies := resourceFieldPolicies(manifest)
 	for _, column := range manifest.Columns {
 		name := strings.ToLower(column.Name)
 		if strings.Contains(name, "password") || strings.Contains(name, "secret") || strings.Contains(name, "token") || strings.Contains(name, "credential") {
+			continue
+		}
+		policy, declared := policies[column.Name]
+		if declared && (!policy.Visible || !policy.Readable || policy.Sensitive) {
 			continue
 		}
 		columns = append(columns, column)

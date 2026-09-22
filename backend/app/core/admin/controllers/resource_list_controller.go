@@ -87,7 +87,9 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		allowedColumns := make(map[string]bool, len(manifest.Columns)+1)
 		allowedColumns["id"] = true
 		for _, column := range manifest.Columns {
-			allowedColumns[column.Name] = true
+			if resourceFieldAllowedForQuery(manifest, column.Name, "sort") {
+				allowedColumns[column.Name] = true
+			}
 			searchColumns = append(searchColumns, column.Name)
 		}
 		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFields(manifest))...)
@@ -113,7 +115,21 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 	if users, ok := rows.(*[]models.User); ok {
 		items := make([]map[string]any, 0, len(*users))
 		for _, user := range *users {
-			items = append(items, user.Public())
+			items = append(items, projectResourceValue(user.Public(), manifest, false))
+		}
+		return resourceListResponse(ctx, items, query, total)
+	}
+	if roles, ok := rows.(*[]models.Role); ok {
+		items := make([]map[string]any, 0, len(*roles))
+		for _, role := range *roles {
+			items = append(items, projectResourceValue(role, manifest, false))
+		}
+		return resourceListResponse(ctx, items, query, total)
+	}
+	if permissions, ok := rows.(*[]models.Permission); ok {
+		items := make([]map[string]any, 0, len(*permissions))
+		for _, permission := range *permissions {
+			items = append(items, projectResourceValue(permission, manifest, false))
 		}
 		return resourceListResponse(ctx, items, query, total)
 	}
@@ -144,7 +160,7 @@ func applyResourceSearch(query orm.Query, search string, columns ...string) orm.
 func resourceSearchFields(manifest resource.Manifest) []resource.Field {
 	fields := make([]resource.Field, 0)
 	for _, field := range manifest.Fields {
-		if field.Type == "text" || field.Type == "email" {
+		if (field.Type == "text" || field.Type == "email") && resourceFieldAllowedForQuery(manifest, field.Name, "search") {
 			fields = append(fields, field)
 		}
 	}
@@ -154,7 +170,7 @@ func resourceSearchFields(manifest resource.Manifest) []resource.Field {
 func resourceFilterFields(manifest resource.Manifest) []resource.Field {
 	fields := make([]resource.Field, 0)
 	for _, field := range manifest.Fields {
-		if field.Type == "select" || field.Type == "boolean" {
+		if (field.Type == "select" || field.Type == "boolean") && field.Visible && field.Readable {
 			fields = append(fields, field)
 		}
 	}
