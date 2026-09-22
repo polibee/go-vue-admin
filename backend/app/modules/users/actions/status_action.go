@@ -2,7 +2,6 @@ package actions
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	adminactions "goravel/app/core/admin/actions"
@@ -70,5 +69,5 @@ func userStatusErrorCode(err error) string {
 	if errors.Is(err, userservices.ErrLastAdmin) {
 		return "LAST_ADMIN_PROTECTED"
 	}
-	return fmt.Sprintf("%T", err)
+	return "INTERNAL_ERROR"
 }
