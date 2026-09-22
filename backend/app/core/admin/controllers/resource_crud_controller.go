@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -28,6 +29,9 @@ func (r *ResourceController) Create(ctx http.Context) http.Response {
 		if err := ctx.Request().Bind(&payload); err != nil {
 			return rbacError(ctx, 422, "VALIDATION_ERROR")
 		}
+		if err := validateSpecializedPayload(ctx, manifest, "create", map[string]any{"name": payload.Name, "email": payload.Email, "password": payload.Password, "locale": payload.Locale, "status": payload.Status}); err != nil {
+			return fieldWriteError(ctx, err)
+		}
 		user, err := userservices.NewUserService().Create(payload.Name, payload.Email, payload.Password, payload.Locale, payload.Status)
 		if err != nil {
 			return userServiceError(ctx, err)
@@ -40,6 +44,9 @@ func (r *ResourceController) Create(ctx http.Context) http.Response {
 		if err := ctx.Request().Bind(&payload); err != nil {
 			return rbacError(ctx, 422, "VALIDATION_ERROR")
 		}
+		if err := validateSpecializedPayload(ctx, manifest, "create", map[string]any{"name": payload.Name, "display_name": payload.DisplayName}); err != nil {
+			return fieldWriteError(ctx, err)
+		}
 		role, err := rbacservices.NewRoleService().Create(payload.Name, payload.DisplayName)
 		if err != nil {
 			return roleServiceError(ctx, err)
@@ -47,7 +54,7 @@ func (r *ResourceController) Create(ctx http.Context) http.Response {
 		recordManagementAudit(ctx, "role.create", map[string]any{"target_role_id": role.ID})
 		return ctx.Response().Status(201).Json(http.Json{"data": role})
 	}
-	values, err := bindGeneratedValues(ctx, manifest)
+	values, err := bindGeneratedValues(ctx, manifest, "create")
 	if err != nil {
 		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
 	}
@@ -106,6 +113,9 @@ func (r *ResourceController) Update(ctx http.Context) http.Response {
 		if err := ctx.Request().Bind(&payload); err != nil {
 			return rbacError(ctx, 422, "VALIDATION_ERROR")
 		}
+		if err := validateSpecializedPayload(ctx, manifest, "update", map[string]any{"name": payload.Name, "email": payload.Email, "password": payload.Password, "locale": payload.Locale, "status": payload.Status}); err != nil {
+			return fieldWriteError(ctx, err)
+		}
 		user, err := userservices.NewUserService().Update(id, payload.Name, payload.Email, payload.Password, payload.Locale, payload.Status)
 		if err != nil {
 			return userServiceError(ctx, err)
@@ -118,6 +128,9 @@ func (r *ResourceController) Update(ctx http.Context) http.Response {
 		if err := ctx.Request().Bind(&payload); err != nil {
 			return rbacError(ctx, 422, "VALIDATION_ERROR")
 		}
+		if err := validateSpecializedPayload(ctx, manifest, "update", map[string]any{"name": payload.Name, "display_name": payload.DisplayName}); err != nil {
+			return fieldWriteError(ctx, err)
+		}
 		role, err := rbacservices.NewRoleService().Update(id, payload.Name, payload.DisplayName)
 		if err != nil {
 			return roleServiceError(ctx, err)
@@ -125,7 +138,7 @@ func (r *ResourceController) Update(ctx http.Context) http.Response {
 		recordManagementAudit(ctx, "role.update", map[string]any{"target_role_id": role.ID})
 		return ctx.Response().Success().Json(http.Json{"data": role})
 	}
-	values, err := bindGeneratedValues(ctx, manifest)
+	values, err := bindGeneratedValues(ctx, manifest, "update")
 	if err != nil {
 		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
 	}
@@ -188,7 +201,7 @@ func generatedManifest(ctx http.Context) (resource.Manifest, bool) {
 	return manifest, err == nil && manifest.Table != ""
 }
 
-func bindGeneratedValues(ctx http.Context, manifest resource.Manifest) (map[string]any, error) {
+func bindGeneratedValues(ctx http.Context, manifest resource.Manifest, action string) (map[string]any, error) {
 	var payload map[string]any
 	if err := ctx.Request().Bind(&payload); err != nil {
 		return nil, err
@@ -201,7 +214,27 @@ func bindGeneratedValues(ctx http.Context, manifest resource.Manifest) (map[stri
 	if err != nil {
 		return nil, err
 	}
-	return rbacservices.NewFieldPermissionService().ValidateWritablePayload(values, manifest, resourceFieldPolicies(manifest))
+	policies, err := resourceFieldPoliciesFor(ctx, manifest, action)
+	if err != nil {
+		return nil, err
+	}
+	return rbacservices.NewFieldPermissionService().ValidateWritablePayload(values, manifest, policies)
+}
+
+func validateSpecializedPayload(ctx http.Context, manifest resource.Manifest, action string, payload map[string]any) error {
+	policies, err := resourceFieldPoliciesFor(ctx, manifest, action)
+	if err != nil {
+		return err
+	}
+	_, err = rbacservices.NewFieldPermissionService().ValidateWritablePayload(payload, manifest, policies)
+	return err
+}
+
+func fieldWriteError(ctx http.Context, err error) http.Response {
+	if errors.Is(err, rbacservices.ErrFieldPermissionDenied) || errors.Is(err, rbacservices.ErrFieldPolicyExpansion) || errors.Is(err, rbacservices.ErrFieldNotFound) {
+		return ctx.Response().Status(422).Json(http.Json{"code": "FIELD_PERMISSION_DENIED"})
+	}
+	return resourceScopeError(ctx, err)
 }
 
 func validateGeneratedValues(payload map[string]any, manifest resource.Manifest) (map[string]any, error) {

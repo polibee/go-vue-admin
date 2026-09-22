@@ -86,3 +86,20 @@ func TestValidateFieldOverridesRejectsUnknownAndManifestExpansion(t *testing.T) 
 		t.Fatalf("expected restrictive override to pass, got %v", err)
 	}
 }
+
+func TestMergeFieldPoliciesPreservesManifestBoundsAcrossRoles(t *testing.T) {
+	base := map[string]FieldPolicy{
+		"email":  {Visible: true, Readable: true, Writable: true},
+		"secret": {Visible: false, Readable: false, Writable: false, Sensitive: true},
+	}
+	merged := mergeFieldPolicies(base, []map[string]FieldPolicy{
+		{"email": {Visible: true, Readable: false, Writable: false}, "secret": {Visible: false, Readable: true, Writable: true, Sensitive: true}},
+		{"email": {Visible: true, Readable: true, Writable: true}},
+	})
+	if !merged["email"].Readable || !merged["email"].Writable {
+		t.Fatalf("expected any-role allow to merge: %+v", merged["email"])
+	}
+	if merged["secret"].Visible || merged["secret"].Readable || merged["secret"].Writable {
+		t.Fatalf("manifest bounds were expanded: %+v", merged["secret"])
+	}
+}

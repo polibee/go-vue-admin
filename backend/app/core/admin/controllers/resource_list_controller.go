@@ -11,6 +11,7 @@ import (
 	"goravel/app/facades"
 	"goravel/app/models"
 	"goravel/app/modules/admin/registry"
+	rbacservices "goravel/app/services/rbac"
 )
 
 type resourceListQuery struct {
@@ -26,6 +27,10 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 	manifest, manifestErr := registry.AdminRegistry().Find(ctx.Request().Route("resource"))
 	if manifestErr != nil || manifest.Table == "" {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
+	}
+	fieldPolicies, fieldErr := resourceFieldPoliciesFor(ctx, manifest, "view")
+	if fieldErr != nil {
+		return resourceScopeError(ctx, fieldErr)
 	}
 	query := resourceListQuery{
 		Page:    positiveInt(ctx.Request().Query("page", "1"), 1),
@@ -53,7 +58,7 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		if manifestErr != nil {
 			return resourceScopeError(ctx, manifestErr)
 		}
-		q = applyResourceSearch(q, query.Search, "name", "email")
+		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
 		if query.Status != "" {
 			q = q.Where("status = ?", query.Status)
 		}
@@ -65,7 +70,7 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		if manifestErr != nil {
 			return resourceScopeError(ctx, manifestErr)
 		}
-		q = applyResourceSearch(q, query.Search, "name", "display_name")
+		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
 		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "display_name": true}, "id")
 	case "permissions":
 		rows = &[]models.Permission{}
@@ -74,7 +79,7 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		if manifestErr != nil {
 			return resourceScopeError(ctx, manifestErr)
 		}
-		q = applyResourceSearch(q, query.Search, "name", "display_name")
+		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
 		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "display_name": true}, "id")
 	default:
 		rows = &[]map[string]any{}
@@ -92,8 +97,8 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 			}
 			searchColumns = append(searchColumns, column.Name)
 		}
-		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFields(manifest))...)
-		for _, field := range resourceFilterFields(manifest) {
+		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
+		for _, field := range resourceFilterFieldsWithPolicies(manifest, fieldPolicies) {
 			value := strings.TrimSpace(ctx.Request().Query(field.Name))
 			if value != "" && value != "all" && resourceFilterValueAllowed(field, value) {
 				q = q.Where(field.Name+" = ?", value)
@@ -115,21 +120,21 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 	if users, ok := rows.(*[]models.User); ok {
 		items := make([]map[string]any, 0, len(*users))
 		for _, user := range *users {
-			items = append(items, projectResourceValue(user.Public(), manifest, false))
+			items = append(items, projectResourceValueWithPolicies(user.Public(), manifest, fieldPolicies, false))
 		}
 		return resourceListResponse(ctx, items, query, total)
 	}
 	if roles, ok := rows.(*[]models.Role); ok {
 		items := make([]map[string]any, 0, len(*roles))
 		for _, role := range *roles {
-			items = append(items, projectResourceValue(role, manifest, false))
+			items = append(items, projectResourceValueWithPolicies(role, manifest, fieldPolicies, false))
 		}
 		return resourceListResponse(ctx, items, query, total)
 	}
 	if permissions, ok := rows.(*[]models.Permission); ok {
 		items := make([]map[string]any, 0, len(*permissions))
 		for _, permission := range *permissions {
-			items = append(items, projectResourceValue(permission, manifest, false))
+			items = append(items, projectResourceValueWithPolicies(permission, manifest, fieldPolicies, false))
 		}
 		return resourceListResponse(ctx, items, query, total)
 	}
@@ -158,9 +163,14 @@ func applyResourceSearch(query orm.Query, search string, columns ...string) orm.
 }
 
 func resourceSearchFields(manifest resource.Manifest) []resource.Field {
+	return resourceSearchFieldsWithPolicies(manifest, resourceFieldPolicies(manifest))
+}
+
+func resourceSearchFieldsWithPolicies(manifest resource.Manifest, policies map[string]rbacservices.FieldPolicy) []resource.Field {
 	fields := make([]resource.Field, 0)
 	for _, field := range manifest.Fields {
-		if (field.Type == "text" || field.Type == "email") && resourceFieldAllowedForQuery(manifest, field.Name, "search") {
+		policy := policies[field.Name]
+		if (field.Type == "text" || field.Type == "email") && policy.Visible && policy.Readable && !policy.Sensitive {
 			fields = append(fields, field)
 		}
 	}
@@ -168,9 +178,14 @@ func resourceSearchFields(manifest resource.Manifest) []resource.Field {
 }
 
 func resourceFilterFields(manifest resource.Manifest) []resource.Field {
+	return resourceFilterFieldsWithPolicies(manifest, resourceFieldPolicies(manifest))
+}
+
+func resourceFilterFieldsWithPolicies(manifest resource.Manifest, policies map[string]rbacservices.FieldPolicy) []resource.Field {
 	fields := make([]resource.Field, 0)
 	for _, field := range manifest.Fields {
-		if (field.Type == "select" || field.Type == "boolean") && field.Visible && field.Readable {
+		policy := policies[field.Name]
+		if (field.Type == "select" || field.Type == "boolean") && policy.Visible && policy.Readable && !policy.Sensitive {
 			fields = append(fields, field)
 		}
 	}

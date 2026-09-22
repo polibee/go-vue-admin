@@ -21,6 +21,10 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 	if manifestErr != nil || manifest.Table == "" {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 	}
+	fieldPolicies, fieldErr := resourceFieldPoliciesFor(ctx, manifest, "view")
+	if fieldErr != nil {
+		return resourceScopeError(ctx, fieldErr)
+	}
 	switch resourceName {
 	case "users":
 		var user models.User
@@ -31,7 +35,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if err := q.Where("id", id).First(&user); err != nil {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
-		return ctx.Response().Success().Json(http.Json{"data": projectResourceValue(user.Public(), manifest, false)})
+		return ctx.Response().Success().Json(http.Json{"data": projectResourceValueWithPolicies(user.Public(), manifest, fieldPolicies, false)})
 	case "roles":
 		var role models.Role
 		q, scopeErr := applyResourceScope(ctx, facades.Orm().Query(), manifest, "view")
@@ -41,7 +45,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if err := q.Where("id", id).First(&role); err != nil {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
-		return ctx.Response().Success().Json(http.Json{"data": projectResourceValue(role, manifest, false)})
+		return ctx.Response().Success().Json(http.Json{"data": projectResourceValueWithPolicies(role, manifest, fieldPolicies, false)})
 	case "permissions":
 		var permission models.Permission
 		q, scopeErr := applyResourceScope(ctx, facades.Orm().Query(), manifest, "view")
@@ -51,7 +55,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if err := q.Where("id", id).First(&permission); err != nil {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
-		return ctx.Response().Success().Json(http.Json{"data": projectResourceValue(permission, manifest, false)})
+		return ctx.Response().Success().Json(http.Json{"data": projectResourceValueWithPolicies(permission, manifest, fieldPolicies, false)})
 	default:
 		var rows []map[string]any
 		q, scopeErr := applyResourceScope(ctx, facades.Orm().Query().Table(manifest.Table), manifest, "view")
@@ -61,6 +65,6 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if err := q.Where("id = ?", id).Get(&rows); err != nil || len(rows) == 0 {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
-		return ctx.Response().Success().Json(http.Json{"data": projectResourceRecord(rows[0], manifest, false)})
+		return ctx.Response().Success().Json(http.Json{"data": projectResourceRecordWithPolicies(rows[0], manifest, fieldPolicies, false)})
 	}
 }

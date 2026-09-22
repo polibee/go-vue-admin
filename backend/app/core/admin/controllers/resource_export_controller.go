@@ -13,6 +13,7 @@ import (
 	"goravel/app/facades"
 	"goravel/app/models"
 	"goravel/app/modules/admin/registry"
+	rbacservices "goravel/app/services/rbac"
 )
 
 func (r *ResourceController) Export(ctx http.Context) http.Response {
@@ -20,6 +21,10 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 	manifest, err := registry.AdminRegistry().Find(resourceName)
 	if err != nil || manifest.Table == "" {
 		return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
+	}
+	fieldPolicies, fieldErr := resourceFieldPoliciesFor(ctx, manifest, "view")
+	if fieldErr != nil {
+		return resourceScopeError(ctx, fieldErr)
 	}
 	query := resourceListQuery{
 		Search: strings.TrimSpace(ctx.Request().Query("search")),
@@ -30,7 +35,7 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 	if query.Dir != "asc" {
 		query.Dir = "desc"
 	}
-	columns := exportColumns(manifest)
+	columns := exportColumnsWithPolicies(manifest, fieldPolicies)
 	var rows []map[string]any
 	var q orm.Query
 	switch resourceName {
@@ -41,7 +46,7 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 		if err != nil {
 			return resourceScopeError(ctx, err)
 		}
-		q = applyResourceSearch(q, query.Search, "name", "email")
+		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
 		if query.Status != "" {
 			q = q.Where("status = ?", query.Status)
 		}
@@ -51,7 +56,7 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 			return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 		}
 		for _, record := range records {
-			rows = append(rows, projectResourceValue(record.Public(), manifest, true))
+			rows = append(rows, projectResourceValueWithPolicies(record.Public(), manifest, fieldPolicies, true))
 		}
 	case "roles":
 		var records []models.Role
@@ -60,14 +65,14 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 		if err != nil {
 			return resourceScopeError(ctx, err)
 		}
-		q = applyResourceSearch(q, query.Search, "name", "display_name")
+		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
 		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "display_name": true}, "id")
 		q = q.OrderBy(query.Sort, query.Dir)
 		if err := q.Get(&records); err != nil {
 			return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 		}
 		for _, record := range records {
-			rows = append(rows, projectResourceValue(map[string]any{"id": record.ID, "name": record.Name, "display_name": record.DisplayName}, manifest, true))
+			rows = append(rows, projectResourceValueWithPolicies(map[string]any{"id": record.ID, "name": record.Name, "display_name": record.DisplayName}, manifest, fieldPolicies, true))
 		}
 	case "permissions":
 		var records []models.Permission
@@ -76,14 +81,14 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 		if err != nil {
 			return resourceScopeError(ctx, err)
 		}
-		q = applyResourceSearch(q, query.Search, "name", "display_name")
+		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
 		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "display_name": true}, "id")
 		q = q.OrderBy(query.Sort, query.Dir)
 		if err := q.Get(&records); err != nil {
 			return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 		}
 		for _, record := range records {
-			rows = append(rows, projectResourceValue(map[string]any{"id": record.ID, "name": record.Name, "display_name": record.DisplayName}, manifest, true))
+			rows = append(rows, projectResourceValueWithPolicies(map[string]any{"id": record.ID, "name": record.Name, "display_name": record.DisplayName}, manifest, fieldPolicies, true))
 		}
 	default:
 		q = facades.Orm().Query().Table(manifest.Table)
@@ -91,8 +96,8 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 		if err != nil {
 			return resourceScopeError(ctx, err)
 		}
-		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFields(manifest))...)
-		for _, field := range resourceFilterFields(manifest) {
+		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
+		for _, field := range resourceFilterFieldsWithPolicies(manifest, fieldPolicies) {
 			value := strings.TrimSpace(ctx.Request().Query(field.Name))
 			if value != "" && value != "all" && resourceFilterValueAllowed(field, value) {
 				q = q.Where(field.Name+" = ?", value)
@@ -107,7 +112,7 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 		if err := q.Get(&rows); err != nil {
 			return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
 		}
-		rows = projectResourceRows(rows, manifest, true)
+		rows = projectResourceRowsWithPolicies(rows, manifest, fieldPolicies, true)
 	}
 
 	body, err := renderResourceCSV(columns, rows)
@@ -119,8 +124,11 @@ func (r *ResourceController) Export(ctx http.Context) http.Response {
 }
 
 func exportColumns(manifest resource.Manifest) []resource.Column {
+	return exportColumnsWithPolicies(manifest, resourceFieldPolicies(manifest))
+}
+
+func exportColumnsWithPolicies(manifest resource.Manifest, policies map[string]rbacservices.FieldPolicy) []resource.Column {
 	columns := []resource.Column{{Name: "id", Label: "ID"}}
-	policies := resourceFieldPolicies(manifest)
 	for _, column := range manifest.Columns {
 		name := strings.ToLower(column.Name)
 		if strings.Contains(name, "password") || strings.Contains(name, "secret") || strings.Contains(name, "token") || strings.Contains(name, "credential") {

@@ -9,7 +9,7 @@ func AdminRegistry() *resource.Registry {
 		Name: "users", Label: "Users", Route: "/admin/users", Table: "users", Permissions: []string{"admin.users.view"}, DataScope: resource.DataScopeAll,
 		Fields: []resource.Field{
 			{Name: "name", Label: "Name", Type: "text"}, {Name: "email", Label: "Email", Type: "email"},
-			{Name: "password", Label: "Password", Type: "password", Visible: false, Readable: false, Writable: false, Sensitive: true, PolicyConfigured: true}, {Name: "locale", Label: "Locale", Type: "text"},
+			{Name: "password", Label: "Password", Type: "password", Visible: false, Readable: false, Writable: true, Sensitive: true, PolicyConfigured: true}, {Name: "locale", Label: "Locale", Type: "text"},
 			{Name: "status", Label: "Status", Type: "select", Options: []resource.Option{
 				{Value: "active", Label: "Active"}, {Value: "disabled", Label: "Disabled"}, {Value: "locked", Label: "Locked"},
 			}},
