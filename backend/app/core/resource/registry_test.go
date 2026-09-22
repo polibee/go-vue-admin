@@ -49,6 +49,27 @@ func TestRegistryDefaultsNavigationMetadata(t *testing.T) {
 	}
 }
 
+func TestRegistryDefaultsPageMode(t *testing.T) {
+	registry := NewRegistry()
+	if err := registry.Register(Manifest{Name: "posts", Label: "Posts", Route: "/posts"}); err != nil {
+		t.Fatalf("register: %v", err)
+	}
+	manifest, err := registry.Find("posts")
+	if err != nil {
+		t.Fatalf("find: %v", err)
+	}
+	if manifest.PageMode != PageModeGeneric {
+		t.Fatalf("page mode = %q, want %q", manifest.PageMode, PageModeGeneric)
+	}
+}
+
+func TestRegistryRejectsUnknownPageMode(t *testing.T) {
+	manifest := Manifest{Name: "posts", Label: "Posts", Route: "/posts", PageMode: PageMode("wizard")}
+	if err := NewRegistry().Register(manifest); !errors.Is(err, ErrInvalidManifest) {
+		t.Fatalf("expected unknown page mode to fail, got %v", err)
+	}
+}
+
 func TestRegistryValidatesDataScopeMetadata(t *testing.T) {
 	own := Manifest{
 		Name: "orders", Label: "Orders", Route: "/orders",

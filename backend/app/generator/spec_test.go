@@ -81,6 +81,32 @@ func TestNormalizeBuildsSharedMenuAndPageMetadata(t *testing.T) {
 	}
 }
 
+func TestNormalizeDefaultsToGenericPageMode(t *testing.T) {
+	spec, err := Normalize(Input{Name: "departments", Fields: []string{"name:text"}})
+	if err != nil {
+		t.Fatalf("normalize: %v", err)
+	}
+	if spec.PageMode != "generic" {
+		t.Fatalf("page mode = %q, want generic", spec.PageMode)
+	}
+}
+
+func TestNormalizePreservesCustomPageMode(t *testing.T) {
+	spec, err := Normalize(Input{Name: "orders", PageMode: "custom", Fields: []string{"number:text"}})
+	if err != nil {
+		t.Fatalf("normalize custom: %v", err)
+	}
+	if spec.PageMode != "custom" {
+		t.Fatalf("page mode = %q, want custom", spec.PageMode)
+	}
+}
+
+func TestNormalizeRejectsUnknownPageMode(t *testing.T) {
+	if _, err := Normalize(Input{Name: "orders", PageMode: "wizard", Fields: []string{"number:text"}}); err == nil {
+		t.Fatal("expected unknown page mode to fail")
+	}
+}
+
 func TestNormalizeSupportsOwnDataScopeWithDeclaredOwnerField(t *testing.T) {
 	spec, err := Normalize(Input{
 		Name: "orders", Scope: "own", OwnerField: "owner_id",

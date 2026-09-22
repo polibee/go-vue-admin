@@ -18,6 +18,13 @@ const (
 	DataScopeOwn DataScope = "own"
 )
 
+type PageMode string
+
+const (
+	PageModeGeneric PageMode = "generic"
+	PageModeCustom  PageMode = "custom"
+)
+
 type Field struct {
 	Name             string   `json:"name"`
 	Label            string   `json:"label"`
@@ -101,6 +108,7 @@ type Manifest struct {
 	Name         string            `json:"name"`
 	Label        string            `json:"label"`
 	Route        string            `json:"route"`
+	PageMode     PageMode          `json:"page_mode,omitempty"`
 	Table        string            `json:"table,omitempty"`
 	Permissions  []string          `json:"permissions"`
 	Fields       []Field           `json:"fields"`
@@ -127,6 +135,12 @@ func (r *Registry) Register(manifest Manifest) error {
 	}
 	if manifest.DataScope == "" {
 		manifest.DataScope = DataScopeAll
+	}
+	if manifest.PageMode == "" {
+		manifest.PageMode = PageModeGeneric
+	}
+	if manifest.PageMode != PageModeGeneric && manifest.PageMode != PageModeCustom {
+		return ErrInvalidManifest
 	}
 	if manifest.Navigation.Group == "" {
 		manifest.Navigation.Group = "business"

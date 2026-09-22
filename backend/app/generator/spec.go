@@ -21,6 +21,7 @@ type Input struct {
 	Name       string
 	Label      string
 	Route      string
+	PageMode   string
 	Permission string
 	Icon       string
 	Actions    []string
@@ -38,6 +39,7 @@ type Spec struct {
 	Label         string
 	Route         string
 	FrontendRoute string
+	PageMode      string
 	Permission    string
 	Icon          string
 	Actions       []string
@@ -197,6 +199,13 @@ func Normalize(input Input) (Spec, error) {
 	}
 	if spec.Icon == "" {
 		spec.Icon = "box"
+	}
+	spec.PageMode = input.PageMode
+	if spec.PageMode == "" {
+		spec.PageMode = "generic"
+	}
+	if spec.PageMode != "generic" && spec.PageMode != "custom" {
+		return Spec{}, fmt.Errorf("unsupported page mode %q", spec.PageMode)
 	}
 	spec.DataScope = input.Scope
 	if spec.DataScope == "" {
