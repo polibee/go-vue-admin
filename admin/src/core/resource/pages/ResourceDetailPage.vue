@@ -10,7 +10,6 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiError, errorMessageKey } from '@/lib/api'
 import { generatedApi, type RelationOption, type ResourceDetailSection, type ResourceManifest } from '@/generated/api'
-import { canDeleteResource } from '@/lib/resource-actions'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 
@@ -67,7 +66,7 @@ function fieldLabel(name: string) {
 }
 
 async function deleteRecord() {
-  if (!auth.token || !data.value.id || !canDelete.value || !canDeleteResource(resourceName.value, data.value)) return
+  if (!auth.token || !data.value.id || !canDelete.value) return
   deleting.value = true
   error.value = ''
   try {
@@ -86,7 +85,7 @@ async function deleteRecord() {
   <div class="flex flex-col gap-6">
     <div class="flex items-center gap-3">
       <Button variant="ghost" size="icon" :aria-label="t('resource.back')" @click="router.back()"><ArrowLeft /></Button>
-      <div class="flex-1"><h1 class="text-2xl font-semibold tracking-tight">{{ t('resource.detail') }}</h1><p class="text-sm text-muted-foreground">{{ resourceName }} #{{ route.params.id }}</p></div><div v-if="canEdit || canDelete" class="flex gap-2"><Button v-if="canEdit" variant="outline" @click="router.push(`/${resourceName}/${route.params.id}/edit`)"><Pencil data-icon="inline-start" />{{ resourceName === 'roles' ? t('rbac.editRole') : resourceName === 'users' ? t('resource.editUser') : t('resource.edit') }}</Button><Button v-if="canDelete && canDeleteResource(resourceName, data)" variant="destructive" @click="deleteDialogOpen = true"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div>
+      <div class="flex-1"><h1 class="text-2xl font-semibold tracking-tight">{{ t('resource.detail') }}</h1><p class="text-sm text-muted-foreground">{{ resourceName }} #{{ route.params.id }}</p></div><div v-if="canEdit || canDelete" class="flex gap-2"><Button v-if="canEdit" variant="outline" @click="router.push(`/${resourceName}/${route.params.id}/edit`)"><Pencil data-icon="inline-start" />{{ t('resource.edit') }}</Button><Button v-if="canDelete" variant="destructive" @click="deleteDialogOpen = true"><Trash2 data-icon="inline-start" />{{ t('resource.delete') }}</Button></div>
     </div>
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Card v-if="loading"><CardHeader><Skeleton class="h-6 w-40" /><Skeleton class="h-4 w-64" /></CardHeader><CardContent class="flex flex-col gap-3"><Skeleton v-for="item in 4" :key="item" class="h-10" /></CardContent></Card>
