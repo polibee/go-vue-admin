@@ -12,7 +12,7 @@
 
 - 统一批量 Action 请求/响应契约；
 - Manifest Action 的名称、标签、类型和权限校验；
-- `POST /admin/resources/{resource}/actions/{action}` 执行入口；
+- `POST /api/v1/admin/{resource}/actions/{action}` 执行入口；
 - ID 数量限制、重复 ID 归一化、数据范围校验和 Action 权限校验；
 - 受控 Handler 注册表，不允许客户端提交 SQL、表名、字段名或脚本；
 - `set-status` Handler 迁移现有用户批量状态逻辑；
@@ -45,7 +45,7 @@ type Action struct {
 批量入口：
 
 ```text
-POST /admin/resources/{resource}/actions/{action}
+POST /api/v1/admin/{resource}/actions/{action}
 ```
 
 请求体：
