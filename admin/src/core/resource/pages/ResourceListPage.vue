@@ -309,13 +309,6 @@ watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; 
       </Button></div>
     </div>
 
-        <div v-if="selectedCount && batchActions.length" class="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3">
-          <span class="text-sm text-muted-foreground">{{ t('resource.selectedCount', { count: selectedCount }) }}</span>
-          <Button v-if="!allFilteredSelected && selectedCount === rows.length && meta.total > rows.length" variant="link" size="sm" @click="selectAllFiltered">{{ t('resource.selectAllFiltered', { count: meta.total }) }}</Button>
-          <Button v-for="action in batchActions" :key="action.name" size="sm" @click="openBulkAction(action)">{{ action.label }}</Button>
-          <Button variant="ghost" size="sm" @click="clearSelection">{{ t('resource.clearSelection') }}</Button>
-    </div>
-
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Alert v-if="lastActionResult"><AlertTitle>{{ t('resource.actionCompleted') }}</AlertTitle><AlertDescription>{{ t('resource.actionResult', { succeeded: lastActionResult.succeeded, failed: lastActionResult.failed, skipped: lastActionResult.skipped }) }}</AlertDescription></Alert>
     <Card>
@@ -323,6 +316,14 @@ watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; 
         <div><CardTitle>{{ currentManifest?.label || t('resource.resourceNotFound') }}</CardTitle><CardDescription>{{ t('resource.total', { count: meta.total }) }}</CardDescription></div>
         <form class="flex w-full flex-wrap gap-2 sm:w-auto" @submit.prevent="submitSearch"><Select v-if="currentManifest?.soft_delete" :model-value="trashed" @update:model-value="(value) => { trashed = String(value); clearSelection(); void loadRows(1) }"><SelectTrigger class="w-32" :aria-label="t('resource.trashFilter')"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">{{ t('resource.activeRecords') }}</SelectItem><SelectItem value="only">{{ t('resource.trashedRecords') }}</SelectItem><SelectItem value="with">{{ t('resource.allRecords') }}</SelectItem></SelectContent></Select><template v-for="field in filters" :key="field.name"><Select v-if="field.type === 'select' || field.type === 'multi-select' || field.type === 'boolean'" :model-value="filterValues[field.name] || 'all'" @update:model-value="changeResourceFilter(field.name, $event)"><SelectTrigger class="w-36" :aria-label="field.label"><SelectValue :placeholder="field.label" /></SelectTrigger><SelectContent><SelectItem v-for="option in filterOptions(field)" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select><Input v-else v-model="filterValues[field.name]" class="w-44" :type="field.type === 'date-range' ? 'text' : 'search'" :placeholder="field.type === 'date-range' ? `${field.label} (YYYY-MM-DD..YYYY-MM-DD)` : field.label" /></template><Input v-model="search" class="sm:w-64" :placeholder="t('resource.searchPlaceholder')" :aria-label="t('resource.search')" /><Button type="submit" size="icon" :aria-label="t('resource.search')"><Search /></Button></form>
       </CardHeader>
+      <div v-if="selectedCount && batchActions.length" class="overflow-x-auto border-y bg-muted/20 px-4 py-2">
+        <div class="flex min-w-max items-center gap-2">
+          <span class="text-sm text-muted-foreground">{{ t('resource.selectedCount', { count: selectedCount }) }}</span>
+          <Button v-if="!allFilteredSelected && selectedCount === rows.length && meta.total > rows.length" variant="link" size="sm" @click="selectAllFiltered">{{ t('resource.selectAllFiltered', { count: meta.total }) }}</Button>
+          <Button v-for="action in batchActions" :key="action.name" size="sm" @click="openBulkAction(action)">{{ action.label }}</Button>
+          <Button variant="ghost" size="sm" @click="clearSelection">{{ t('resource.clearSelection') }}</Button>
+        </div>
+      </div>
       <CardContent>
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
         <Empty v-else-if="!rows.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
