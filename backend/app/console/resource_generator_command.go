@@ -31,6 +31,8 @@ func (ResourceGeneratorCommand) Extend() command.Extend {
 			&command.StringFlag{Name: "route", Usage: "admin route"},
 			&command.StringFlag{Name: "permission", Usage: "view permission"},
 			&command.StringFlag{Name: "icon", Usage: "menu icon"},
+			&command.StringFlag{Name: "scope", Usage: "data scope: all or own"},
+			&command.StringFlag{Name: "owner-field", Usage: "integer field used by own data scope"},
 			&command.StringSliceFlag{Name: "field", Usage: "field definition name:type[:required[:value=Label|value=Label]]", Required: true},
 		},
 	}
@@ -43,6 +45,8 @@ func (ResourceGeneratorCommand) Handle(ctx console.Context) error {
 		Route:      ctx.Option("route"),
 		Permission: ctx.Option("permission"),
 		Icon:       ctx.Option("icon"),
+		Scope:      ctx.Option("scope"),
+		OwnerField: ctx.Option("owner-field"),
 		Fields:     ctx.OptionSlice("field"),
 	}
 	root, err := os.Getwd()

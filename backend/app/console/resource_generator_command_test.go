@@ -10,8 +10,8 @@ func TestResourceGeneratorCommandMetadata(t *testing.T) {
 	if command.Description() == "" {
 		t.Fatal("description must not be empty")
 	}
-	if len(command.Extend().Flags) != 5 {
-		t.Fatalf("flag count = %d, want 5", len(command.Extend().Flags))
+	if len(command.Extend().Flags) != 7 {
+		t.Fatalf("flag count = %d, want 7", len(command.Extend().Flags))
 	}
 }
 

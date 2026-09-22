@@ -23,6 +23,8 @@ Custom Page        普通 Vue 页面 + Goravel Controller/Service
 - 导出接口为 `/api/v1/admin/{resource}/export`，复用搜索、筛选和排序参数；
 - 列表支持 `page`、`per_page`、`search`、`sort`、`dir` 参数，返回 `data` 与 `meta`；
 - 排序字段按资源白名单限制，搜索使用参数绑定。
+- Resource Manifest 可声明 `data_scope: all|own`；`own` 资源必须同时声明整数型
+  `owner_field`，后端列表、详情、导出和写操作会统一应用数据范围约束。
 
 资源页面必须复用 Registry 契约，不能在页面内重新定义资源元数据。用户和角色的
 统一 CRUD 入口仍由各自 Domain Service 承担安全校验；关系操作和用户批量状态属于
@@ -52,6 +54,8 @@ columns
 filters
 actions
 navigation
+data_scope
+owner_field
 ```
 
 标准能力：分页、搜索、排序、筛选、CSV 导出、新增、编辑、查看、删除、行操作、批量操作、字段权限和审计钩子。

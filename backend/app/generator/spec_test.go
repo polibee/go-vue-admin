@@ -62,3 +62,23 @@ func TestNormalizeBuildsSharedMenuAndPageMetadata(t *testing.T) {
 		t.Fatalf("actions = %v, want %v", spec.Actions, wantActions)
 	}
 }
+
+func TestNormalizeSupportsOwnDataScopeWithDeclaredOwnerField(t *testing.T) {
+	spec, err := Normalize(Input{
+		Name: "orders", Scope: "own", OwnerField: "owner_id",
+		Fields: []string{"owner_id:integer", "number:text"},
+	})
+	if err != nil {
+		t.Fatalf("normalize own scope: %v", err)
+	}
+	if spec.DataScope != "own" || spec.OwnerField != "owner_id" {
+		t.Fatalf("scope metadata = %+v", spec)
+	}
+
+	if _, err := Normalize(Input{Name: "invalid-orders", Scope: "own", Fields: []string{"number:text"}}); err == nil {
+		t.Fatal("expected own scope without owner field to fail")
+	}
+	if _, err := Normalize(Input{Name: "invalid-type", Scope: "own", OwnerField: "owner_id", Fields: []string{"owner_id:text"}}); err == nil {
+		t.Fatal("expected non-integer owner field to fail")
+	}
+}

@@ -10,7 +10,7 @@ export interface AuthUser { id: number; name: string; email: string; status: Use
 export interface LoginRequest { email: string; password: string }
 export interface LoginResponse { access_token: string; token_type: string; user: AuthUser }
 export interface RefreshResponse { access_token: string; token_type: string }
-export interface ResourceManifest { name: string; label: string; route: string; permissions: string[]; fields: Array<{ name: string; label: string; type: string; options?: Array<{ value: string; label: string }> }>; columns: Array<{ name: string; label: string; sortable: boolean }>; actions?: Array<{ name: string; label: string; kind: string; permission: string }> }
+export interface ResourceManifest { name: string; label: string; route: string; permissions: string[]; data_scope?: DataScope; owner_field?: string; fields: Array<{ name: string; label: string; type: string; options?: Array<{ value: string; label: string }> }>; columns: Array<{ name: string; label: string; sortable: boolean }>; actions?: Array<{ name: string; label: string; kind: string; permission: string }> }
 export interface ResourceListMeta { page: number; per_page: number; total: number; last_page: number }
 export interface ResourceList<T = Record<string, unknown>> { data: T[]; meta: ResourceListMeta }
 export interface BulkUserStatusRequest { user_ids: number[]; status: UserStatus }

@@ -24,6 +24,8 @@ type Input struct {
 	Icon       string
 	Actions    []string
 	Fields     []string
+	Scope      string
+	OwnerField string
 }
 
 type Spec struct {
@@ -36,6 +38,8 @@ type Spec struct {
 	Icon          string
 	Actions       []string
 	Fields        []FieldSpec
+	DataScope     string
+	OwnerField    string
 }
 
 type FieldSpec struct {
@@ -135,6 +139,17 @@ func Normalize(input Input) (Spec, error) {
 	if spec.Icon == "" {
 		spec.Icon = "box"
 	}
+	spec.DataScope = input.Scope
+	if spec.DataScope == "" {
+		spec.DataScope = "all"
+	}
+	if spec.DataScope != "all" && spec.DataScope != "own" {
+		return Spec{}, fmt.Errorf("unsupported data scope %q", spec.DataScope)
+	}
+	spec.OwnerField = input.OwnerField
+	if spec.DataScope == "own" && spec.OwnerField == "" {
+		return Spec{}, fmt.Errorf("own data scope requires an owner field")
+	}
 	actions := input.Actions
 	if len(actions) == 0 {
 		actions = []string{"view", "create", "update", "delete"}
@@ -156,6 +171,17 @@ func Normalize(input Input) (Spec, error) {
 		}
 		seen[field.Name] = struct{}{}
 		spec.Fields = append(spec.Fields, field)
+	}
+	if spec.DataScope == "own" {
+		_, exists := seen[spec.OwnerField]
+		if !exists {
+			return Spec{}, fmt.Errorf("owner field %q must be declared", spec.OwnerField)
+		}
+		for _, field := range spec.Fields {
+			if field.Name == spec.OwnerField && field.Type != "integer" {
+				return Spec{}, fmt.Errorf("owner field %q must use integer type", spec.OwnerField)
+			}
+		}
 	}
 	return spec, nil
 }

@@ -64,3 +64,24 @@ func TestRenderFrontendArtifactsFromResourceSpec(t *testing.T) {
 		}
 	}
 }
+
+func TestRenderFrontendOwnScopeMetadata(t *testing.T) {
+	spec, err := Normalize(Input{Name: "orders", Scope: "own", OwnerField: "owner_id", Fields: []string{"owner_id:integer", "number:text"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	artifacts, err := RenderFrontend(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, artifact := range artifacts {
+		if artifact.Path == "admin/src/modules/orders/resource.ts" {
+			content := string(artifact.Content)
+			if !strings.Contains(content, `dataScope: "own"`) || !strings.Contains(content, `ownerField: "owner_id"`) {
+				t.Fatalf("own scope metadata missing: %s", content)
+			}
+			return
+		}
+	}
+	t.Fatal("resource metadata artifact not found")
+}
