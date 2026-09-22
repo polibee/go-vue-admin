@@ -44,6 +44,11 @@ export interface AuditLog { id: number; user_id: number; action: string; metadat
 export type AuditCleanupMode = 'retention' | 'selected' | 'filtered' | 'all'
 export interface AuditCleanupRequest { mode?: AuditCleanupMode; retention_days?: number; ids?: number[]; action?: string; user_id?: string; confirmation?: string }
 export interface AuditCleanupResponse { deleted: number; mode: AuditCleanupMode; retention_days?: number; cutoff?: string | null }
+export interface Notification { id: number; user_id: number; type: string; title: string; body: string; url?: string | null; read_at?: string | null; created_at: string; updated_at?: string }
+export interface NotificationList { data: Notification[]; meta: ResourceListMeta }
+export interface NotificationUnreadCount { count: number; updated?: number; id?: number; read?: boolean }
+export interface NotificationReadResponse { id: number; read: boolean }
+export interface NotificationMarkAllReadResponse { updated: number }
 export interface GlobalSearchResult { resource: string; label: string; id: string | number; title: string; subtitle?: string; route: string }
 export interface FieldPermissionOverride { readable: boolean; writable: boolean }
 export interface RolePermissionAssignment { id: number; name: string; display_name: string; scope: DataScope; fields?: Record<string, FieldPermissionOverride> }
@@ -66,6 +71,10 @@ export const generatedApi = {
   overview(token: string) { return apiFetch<AdminOverview>('/api/v1/admin/overview', {}, token) },
   auditLogs(token: string, query: URLSearchParams) { return apiFetchEnvelope<AuditLog[]>('/api/v1/admin/audit-logs?' + query, {}, token) as unknown as Promise<ResourceList<AuditLog>> },
   cleanupAuditLogs(request: AuditCleanupRequest, token: string) { return apiFetch<AuditCleanupResponse>('/api/v1/admin/audit-logs/cleanup', { method: 'POST', body: JSON.stringify(request) }, token) },
+  notifications(token: string, query: URLSearchParams = new URLSearchParams()) { return apiFetchEnvelope<Notification[]>('/api/v1/notifications?' + query, {}, token) as unknown as Promise<NotificationList> },
+  notificationUnreadCount(token: string) { return apiFetch<NotificationUnreadCount>('/api/v1/notifications/unread-count', {}, token) },
+  markNotificationRead(id: number, token: string) { return apiFetch<NotificationReadResponse>('/api/v1/notifications/' + id + '/read', { method: 'PUT' }, token) },
+  markAllNotificationsRead(token: string) { return apiFetch<NotificationMarkAllReadResponse>('/api/v1/notifications/read-all', { method: 'PUT' }, token) },
   resourceList<T = Record<string, unknown>>(resource: string, query: URLSearchParams, token: string) { return apiFetchEnvelope<T[]>('/api/v1/admin/' + resource + '?' + query, {}, token) as unknown as Promise<ResourceList<T>> },
   resourceExport(resource: string, query: URLSearchParams, token: string) { return apiDownload('/api/v1/admin/' + resource + '/export?' + query, {}, token) },
   resourceShow<T = Record<string, unknown>>(resource: string, id: string | number, token: string) { return apiFetch<T>('/api/v1/admin/' + resource + '/' + id, {}, token) },

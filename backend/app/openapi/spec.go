@@ -9,31 +9,35 @@ func Spec() map[string]any {
 		"components": map[string]any{
 			"securitySchemes": map[string]any{"bearerAuth": map[string]any{"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}},
 			"schemas": map[string]any{
-				"UserStatus":              map[string]any{"type": "string", "enum": []string{"active", "disabled", "locked"}},
-				"DataScope":               map[string]any{"type": "string", "enum": []string{"all", "own"}},
-				"FieldPermissionOverride": map[string]any{"type": "object", "required": []string{"readable", "writable"}, "properties": map[string]any{"readable": map[string]any{"type": "boolean"}, "writable": map[string]any{"type": "boolean"}}},
-				"Error":                   map[string]any{"type": "object", "required": []string{"code"}, "properties": map[string]any{"code": map[string]any{"type": "string"}}},
-				"ResourceOption":          resourceOptionSchema(),
-				"ResourceField":           resourceFieldSchema(),
-				"ResourceFilter":          resourceFilterSchema(),
-				"ResourceColumn":          resourceColumnSchema(),
-				"ResourceAction":          resourceActionSchema(),
-				"ActionPayloadField":      actionPayloadFieldSchema(),
-				"ResourceRelation":        resourceRelationSchema(),
-				"ResourceFormGroup":       resourceFormGroupSchema(),
-				"ResourceDetailSection":   resourceDetailSectionSchema(),
-				"ResourceFieldDependency": resourceFieldDependencySchema(),
-				"RelationOption":          relationOptionSchema(),
-				"RelationOptionList":      relationOptionListSchema(),
-				"ResourceListMeta":        resourceListMetaSchema(),
-				"ResourceManifest":        resourceManifestSchema(),
-				"ActionRequest":           actionRequestSchema(),
-				"ActionResponse":          actionResponseSchema(),
-				"GlobalSearchResult":      globalSearchResultSchema(),
-				"GlobalSearchResponse":    globalSearchResponseSchema(),
-				"AuditCleanupMode":        map[string]any{"type": "string", "enum": []string{"retention", "selected", "filtered", "all"}},
-				"AuditCleanupRequest":     auditCleanupRequestSchema(),
-				"AuditCleanupResponse":    auditCleanupResponseSchema(),
+				"UserStatus":                      map[string]any{"type": "string", "enum": []string{"active", "disabled", "locked"}},
+				"DataScope":                       map[string]any{"type": "string", "enum": []string{"all", "own"}},
+				"FieldPermissionOverride":         map[string]any{"type": "object", "required": []string{"readable", "writable"}, "properties": map[string]any{"readable": map[string]any{"type": "boolean"}, "writable": map[string]any{"type": "boolean"}}},
+				"Error":                           map[string]any{"type": "object", "required": []string{"code"}, "properties": map[string]any{"code": map[string]any{"type": "string"}}},
+				"ResourceOption":                  resourceOptionSchema(),
+				"ResourceField":                   resourceFieldSchema(),
+				"ResourceFilter":                  resourceFilterSchema(),
+				"ResourceColumn":                  resourceColumnSchema(),
+				"ResourceAction":                  resourceActionSchema(),
+				"ActionPayloadField":              actionPayloadFieldSchema(),
+				"ResourceRelation":                resourceRelationSchema(),
+				"ResourceFormGroup":               resourceFormGroupSchema(),
+				"ResourceDetailSection":           resourceDetailSectionSchema(),
+				"ResourceFieldDependency":         resourceFieldDependencySchema(),
+				"RelationOption":                  relationOptionSchema(),
+				"RelationOptionList":              relationOptionListSchema(),
+				"ResourceListMeta":                resourceListMetaSchema(),
+				"ResourceManifest":                resourceManifestSchema(),
+				"ActionRequest":                   actionRequestSchema(),
+				"ActionResponse":                  actionResponseSchema(),
+				"GlobalSearchResult":              globalSearchResultSchema(),
+				"GlobalSearchResponse":            globalSearchResponseSchema(),
+				"AuditCleanupMode":                map[string]any{"type": "string", "enum": []string{"retention", "selected", "filtered", "all"}},
+				"AuditCleanupRequest":             auditCleanupRequestSchema(),
+				"AuditCleanupResponse":            auditCleanupResponseSchema(),
+				"Notification":                    notificationSchema(),
+				"NotificationReadResponse":        notificationReadResponseSchema(),
+				"NotificationMarkAllReadResponse": notificationMarkAllReadResponseSchema(),
+				"NotificationUnreadCount":         notificationUnreadCountSchema(),
 			},
 		},
 		"paths": map[string]any{
@@ -61,11 +65,15 @@ func Spec() map[string]any {
 				"put":    resourceWriteOperation("updateResource", "200", true),
 				"delete": map[string]any{"operationId": "deleteResource", "parameters": []map[string]any{pathParameter("resource"), pathParameter("id")}, "responses": map[string]any{"204": map[string]any{"description": "Resource deleted"}, "401": errorResponse(), "403": errorResponse(), "404": errorResponse()}},
 			},
-			"/admin/overview":           map[string]any{"get": operation("adminOverview")},
-			"/admin/audit-logs":         map[string]any{"get": listOperation("auditLogs", []map[string]any{queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("action", "string"), queryParameter("user_id", "integer")})},
-			"/admin/audit-logs/cleanup": map[string]any{"post": map[string]any{"operationId": "cleanupAuditLogs", "requestBody": jsonBody("AuditCleanupRequest", map[string]any{"$ref": "#/components/schemas/AuditCleanupRequest"}), "responses": map[string]any{"200": jsonResponse("AuditCleanupResponse"), "401": errorResponse(), "403": errorResponse(), "422": errorResponse()}}},
-			"/admin/settings":           map[string]any{"get": operation("systemSettings")},
-			"/admin/settings/{key}":     map[string]any{"put": map[string]any{"operationId": "updateSystemSetting", "parameters": []map[string]any{{"name": "key", "in": "path", "required": true, "schema": map[string]any{"type": "string"}}}, "requestBody": jsonBody("SystemSettingRequest", map[string]any{"type": "object", "required": []string{"value"}, "properties": map[string]any{"value": map[string]any{"type": "string"}, "value_type": map[string]any{"type": "string", "enum": []string{"string", "boolean", "integer", "json"}}, "group": map[string]any{"type": "string"}, "description": map[string]any{"type": "string"}}}), "responses": map[string]any{"200": jsonResponse("SystemSettingResponse"), "422": errorResponse()}}},
+			"/admin/overview":             map[string]any{"get": operation("adminOverview")},
+			"/admin/audit-logs":           map[string]any{"get": listOperation("auditLogs", []map[string]any{queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("action", "string"), queryParameter("user_id", "integer")})},
+			"/admin/audit-logs/cleanup":   map[string]any{"post": map[string]any{"operationId": "cleanupAuditLogs", "requestBody": jsonBody("AuditCleanupRequest", map[string]any{"$ref": "#/components/schemas/AuditCleanupRequest"}), "responses": map[string]any{"200": jsonResponse("AuditCleanupResponse"), "401": errorResponse(), "403": errorResponse(), "422": errorResponse()}}},
+			"/notifications":              map[string]any{"get": listOperation("notifications", []map[string]any{queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("unread", "boolean")})},
+			"/notifications/unread-count": map[string]any{"get": operation("notificationUnreadCount")},
+			"/notifications/{id}/read":    map[string]any{"put": map[string]any{"operationId": "markNotificationRead", "parameters": []map[string]any{pathParameter("id")}, "responses": map[string]any{"200": jsonResponse("NotificationReadResponse"), "401": errorResponse(), "404": errorResponse(), "422": errorResponse()}}},
+			"/notifications/read-all":     map[string]any{"put": map[string]any{"operationId": "markAllNotificationsRead", "responses": map[string]any{"200": jsonResponse("NotificationMarkAllReadResponse"), "401": errorResponse()}}},
+			"/admin/settings":             map[string]any{"get": operation("systemSettings")},
+			"/admin/settings/{key}":       map[string]any{"put": map[string]any{"operationId": "updateSystemSetting", "parameters": []map[string]any{{"name": "key", "in": "path", "required": true, "schema": map[string]any{"type": "string"}}}, "requestBody": jsonBody("SystemSettingRequest", map[string]any{"type": "object", "required": []string{"value"}, "properties": map[string]any{"value": map[string]any{"type": "string"}, "value_type": map[string]any{"type": "string", "enum": []string{"string", "boolean", "integer", "json"}}, "group": map[string]any{"type": "string"}, "description": map[string]any{"type": "string"}}}), "responses": map[string]any{"200": jsonResponse("SystemSettingResponse"), "422": errorResponse()}}},
 			"/admin/roles/{id}/permissions": map[string]any{"put": map[string]any{
 				"operationId": "replaceRolePermissions",
 				"parameters":  []map[string]any{pathParameter("id")},
@@ -122,6 +130,24 @@ func auditCleanupResponseSchema() map[string]any {
 		"retention_days": map[string]any{"type": "integer"},
 		"cutoff":         map[string]any{"type": "string", "format": "date-time", "nullable": true},
 	}}
+}
+
+func notificationSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"id", "user_id", "type", "title", "body", "read_at", "created_at"}, "properties": map[string]any{
+		"id": map[string]any{"type": "integer", "format": "int64"}, "user_id": map[string]any{"type": "integer", "format": "int64"}, "type": map[string]any{"type": "string"}, "title": map[string]any{"type": "string"}, "body": map[string]any{"type": "string"}, "url": map[string]any{"type": "string", "nullable": true}, "read_at": map[string]any{"type": "string", "format": "date-time", "nullable": true}, "created_at": map[string]any{"type": "string", "format": "date-time"},
+	}}
+}
+
+func notificationUnreadCountSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"count"}, "properties": map[string]any{"count": map[string]any{"type": "integer"}}}
+}
+
+func notificationReadResponseSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"id", "read"}, "properties": map[string]any{"id": map[string]any{"type": "integer"}, "read": map[string]any{"type": "boolean"}}}
+}
+
+func notificationMarkAllReadResponseSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"updated"}, "properties": map[string]any{"updated": map[string]any{"type": "integer"}}}
 }
 
 func resourceManifestSchema() map[string]any {
