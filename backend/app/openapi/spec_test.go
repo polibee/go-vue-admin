@@ -37,10 +37,19 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 		}
 	}
 	schemas := spec["components"].(map[string]any)["schemas"].(map[string]any)
-	for _, schema := range []string{"ResourceManifest", "ResourceField", "ResourceOption", "ResourceAction", "ActionPayloadField", "ResourceRelation", "ResourceFormGroup", "ResourceDetailSection", "ResourceFieldDependency", "RelationOption", "RelationOptionList", "ResourceListMeta", "ActionRequest", "ActionResponse", "GlobalSearchResult", "GlobalSearchResponse", "DataScope"} {
+	for _, schema := range []string{"ResourceManifest", "ResourceField", "ResourceOption", "ResourceAction", "ActionPayloadField", "ResourceRelation", "ResourceFormGroup", "ResourceDetailSection", "ResourceFieldDependency", "RelationOption", "RelationOptionList", "ResourceListMeta", "ActionRequest", "ActionResponse", "GlobalSearchResult", "GlobalSearchResponse", "DataScope", "AuditCleanupMode", "AuditCleanupRequest", "AuditCleanupResponse"} {
 		if _, ok := schemas[schema]; !ok {
 			t.Fatalf("missing resource schema %s", schema)
 		}
+	}
+	cleanup := paths["/admin/audit-logs/cleanup"].(map[string]any)["post"].(map[string]any)
+	cleanupBody := cleanup["requestBody"].(map[string]any)["content"].(map[string]any)["application/json"].(map[string]any)["schema"].(map[string]any)
+	if cleanupBody["$ref"] != "#/components/schemas/AuditCleanupRequest" {
+		t.Fatalf("unexpected audit cleanup request schema: %v", cleanupBody)
+	}
+	cleanupProperties := schemas["AuditCleanupRequest"].(map[string]any)["properties"].(map[string]any)
+	if _, ok := cleanupProperties["mode"]; !ok {
+		t.Fatal("audit cleanup contract must expose mode")
 	}
 	actionContract := paths["/admin/{resource}/actions/{action}"].(map[string]any)["post"].(map[string]any)
 	if actionContract["operationId"] != "executeResourceAction" {

@@ -28,6 +28,7 @@ const selectedEntry = ref<AuditLog | null>(null)
 const loading = ref(true)
 const error = ref('')
 const cleanupOpen = ref(false)
+const cleanupMode = ref<'retention' | 'all'>('retention')
 const cleanupDays = ref('365')
 const cleaning = ref(false)
 const cleanupResult = ref<number | null>(null)
@@ -76,14 +77,14 @@ function resetFilters() {
 async function cleanupLogs() {
   if (!auth.token) return
   const days = Number(cleanupDays.value)
-  if (!Number.isInteger(days) || days < 1 || days > 3650) {
+  if (cleanupMode.value === 'retention' && (!Number.isInteger(days) || days < 1 || days > 3650)) {
     error.value = t('auth.auditRetentionInvalid')
     return
   }
   cleaning.value = true
   error.value = ''
   try {
-    const result = await generatedApi.cleanupAuditLogs(days, auth.token)
+    const result = await generatedApi.cleanupAuditLogs(cleanupMode.value === 'all' ? { mode: 'all' } : { mode: 'retention', retention_days: days }, auth.token)
     cleanupResult.value = result.deleted
     cleanupOpen.value = false
     await load(1)
@@ -117,7 +118,7 @@ onMounted(load)
       </CardContent>
     </Card>
     <Dialog :open="selectedEntry !== null" @update:open="(open) => { if (!open) selectedEntry = null }"><DialogContent class="max-h-[calc(100vh-2rem)] overflow-y-auto"><DialogHeader><DialogTitle>{{ t('auth.auditDetail') }}</DialogTitle><DialogDescription>{{ selectedEntry?.action }} · {{ selectedEntry ? formatDate(selectedEntry.created_at) : '' }}</DialogDescription></DialogHeader><dl v-if="selectedEntry" class="grid gap-3 text-sm"><div class="flex justify-between gap-4"><dt class="text-muted-foreground">{{ t('auth.auditUser') }}</dt><dd>{{ selectedEntry.user_id }}</dd></div><div><dt class="mb-2 text-muted-foreground">{{ t('auth.auditMetadata') }}</dt><dd v-if="formatAuditMetadata(selectedEntry.metadata)" class="max-h-[50vh] overflow-auto rounded-md bg-muted p-3"><pre class="whitespace-pre-wrap break-words text-xs">{{ formatAuditMetadata(selectedEntry.metadata) }}</pre></dd><dd v-else class="text-muted-foreground">{{ t('auth.auditNoMetadata') }}</dd></div></dl></DialogContent></Dialog>
-    <Dialog v-model:open="cleanupOpen"><DialogContent class="max-h-[calc(100vh-2rem)] overflow-y-auto"><DialogHeader><DialogTitle>{{ t('auth.auditCleanup') }}</DialogTitle><DialogDescription>{{ t('auth.auditCleanupDescription') }}</DialogDescription></DialogHeader><div class="grid gap-2"><label for="audit-retention-days" class="text-sm font-medium">{{ t('auth.auditRetentionDays') }}</label><Input id="audit-retention-days" v-model="cleanupDays" type="number" min="1" max="3650" /></div><DialogFooter><Button variant="outline" @click="cleanupOpen = false">{{ t('resource.cancel') }}</Button><Button :disabled="cleaning" @click="cleanupLogs">{{ t('auth.auditCleanupConfirm') }}</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog v-model:open="cleanupOpen"><DialogContent class="max-h-[calc(100vh-2rem)] overflow-y-auto"><DialogHeader><DialogTitle>{{ t('auth.auditCleanup') }}</DialogTitle><DialogDescription>{{ t(cleanupMode === 'all' ? 'auth.auditCleanupAllDescription' : 'auth.auditCleanupDescription') }}</DialogDescription></DialogHeader><div class="grid gap-3"><div class="grid gap-2"><label class="text-sm font-medium">{{ t('auth.auditCleanupMode') }}</label><Select v-model="cleanupMode"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="retention">{{ t('auth.auditCleanupRetentionMode') }}</SelectItem><SelectItem value="all">{{ t('auth.auditCleanupAllMode') }}</SelectItem></SelectContent></Select></div><div v-if="cleanupMode === 'retention'" class="grid gap-2"><label for="audit-retention-days" class="text-sm font-medium">{{ t('auth.auditRetentionDays') }}</label><Input id="audit-retention-days" v-model="cleanupDays" type="number" min="1" max="3650" /></div><Alert v-else variant="destructive"><AlertTitle>{{ t('auth.auditCleanupAllWarningTitle') }}</AlertTitle><AlertDescription>{{ t('auth.auditCleanupAllWarning') }}</AlertDescription></Alert></div><DialogFooter><Button variant="outline" @click="cleanupOpen = false">{{ t('resource.cancel') }}</Button><Button :disabled="cleaning" @click="cleanupLogs">{{ t(cleanupMode === 'all' ? 'auth.auditCleanupAllConfirm' : 'auth.auditCleanupConfirm') }}</Button></DialogFooter></DialogContent></Dialog>
     <Alert v-if="cleanupResult !== null"><AlertTitle>{{ t('auth.auditCleanupDone') }}</AlertTitle><AlertDescription>{{ t('auth.auditCleanupResult', { count: cleanupResult }) }}</AlertDescription></Alert>
   </div>
 </template>

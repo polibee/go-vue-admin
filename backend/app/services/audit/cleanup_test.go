@@ -14,3 +14,14 @@ func TestValidateRetentionDays(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateCleanupMode(t *testing.T) {
+	for _, mode := range []string{CleanupModeRetention, CleanupModeAll} {
+		if err := ValidateCleanupMode(mode); err != nil {
+			t.Fatalf("cleanup mode %q rejected: %v", mode, err)
+		}
+	}
+	if err := ValidateCleanupMode("unknown"); err == nil {
+		t.Fatal("unknown cleanup mode unexpectedly accepted")
+	}
+}

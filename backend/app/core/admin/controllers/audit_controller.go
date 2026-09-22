@@ -45,7 +45,8 @@ func (a *AuditController) Index(ctx http.Context) http.Response {
 }
 
 type auditCleanupPayload struct {
-	RetentionDays int `json:"retention_days"`
+	Mode          string `json:"mode"`
+	RetentionDays int    `json:"retention_days"`
 }
 
 func (a *AuditController) Cleanup(ctx http.Context) http.Response {
@@ -53,29 +54,49 @@ func (a *AuditController) Cleanup(ctx http.Context) http.Response {
 	if err := ctx.Request().Bind(&payload); err != nil {
 		return ctx.Response().Status(422).Json(http.Json{"code": "AUDIT_RETENTION_INVALID"})
 	}
-	if payload.RetentionDays == 0 {
-		payload.RetentionDays = auditservices.DefaultAuditRetentionDays
+	if payload.Mode == "" {
+		payload.Mode = auditservices.CleanupModeRetention
 	}
-	deleted, cutoff, err := auditservices.NewAuditService().Cleanup(payload.RetentionDays)
-	if err != nil {
+	if err := auditservices.ValidateCleanupMode(payload.Mode); err != nil {
+		return ctx.Response().Status(422).Json(http.Json{"code": "AUDIT_CLEANUP_MODE_INVALID"})
+	}
+	var deleted int64
+	var cutoff time.Time
+	var err error
+	if payload.Mode == auditservices.CleanupModeAll {
+		deleted, err = auditservices.NewAuditService().CleanupAll()
+	} else {
+		if payload.RetentionDays == 0 {
+			payload.RetentionDays = auditservices.DefaultAuditRetentionDays
+		}
+		deleted, cutoff, err = auditservices.NewAuditService().Cleanup(payload.RetentionDays)
 		if errors.Is(err, auditservices.ErrInvalidRetentionDays) {
 			return ctx.Response().Status(422).Json(http.Json{"code": "AUDIT_RETENTION_INVALID"})
 		}
+	}
+	if err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "AUDIT_CLEANUP_FAILED"})
 	}
 	if identity, identityErr := facades.Auth(ctx).ID(); identityErr == nil {
 		userID, parseErr := strconv.ParseUint(identity, 10, 32)
 		if parseErr == nil && userID > 0 {
-			_ = auditservices.NewAuditService().Record(uint(userID), "audit.cleanup", map[string]any{
+			metadata := map[string]any{
+				"mode":           payload.Mode,
 				"retention_days": payload.RetentionDays,
 				"deleted":        deleted,
-				"cutoff":         cutoff.Format(time.RFC3339),
-			})
+			}
+			if payload.Mode == auditservices.CleanupModeRetention {
+				metadata["cutoff"] = cutoff.Format(time.RFC3339)
+			}
+			_ = auditservices.NewAuditService().Record(uint(userID), "audit.cleanup", metadata)
 		}
 	}
-	return ctx.Response().Success().Json(http.Json{"data": http.Json{
-		"deleted":        deleted,
-		"retention_days": payload.RetentionDays,
-		"cutoff":         cutoff.Format(time.RFC3339),
-	}})
+	response := http.Json{"deleted": deleted, "mode": payload.Mode}
+	if payload.Mode == auditservices.CleanupModeRetention {
+		response["retention_days"] = payload.RetentionDays
+		response["cutoff"] = cutoff.Format(time.RFC3339)
+	} else {
+		response["cutoff"] = nil
+	}
+	return ctx.Response().Success().Json(http.Json{"data": response})
 }

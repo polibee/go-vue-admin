@@ -31,6 +31,9 @@ func Spec() map[string]any {
 				"ActionResponse":          actionResponseSchema(),
 				"GlobalSearchResult":      globalSearchResultSchema(),
 				"GlobalSearchResponse":    globalSearchResponseSchema(),
+				"AuditCleanupMode":        map[string]any{"type": "string", "enum": []string{"retention", "all"}},
+				"AuditCleanupRequest":     auditCleanupRequestSchema(),
+				"AuditCleanupResponse":    auditCleanupResponseSchema(),
 			},
 		},
 		"paths": map[string]any{
@@ -60,7 +63,7 @@ func Spec() map[string]any {
 			},
 			"/admin/overview":           map[string]any{"get": operation("adminOverview")},
 			"/admin/audit-logs":         map[string]any{"get": listOperation("auditLogs", []map[string]any{queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("action", "string"), queryParameter("user_id", "integer")})},
-			"/admin/audit-logs/cleanup": map[string]any{"post": map[string]any{"operationId": "cleanupAuditLogs", "requestBody": jsonBody("AuditCleanupRequest", map[string]any{"type": "object", "required": []string{"retention_days"}, "properties": map[string]any{"retention_days": map[string]any{"type": "integer", "minimum": 1, "maximum": 3650}}}), "responses": map[string]any{"200": jsonResponse("AuditCleanupResponse"), "401": errorResponse(), "403": errorResponse(), "422": errorResponse()}}},
+			"/admin/audit-logs/cleanup": map[string]any{"post": map[string]any{"operationId": "cleanupAuditLogs", "requestBody": jsonBody("AuditCleanupRequest", map[string]any{"$ref": "#/components/schemas/AuditCleanupRequest"}), "responses": map[string]any{"200": jsonResponse("AuditCleanupResponse"), "401": errorResponse(), "403": errorResponse(), "422": errorResponse()}}},
 			"/admin/settings":           map[string]any{"get": operation("systemSettings")},
 			"/admin/settings/{key}":     map[string]any{"put": map[string]any{"operationId": "updateSystemSetting", "parameters": []map[string]any{{"name": "key", "in": "path", "required": true, "schema": map[string]any{"type": "string"}}}, "requestBody": jsonBody("SystemSettingRequest", map[string]any{"type": "object", "required": []string{"value"}, "properties": map[string]any{"value": map[string]any{"type": "string"}, "value_type": map[string]any{"type": "string", "enum": []string{"string", "boolean", "integer", "json"}}, "group": map[string]any{"type": "string"}, "description": map[string]any{"type": "string"}}}), "responses": map[string]any{"200": jsonResponse("SystemSettingResponse"), "422": errorResponse()}}},
 			"/admin/roles/{id}/permissions": map[string]any{"put": map[string]any{
@@ -99,6 +102,22 @@ func resourceActionSchema() map[string]any {
 
 func actionPayloadFieldSchema() map[string]any {
 	return map[string]any{"type": "object", "required": []string{"name", "label", "type"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "type": map[string]any{"type": "string", "enum": []string{"text", "number", "boolean", "select"}}, "required": map[string]any{"type": "boolean"}, "options": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceOption"}}}}
+}
+
+func auditCleanupRequestSchema() map[string]any {
+	return map[string]any{"type": "object", "properties": map[string]any{
+		"mode":           map[string]any{"$ref": "#/components/schemas/AuditCleanupMode"},
+		"retention_days": map[string]any{"type": "integer", "minimum": 1, "maximum": 3650},
+	}}
+}
+
+func auditCleanupResponseSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"deleted", "mode"}, "properties": map[string]any{
+		"deleted":        map[string]any{"type": "integer"},
+		"mode":           map[string]any{"$ref": "#/components/schemas/AuditCleanupMode"},
+		"retention_days": map[string]any{"type": "integer"},
+		"cutoff":         map[string]any{"type": "string", "format": "date-time", "nullable": true},
+	}}
 }
 
 func resourceManifestSchema() map[string]any {
