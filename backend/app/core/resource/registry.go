@@ -211,6 +211,13 @@ func ValidateManifestExtensions(manifest Manifest) error {
 			if _, exists := fields[relation.Field]; !exists || relation.Multiple {
 				return ErrInvalidManifest
 			}
+			if relation.Selectable {
+				for _, field := range manifest.Fields {
+					if field.Name == relation.Field && !field.Writable {
+						return ErrInvalidManifest
+					}
+				}
+			}
 		} else if relation.Selectable || relation.Multiple {
 			return ErrInvalidManifest
 		}

@@ -119,6 +119,17 @@ func TestRegistryValidatesRelationsAndFormExtensions(t *testing.T) {
 	}
 }
 
+func TestRegistryRejectsSelectableRelationOnReadonlyField(t *testing.T) {
+	manifest := Manifest{
+		Name: "orders", Label: "Orders", Route: "/admin/orders",
+		Fields:    []Field{{Name: "customer_id", Writable: false, PolicyConfigured: true}},
+		Relations: []Relation{{Name: "customer", Kind: "belongsTo", Resource: "customers", Field: "customer_id", ForeignField: "id", LabelField: "name", Selectable: true}},
+	}
+	if err := NewRegistry().Register(manifest); !errors.Is(err, ErrInvalidManifest) {
+		t.Fatalf("expected selectable relation on readonly field to be rejected, got %v", err)
+	}
+}
+
 func TestFieldPolicyDefaultsPreserveExistingManifestBehavior(t *testing.T) {
 	manifest := Manifest{
 		Name: "posts", Label: "Posts", Route: "/posts",

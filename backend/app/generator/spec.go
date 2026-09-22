@@ -18,19 +18,20 @@ var supportedFieldTypes = map[string]struct{}{
 }
 
 type Input struct {
-	Name       string
-	Label      string
-	Route      string
-	PageMode   string
-	Permission string
-	Icon       string
-	Actions    []string
-	Fields     []string
-	Scope      string
-	OwnerField string
-	Relations  []string
-	FormGroups []string
-	Details    []string
+	Name        string
+	Label       string
+	Route       string
+	PageMode    string
+	Permission  string
+	Icon        string
+	Actions     []string
+	ActionSpecs []string
+	Fields      []string
+	Scope       string
+	OwnerField  string
+	Relations   []string
+	FormGroups  []string
+	Details     []string
 }
 
 type Spec struct {
@@ -218,16 +219,41 @@ func Normalize(input Input) (Spec, error) {
 	if spec.DataScope == "own" && spec.OwnerField == "" {
 		return Spec{}, fmt.Errorf("own data scope requires an owner field")
 	}
-	actions := input.Actions
+	actions := append([]string(nil), input.Actions...)
 	if len(actions) == 0 {
 		actions = []string{"view", "create", "update", "delete"}
+	}
+	customActions := make(map[string]ActionSpec)
+	customActionNames := make([]string, 0, len(input.ActionSpecs))
+	for _, raw := range input.ActionSpecs {
+		action, err := parseActionSpec(raw)
+		if err != nil {
+			return Spec{}, err
+		}
+		if _, exists := customActions[action.Name]; exists {
+			return Spec{}, fmt.Errorf("duplicate action %q", action.Name)
+		}
+		customActions[action.Name] = action
+		customActionNames = append(customActionNames, action.Name)
 	}
 	permissionSpec, err := NormalizePermission(PermissionInput{Name: input.Name, Actions: actions})
 	if err != nil {
 		return Spec{}, err
 	}
 	spec.Actions = permissionSpec.Actions
+	for _, actionName := range customActionNames {
+		if !fieldNamePattern.MatchString(actionName) {
+			return Spec{}, fmt.Errorf("invalid action name %q", actionName)
+		}
+		if !contains(spec.Actions, actionName) {
+			spec.Actions = append(spec.Actions, actionName)
+		}
+	}
 	for _, action := range spec.Actions {
+		if custom, exists := customActions[action]; exists {
+			spec.ActionSpecs = append(spec.ActionSpecs, custom)
+			continue
+		}
 		spec.ActionSpecs = append(spec.ActionSpecs, ActionSpec{Name: action, Label: humanize(action), Permission: "admin." + spec.Name + "." + action})
 	}
 
@@ -301,6 +327,27 @@ func parseRelation(value string) (RelationSpec, error) {
 	}
 	selectable := len(parts) == 7 && parts[6] == "selectable"
 	return RelationSpec{Name: parts[0], Kind: parts[1], Resource: parts[2], Field: parts[3], ForeignField: parts[4], LabelField: parts[5], Selectable: selectable}, nil
+}
+
+func parseActionSpec(value string) (ActionSpec, error) {
+	parts := strings.Split(value, ":")
+	if len(parts) != 6 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
+		return ActionSpec{}, fmt.Errorf("invalid action %q: expected name:label:kind:permission:batch:payload", value)
+	}
+	batch, err := strconv.ParseBool(parts[4])
+	if err != nil || (batch && parts[5] == "") || (!batch && parts[5] != "") {
+		return ActionSpec{}, fmt.Errorf("invalid action %q: batch and payload contract do not match", value)
+	}
+	return ActionSpec{Name: parts[0], Label: parts[1], Kind: parts[2], Permission: parts[3], Batch: batch, Payload: parts[5]}, nil
+}
+
+func contains(values []string, value string) bool {
+	for _, item := range values {
+		if item == value {
+			return true
+		}
+	}
+	return false
 }
 
 func parseFormGroup(value string) (FormGroupSpec, error) {

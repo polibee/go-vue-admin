@@ -128,7 +128,7 @@ async function submit() {
           </FieldGroup>
         </div>
       </FieldGroup>
-      <div class="flex gap-2"><Button type="submit" :disabled="saving"><Save data-icon="inline-start" />{{ saving ? t('resource.saving') : t('resource.save') }}</Button><Button type="button" variant="outline" @click="router.back()">{{ t('resource.cancel') }}</Button></div>
+      <div class="flex gap-2"><Button type="submit" :disabled="saving || Boolean(error)"><Save data-icon="inline-start" />{{ saving ? t('resource.saving') : t('resource.save') }}</Button><Button type="button" variant="outline" @click="router.back()">{{ t('resource.cancel') }}</Button></div>
     </form></CardContent></Card>
   </div>
 </template>

@@ -17,12 +17,15 @@ go run . admin:make-resource posts \
   --label="Posts" \
   --route="/admin/posts" \
   --permission="admin.posts.view" \
+  --action="archive:Archive:archive:admin.posts.archive:true:archive" \
   --field=title:text:required \
   --field=published:boolean \
   --field=status:select:required:active=Active|disabled=Disabled
 ```
 
 字段格式为 `name:type[:required[:value=Label|value=Label]]`；选项仅适用于 `select`，例如 `status:select:required:active=Active|disabled=Disabled`。命令会生成 Resource、Model、Request、Repository、Service、Controller、Routes、Permissions、菜单、ResourceSpec、统一 API 契约、测试、README 和 Migration 文件，并更新生成专属 discovery 文件。普通资源不会生成资源专用 ListPage/FormPage/DetailPage，而是自动进入核心通用页面；`pageMode: custom` 才会生成专用页面覆盖。通用表单根据 Manifest 字段、关系、分组和依赖渲染，列表页根据字段类型自动提供搜索、筛选、排序、详情、编辑、删除和批量操作；API 契约包含 list/show/create/update/delete 五类操作；迁移文件只是待审阅的代码产物，必须人工确认后再执行；命令本身不会连接数据库或运行迁移。
+
+批量 Action 使用 `--action=name:label:kind:permission:batch:payload` 声明；例如 `archive:Archive:archive:admin.posts.archive:true:archive`。只有 `batch=true` 且服务端存在对应 Handler 和 payload 契约时才允许执行。标准 CRUD Action 默认 `batch=false`。
 
 字段可追加权限修饰符：`sensitive` 表示默认不搜索和导出，`readonly` 表示不可写，`hidden` 表示不出现在公开资源页面；例如 `password:text:sensitive`、`owner_id:integer:readonly`。多个修饰符可组合，生成器会把完整的 `visible/readable/writable/sensitive` 策略同步写入后端 Manifest 和前端元数据。
 

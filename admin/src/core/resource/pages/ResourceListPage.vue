@@ -184,7 +184,8 @@ function hasActionKind(kind: string) {
 }
 function openRowStatusAction(row: Record<string, unknown>) {
   selectedIds.value = row.id ? [String(row.id)] : []
-  bulkStatus.value = (typeof row.status === 'string' ? row.status : 'disabled') as UserStatus
+  const status = typeof row.status === 'string' ? row.status : 'disabled'
+  bulkStatus.value = status === 'active' || status === 'locked' ? status : 'disabled'
   bulkStatusDialogOpen.value = true
 }
 function openBulkAction(action: ResourceAction) {

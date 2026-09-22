@@ -129,11 +129,11 @@ func TestNormalizeSupportsOwnDataScopeWithDeclaredOwnerField(t *testing.T) {
 
 func TestNormalizeSupportsRelationsAndFormLayout(t *testing.T) {
 	spec, err := Normalize(Input{
-		Name: "orders",
-		Fields: []string{"customer_id:integer", "status:select:required:active=Active"},
-		Relations: []string{"customer:belongsTo:customers:customer_id:id:name:selectable"},
+		Name:       "orders",
+		Fields:     []string{"customer_id:integer", "status:select:required:active=Active"},
+		Relations:  []string{"customer:belongsTo:customers:customer_id:id:name:selectable"},
 		FormGroups: []string{"main:Main:2:customer_id|status"},
-		Details: []string{"summary:Summary:status"},
+		Details:    []string{"summary:Summary:status"},
 	})
 	if err != nil {
 		t.Fatalf("normalize extensions: %v", err)
@@ -143,5 +143,31 @@ func TestNormalizeSupportsRelationsAndFormLayout(t *testing.T) {
 	}
 	if _, err := Normalize(Input{Name: "orders", Fields: []string{"customer_id:integer"}, Relations: []string{"customer:belongsTo:customers:missing:id:name"}}); err == nil {
 		t.Fatal("expected relation field validation to fail")
+	}
+}
+
+func TestNormalizeSupportsManifestActionDefinitions(t *testing.T) {
+	spec, err := Normalize(Input{
+		Name:        "orders",
+		Fields:      []string{"number:text"},
+		ActionSpecs: []string{"archive:Archive:archive:admin.orders.archive:true:archive"},
+	})
+	if err != nil {
+		t.Fatalf("normalize action definition: %v", err)
+	}
+	if len(spec.ActionSpecs) != 5 || spec.ActionSpecs[4].Name != "archive" || !spec.ActionSpecs[4].Batch || spec.ActionSpecs[4].Payload != "archive" {
+		t.Fatalf("action specs = %+v", spec.ActionSpecs)
+	}
+}
+
+func TestNormalizeRejectsInvalidManifestActionDefinitions(t *testing.T) {
+	for _, action := range []string{
+		"archive:Archive:archive:admin.orders.archive:true:",
+		"archive:Archive:archive:admin.orders.archive:false:archive",
+		"archive:Archive:archive:admin.orders.archive:not-bool:archive",
+	} {
+		if _, err := Normalize(Input{Name: "orders", Fields: []string{"number:text"}, ActionSpecs: []string{action}}); err == nil {
+			t.Fatalf("expected action definition %q to fail", action)
+		}
 	}
 }
