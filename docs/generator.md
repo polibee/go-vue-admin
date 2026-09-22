@@ -28,6 +28,16 @@ go run . artisan admin:make-resource posts \
 
 需要限制为本人数据的资源可使用 `--scope=own --owner-field=owner_id`，其中 `owner_id:integer` 必须同时出现在字段定义中。生成后在 RBAC 中为角色把对应权限设置为“仅本人数据”；后端创建时以当前登录用户为 owner，并在列表、详情、搜索、导出、更新和删除时强制应用范围。
 
+关系和基础布局可通过受控元数据生成：
+
+```text
+--relation=customer:belongsTo:customers:customer_id:id:name:selectable
+--form-group=main:Main:2:customer_id|status
+--detail-section=summary:Summary:status
+```
+
+关系格式为 `name:kind:target_resource:field:foreign_field:label_field[:selectable]`。关系选项由后端统一接口提供，并再次执行目标资源权限、数据范围和字段可读校验；前端不能提交任意表名或字段名。`hasMany` 首期只生成详情只读区块，不自动级联写入。
+
 生成文件写入 `backend/app/modules/<name>/`、`admin/src/modules/<name>/` 和 `backend/database/migrations/`。如果任一目标文件已经存在，命令会在写入前失败，不会覆盖人工文件，也不会留下半套输出。
 
 生成完成后的人工审阅顺序：

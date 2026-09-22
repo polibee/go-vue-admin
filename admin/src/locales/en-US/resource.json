@@ -62,4 +62,6 @@
   "deleteUserDescription": "The user's role links will be removed and this action cannot be undone.",
   "actionCompleted": "Batch action completed",
   "actionResult": "{succeeded} succeeded, {failed} failed, {skipped} skipped."
+  ,"relatedRecords": "Related records"
+  ,"noRelatedRecords": "No related records"
 }

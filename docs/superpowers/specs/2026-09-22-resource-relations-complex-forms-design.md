@@ -17,6 +17,7 @@ type Relation struct {
     Name         string   `json:"name"`
     Kind         string   `json:"kind"` // belongsTo | hasMany
     Resource     string   `json:"resource"`
+    Field        string   `json:"field"` // current resource foreign-key field
     ForeignField string   `json:"foreign_field"`
     LabelField   string   `json:"label_field"`
     Selectable   bool     `json:"selectable"`

@@ -34,6 +34,9 @@ func (ResourceGeneratorCommand) Extend() command.Extend {
 			&command.StringFlag{Name: "scope", Usage: "data scope: all or own"},
 			&command.StringFlag{Name: "owner-field", Usage: "integer field used by own data scope"},
 			&command.StringSliceFlag{Name: "field", Usage: "field definition name:type[:required[:value=Label|value=Label]]", Required: true},
+			&command.StringSliceFlag{Name: "relation", Usage: "relation name:kind:resource:field:foreign_field:label_field[:selectable]"},
+			&command.StringSliceFlag{Name: "form-group", Usage: "form group name:label:columns:field|field"},
+			&command.StringSliceFlag{Name: "detail-section", Usage: "detail section name:label:field|field"},
 		},
 	}
 }
@@ -48,6 +51,9 @@ func (ResourceGeneratorCommand) Handle(ctx console.Context) error {
 		Scope:      ctx.Option("scope"),
 		OwnerField: ctx.Option("owner-field"),
 		Fields:     ctx.OptionSlice("field"),
+		Relations:  ctx.OptionSlice("relation"),
+		FormGroups: ctx.OptionSlice("form-group"),
+		Details:    ctx.OptionSlice("detail-section"),
 	}
 	root, err := os.Getwd()
 	if err != nil {

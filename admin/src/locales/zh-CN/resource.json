@@ -62,4 +62,6 @@
   "deleteUserDescription": "删除后将解除该用户的角色关联，且无法恢复。",
   "actionCompleted": "批量操作完成",
   "actionResult": "成功 {succeeded} 项，失败 {failed} 项，跳过 {skipped} 项。"
+  ,"relatedRecords": "关联记录"
+  ,"noRelatedRecords": "暂无关联记录"
 }

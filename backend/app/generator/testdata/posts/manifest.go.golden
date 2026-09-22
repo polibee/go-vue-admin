@@ -21,5 +21,8 @@ func Manifest() resource.Manifest {
 			{Name: "update", Label: "Update", Kind: "", Permission: "admin.posts.update", Batch: false, Payload: ""},
 			{Name: "delete", Label: "Delete", Kind: "", Permission: "admin.posts.delete", Batch: false, Payload: ""},
 		},
+		Relations:  []resource.Relation{},
+		FormGroups: []resource.FormGroup{},
+		Details:    []resource.DetailSection{},
 	}
 }

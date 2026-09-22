@@ -94,7 +94,7 @@ The generator does not modify manually maintained runtime files and does not exe
 
 ## Action contract
 
-Standard CRUD actions are generated as row-level actions with ` + "`batch=false`" + `. Batch actions require a registered server Handler, a matching ` + "`kind`" + ` and a server-validated ` + "`payload`" + ` contract; the generator does not invent business handlers.
+Standard CRUD actions are generated as row-level actions with `+"`batch=false`"+`. Batch actions require a registered server Handler, a matching `+"`kind`"+` and a server-validated `+"`payload`"+` contract; the generator does not invent business handlers.
 
 ## Verification
 
@@ -110,6 +110,9 @@ func manifestSource(spec Spec, packageName string) string {
 	var fields strings.Builder
 	var columns strings.Builder
 	var actions strings.Builder
+	var relations strings.Builder
+	var groups strings.Builder
+	var details strings.Builder
 	for _, field := range spec.Fields {
 		label := humanize(field.Name)
 		policy := fmt.Sprintf("Visible: %t, Readable: %t, Writable: %t, Sensitive: %t, PolicyConfigured: true", fieldBool(field.Visible), fieldBool(field.Readable), fieldBool(field.Writable), field.Sensitive)
@@ -126,6 +129,15 @@ func manifestSource(spec Spec, packageName string) string {
 	}
 	for _, action := range spec.ActionSpecs {
 		fmt.Fprintf(&actions, "\t\t{Name: %q, Label: %q, Kind: %q, Permission: %q, Batch: %t, Payload: %q},\n", action.Name, action.Label, action.Kind, action.Permission, action.Batch, action.Payload)
+	}
+	for _, relation := range spec.Relations {
+		fmt.Fprintf(&relations, "\t\t{Name: %q, Kind: %q, Resource: %q, Field: %q, ForeignField: %q, LabelField: %q, Selectable: %t},\n", relation.Name, relation.Kind, relation.Resource, relation.Field, relation.ForeignField, relation.LabelField, relation.Selectable)
+	}
+	for _, group := range spec.FormGroups {
+		fmt.Fprintf(&groups, "\t\t{Name: %q, Label: %q, Columns: %d, Fields: []string{%s}},\n", group.Name, group.Label, group.Columns, quoteList(group.Fields)[1:len(quoteList(group.Fields))-1])
+	}
+	for _, section := range spec.Details {
+		fmt.Fprintf(&details, "\t\t{Name: %q, Label: %q, Fields: []string{%s}},\n", section.Name, section.Label, quoteList(section.Fields)[1:len(quoteList(section.Fields))-1])
 	}
 	scopeMetadata := ""
 	if spec.DataScope == "own" {
@@ -146,9 +158,15 @@ func Manifest() resource.Manifest {
 %s		},
 		Actions: []resource.Action{
 %s		},
+		Relations: []resource.Relation{
+%s		},
+		FormGroups: []resource.FormGroup{
+%s		},
+		Details: []resource.DetailSection{
+%s		},
 	}
 }
-`, packageName, spec.Name, spec.Label, spec.Route, spec.Name, spec.Permission, scopeMetadata, fields.String(), columns.String(), actions.String())
+`, packageName, spec.Name, spec.Label, spec.Route, spec.Name, spec.Permission, scopeMetadata, fields.String(), columns.String(), actions.String(), relations.String(), groups.String(), details.String())
 }
 
 func fieldBool(value *bool) bool {

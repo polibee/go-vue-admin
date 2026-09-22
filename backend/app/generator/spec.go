@@ -3,6 +3,7 @@ package generator
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -26,6 +27,9 @@ type Input struct {
 	Fields     []string
 	Scope      string
 	OwnerField string
+	Relations  []string
+	FormGroups []string
+	Details    []string
 }
 
 type Spec struct {
@@ -41,6 +45,9 @@ type Spec struct {
 	Fields        []FieldSpec
 	DataScope     string
 	OwnerField    string
+	Relations     []RelationSpec
+	FormGroups    []FormGroupSpec
+	Details       []DetailSectionSpec
 }
 
 type ActionSpec struct {
@@ -50,6 +57,22 @@ type ActionSpec struct {
 	Permission string
 	Batch      bool
 	Payload    string
+}
+
+type RelationSpec struct {
+	Name, Kind, Resource, Field, ForeignField, LabelField string
+	Selectable                                            bool
+}
+
+type FormGroupSpec struct {
+	Name, Label string
+	Columns     int
+	Fields      []string
+}
+
+type DetailSectionSpec struct {
+	Name, Label string
+	Fields      []string
 }
 
 type FieldSpec struct {
@@ -222,7 +245,87 @@ func Normalize(input Input) (Spec, error) {
 			}
 		}
 	}
+	for _, raw := range input.Relations {
+		relation, err := parseRelation(raw)
+		if err != nil {
+			return Spec{}, err
+		}
+		if relation.Kind == "belongsTo" {
+			if _, exists := seen[relation.Field]; !exists {
+				return Spec{}, fmt.Errorf("relation %q field %q must be declared", relation.Name, relation.Field)
+			}
+		} else if relation.Selectable {
+			return Spec{}, fmt.Errorf("hasMany relation %q cannot be selectable", relation.Name)
+		}
+		spec.Relations = append(spec.Relations, relation)
+	}
+	for _, raw := range input.FormGroups {
+		group, err := parseFormGroup(raw)
+		if err != nil || group.Columns < 1 || group.Columns > 4 {
+			return Spec{}, fmt.Errorf("invalid form group %q", raw)
+		}
+		if err := validateSpecFieldReferences(group.Fields, seen); err != nil {
+			return Spec{}, err
+		}
+		spec.FormGroups = append(spec.FormGroups, group)
+	}
+	for _, raw := range input.Details {
+		section, err := parseDetailSection(raw)
+		if err != nil {
+			return Spec{}, fmt.Errorf("invalid detail section %q", raw)
+		}
+		if err := validateSpecFieldReferences(section.Fields, seen); err != nil {
+			return Spec{}, err
+		}
+		spec.Details = append(spec.Details, section)
+	}
 	return spec, nil
+}
+
+func parseRelation(value string) (RelationSpec, error) {
+	parts := strings.Split(value, ":")
+	if len(parts) < 6 || len(parts) > 7 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" || parts[4] == "" || parts[5] == "" {
+		return RelationSpec{}, fmt.Errorf("invalid relation %q", value)
+	}
+	if parts[1] != "belongsTo" && parts[1] != "hasMany" {
+		return RelationSpec{}, fmt.Errorf("invalid relation kind %q", parts[1])
+	}
+	selectable := len(parts) == 7 && parts[6] == "selectable"
+	return RelationSpec{Name: parts[0], Kind: parts[1], Resource: parts[2], Field: parts[3], ForeignField: parts[4], LabelField: parts[5], Selectable: selectable}, nil
+}
+
+func parseFormGroup(value string) (FormGroupSpec, error) {
+	parts := strings.SplitN(value, ":", 4)
+	if len(parts) != 4 || parts[0] == "" || parts[1] == "" {
+		return FormGroupSpec{}, fmt.Errorf("invalid form group")
+	}
+	columns, err := strconv.Atoi(parts[2])
+	if err != nil || parts[3] == "" {
+		return FormGroupSpec{}, fmt.Errorf("invalid form group")
+	}
+	return FormGroupSpec{Name: parts[0], Label: parts[1], Columns: columns, Fields: strings.Split(parts[3], "|")}, nil
+}
+
+func parseDetailSection(value string) (DetailSectionSpec, error) {
+	parts := strings.SplitN(value, ":", 3)
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return DetailSectionSpec{}, fmt.Errorf("invalid detail section")
+	}
+	return DetailSectionSpec{Name: parts[0], Label: parts[1], Fields: strings.Split(parts[2], "|")}, nil
+}
+
+func validateSpecFieldReferences(names []string, fields map[string]struct{}) error {
+	seen := make(map[string]struct{}, len(names))
+	for _, name := range names {
+		if _, ok := fields[name]; !ok {
+			return fmt.Errorf("field %q must be declared", name)
+		}
+		if _, ok := seen[name]; ok {
+			return fmt.Errorf("duplicate field %q", name)
+		}
+		seen[name] = struct{}{}
+	}
+	return nil
 }
 
 func pascal(value string) string {

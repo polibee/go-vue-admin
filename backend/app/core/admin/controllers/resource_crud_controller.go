@@ -61,6 +61,9 @@ func (r *ResourceController) Create(ctx http.Context) http.Response {
 	if err := enforceResourceCreateOwner(ctx, manifest, values); err != nil {
 		return resourceScopeError(ctx, err)
 	}
+	if err := validateResourceRelations(ctx, manifest, values); err != nil {
+		return relationWriteError(ctx, err)
+	}
 	createdID, err := insertGeneratedResource(manifest, values)
 	if err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
@@ -141,6 +144,9 @@ func (r *ResourceController) Update(ctx http.Context) http.Response {
 	values, err := bindGeneratedValues(ctx, manifest, "update")
 	if err != nil {
 		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
+	}
+	if err := validateResourceRelations(ctx, manifest, values); err != nil {
+		return relationWriteError(ctx, err)
 	}
 	if _, err := facades.Orm().Query().Table(manifest.Table).Where("id = ?", id).Update(values); err != nil {
 		return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
@@ -294,4 +300,55 @@ func validateGeneratedField(field resource.Field, value any) error {
 		}
 	}
 	return nil
+}
+
+var (
+	errRelationNotFound  = errors.New("relation target not found")
+	errRelationForbidden = errors.New("relation target forbidden")
+)
+
+func validateResourceRelations(ctx http.Context, manifest resource.Manifest, values map[string]any) error {
+	for _, relation := range manifest.Relations {
+		if relation.Kind != "belongsTo" || !relation.Selectable {
+			continue
+		}
+		value, exists := values[relation.Field]
+		if !exists || value == nil || value == "" {
+			continue
+		}
+		target, err := registry.AdminRegistry().Find(relation.Resource)
+		if err != nil || target.Table == "" || !targetFieldDeclared(target, relation.ForeignField) {
+			return errRelationNotFound
+		}
+		permission := relation.Permission
+		if permission == "" && len(target.Permissions) > 0 {
+			permission = target.Permissions[0]
+		}
+		allowed, permissionErr := rbacservices.NewRBACService().UserHasPermission(ctx, permission)
+		if permissionErr != nil || !allowed {
+			return errRelationForbidden
+		}
+		query, scopeErr := applyResourceScope(ctx, facades.Orm().Query().Table(target.Table), target, "view")
+		if scopeErr != nil {
+			return errRelationForbidden
+		}
+		exists, existsErr := query.Where(relation.ForeignField+" = ?", value).Exists()
+		if existsErr != nil {
+			return errRelationForbidden
+		}
+		if !exists {
+			return errRelationNotFound
+		}
+	}
+	return nil
+}
+
+func relationWriteError(ctx http.Context, err error) http.Response {
+	if errors.Is(err, errRelationForbidden) {
+		return ctx.Response().Status(422).Json(http.Json{"code": "RELATION_FORBIDDEN"})
+	}
+	if errors.Is(err, errRelationNotFound) {
+		return ctx.Response().Status(422).Json(http.Json{"code": "RELATION_NOT_FOUND"})
+	}
+	return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
 }

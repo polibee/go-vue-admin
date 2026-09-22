@@ -2,6 +2,7 @@ export interface ResourceFormField {
   name: string
   label: string
   type: string
+  required?: boolean
   options?: readonly { value: string; label: string }[]
   visible?: boolean
   readable?: boolean

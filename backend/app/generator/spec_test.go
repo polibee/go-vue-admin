@@ -100,3 +100,22 @@ func TestNormalizeSupportsOwnDataScopeWithDeclaredOwnerField(t *testing.T) {
 		t.Fatal("expected non-integer owner field to fail")
 	}
 }
+
+func TestNormalizeSupportsRelationsAndFormLayout(t *testing.T) {
+	spec, err := Normalize(Input{
+		Name: "orders",
+		Fields: []string{"customer_id:integer", "status:select:required:active=Active"},
+		Relations: []string{"customer:belongsTo:customers:customer_id:id:name:selectable"},
+		FormGroups: []string{"main:Main:2:customer_id|status"},
+		Details: []string{"summary:Summary:status"},
+	})
+	if err != nil {
+		t.Fatalf("normalize extensions: %v", err)
+	}
+	if len(spec.Relations) != 1 || !spec.Relations[0].Selectable || len(spec.FormGroups) != 1 || len(spec.Details) != 1 {
+		t.Fatalf("unexpected extensions: %+v", spec)
+	}
+	if _, err := Normalize(Input{Name: "orders", Fields: []string{"customer_id:integer"}, Relations: []string{"customer:belongsTo:customers:missing:id:name"}}); err == nil {
+		t.Fatal("expected relation field validation to fail")
+	}
+}

@@ -41,9 +41,12 @@ export const resourceDefinition = {
   icon: %q,
 %s
   actions: %s,
+  relations: %s,
+  form_groups: %s,
+  details: %s,
   fields: %s,
 } as const;
-`, spec.Name, spec.Label, spec.FrontendRoute, spec.Permission, spec.Icon, scopeMetadata, frontendActionList(spec), frontendFields(spec))
+`, spec.Name, spec.Label, spec.FrontendRoute, spec.Permission, spec.Icon, scopeMetadata, frontendActionList(spec), frontendRelations(spec), frontendFormGroups(spec), frontendDetails(spec), frontendFields(spec))
 }
 
 func frontendMenuSource(spec Spec) string {
@@ -79,11 +82,14 @@ export const resourceApi = {
   update(id: string | number, payload: ResourceRecord, token: string) {
     return generatedApi.resourceUpdate<ResourceRecord>(%q, id, payload, token);
   },
+  relationOptions(relation: string, token: string) {
+    return generatedApi.resourceRelationOptions(%q, relation, token);
+  },
   remove(id: string | number, token: string) {
     return generatedApi.resourceDelete(%q, id, token);
   },
 };
-`, spec.Name, spec.Name, spec.Name, spec.Name, spec.Name)
+`, spec.Name, spec.Name, spec.Name, spec.Name, spec.Name, spec.Name)
 }
 
 func frontendRoutesSource(spec Spec) string {
@@ -182,6 +188,30 @@ func frontendActionList(spec Spec) string {
 	items := make([]string, 0, len(spec.ActionSpecs))
 	for _, action := range spec.ActionSpecs {
 		items = append(items, fmt.Sprintf("{ name: %q, label: %q, kind: %q, permission: %q, batch: %t, payload: %q }", action.Name, action.Label, action.Kind, action.Permission, action.Batch, action.Payload))
+	}
+	return "[" + strings.Join(items, ", ") + "]"
+}
+
+func frontendRelations(spec Spec) string {
+	items := make([]string, 0, len(spec.Relations))
+	for _, relation := range spec.Relations {
+		items = append(items, fmt.Sprintf("{ name: %q, kind: %q, resource: %q, field: %q, foreign_field: %q, label_field: %q, selectable: %t, multiple: false }", relation.Name, relation.Kind, relation.Resource, relation.Field, relation.ForeignField, relation.LabelField, relation.Selectable))
+	}
+	return "[" + strings.Join(items, ", ") + "]"
+}
+
+func frontendFormGroups(spec Spec) string {
+	items := make([]string, 0, len(spec.FormGroups))
+	for _, group := range spec.FormGroups {
+		items = append(items, fmt.Sprintf("{ name: %q, label: %q, columns: %d, fields: %s }", group.Name, group.Label, group.Columns, quoteList(group.Fields)))
+	}
+	return "[" + strings.Join(items, ", ") + "]"
+}
+
+func frontendDetails(spec Spec) string {
+	items := make([]string, 0, len(spec.Details))
+	for _, section := range spec.Details {
+		items = append(items, fmt.Sprintf("{ name: %q, label: %q, fields: %s }", section.Name, section.Label, quoteList(section.Fields)))
 	}
 	return "[" + strings.Join(items, ", ") + "]"
 }

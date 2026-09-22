@@ -17,6 +17,11 @@ func Spec() map[string]any {
 				"ResourceField":           resourceFieldSchema(),
 				"ResourceColumn":          resourceColumnSchema(),
 				"ResourceAction":          resourceActionSchema(),
+				"ResourceRelation":        resourceRelationSchema(),
+				"ResourceFormGroup":       resourceFormGroupSchema(),
+				"ResourceDetailSection":   resourceDetailSectionSchema(),
+				"ResourceFieldDependency": resourceFieldDependencySchema(),
+				"RelationOption":          relationOptionSchema(),
 				"ResourceManifest":        resourceManifestSchema(),
 				"ActionRequest":           actionRequestSchema(),
 				"ActionResponse":          actionResponseSchema(),
@@ -40,8 +45,10 @@ func Spec() map[string]any {
 				"get":  listOperation("listResourceRows", []map[string]any{pathParameter("resource"), queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("search", "string"), queryParameter("sort", "string"), queryParameter("dir", "string")}),
 				"post": resourceWriteOperation("createResource", "201"),
 			},
-			"/admin/{resource}/export":           exportOperation(),
-			"/admin/{resource}/actions/{action}": map[string]any{"post": resourceActionOperation()},
+			"/admin/{resource}/export":                       exportOperation(),
+			"/admin/{resource}/actions/{action}":             map[string]any{"post": resourceActionOperation()},
+			"/admin/{resource}/relations/{relation}/options": map[string]any{"get": relationOptionsOperation()},
+			"/admin/{resource}/{id}/relations/{relation}":    map[string]any{"get": relationRecordsOperation()},
 			"/admin/{resource}/{id}": map[string]any{
 				"get":    resourceItemOperation("showResource"),
 				"put":    resourceWriteOperation("updateResource", "200", true),
@@ -82,7 +89,27 @@ func resourceActionSchema() map[string]any {
 }
 
 func resourceManifestSchema() map[string]any {
-	return map[string]any{"type": "object", "required": []string{"name", "label", "route", "permissions", "fields", "columns"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "route": map[string]any{"type": "string"}, "permissions": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}, "data_scope": map[string]any{"$ref": "#/components/schemas/DataScope"}, "owner_field": map[string]any{"type": "string"}, "fields": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceField"}}, "columns": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceColumn"}}, "actions": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceAction"}}}}
+	return map[string]any{"type": "object", "required": []string{"name", "label", "route", "permissions", "fields", "columns"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "route": map[string]any{"type": "string"}, "permissions": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}, "data_scope": map[string]any{"$ref": "#/components/schemas/DataScope"}, "owner_field": map[string]any{"type": "string"}, "fields": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceField"}}, "columns": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceColumn"}}, "actions": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceAction"}}, "relations": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceRelation"}}, "form_groups": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceFormGroup"}}, "details": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceDetailSection"}}, "dependencies": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceFieldDependency"}}}}
+}
+
+func resourceRelationSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"name", "kind", "resource", "field", "foreign_field", "label_field", "selectable", "multiple"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "kind": map[string]any{"type": "string", "enum": []string{"belongsTo", "hasMany"}}, "resource": map[string]any{"type": "string"}, "field": map[string]any{"type": "string"}, "foreign_field": map[string]any{"type": "string"}, "label_field": map[string]any{"type": "string"}, "selectable": map[string]any{"type": "boolean"}, "multiple": map[string]any{"type": "boolean"}, "permission": map[string]any{"type": "string"}, "filter_fields": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}}}
+}
+
+func resourceFormGroupSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"name", "label", "fields"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "columns": map[string]any{"type": "integer", "minimum": 1, "maximum": 4}, "fields": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}}}
+}
+
+func resourceDetailSectionSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"name", "label", "fields"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "fields": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}}}
+}
+
+func resourceFieldDependencySchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"field", "on", "value"}, "properties": map[string]any{"field": map[string]any{"type": "string"}, "on": map[string]any{"type": "string"}, "value": map[string]any{"type": "string"}}}
+}
+
+func relationOptionSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"value", "label"}, "properties": map[string]any{"value": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}}}
 }
 
 func actionRequestSchema() map[string]any {
@@ -166,6 +193,14 @@ func resourceActionOperation() map[string]any {
 			"401": errorResponse(), "403": errorResponse(), "404": errorResponse(), "422": errorResponse(),
 		},
 	}
+}
+
+func relationOptionsOperation() map[string]any {
+	return map[string]any{"operationId": "resourceRelationOptions", "parameters": []map[string]any{pathParameter("resource"), pathParameter("relation")}, "responses": map[string]any{"200": map[string]any{"description": "Relation options", "content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"type": "object", "properties": map[string]any{"data": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/RelationOption"}}}}}}}, "401": errorResponse(), "403": errorResponse(), "404": errorResponse()}}
+}
+
+func relationRecordsOperation() map[string]any {
+	return map[string]any{"operationId": "resourceRelationRecords", "parameters": []map[string]any{pathParameter("resource"), pathParameter("id"), pathParameter("relation")}, "responses": map[string]any{"200": map[string]any{"description": "Related records", "content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"type": "object", "properties": map[string]any{"data": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/RelationOption"}}}}}}}, "401": errorResponse(), "403": errorResponse(), "404": errorResponse()}}
 }
 
 func queryParameter(name string, valueType string) map[string]any {

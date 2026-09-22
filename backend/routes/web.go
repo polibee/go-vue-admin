@@ -57,6 +57,8 @@ func Web() {
 	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("view")).Get("/api/v1/admin/:resource", resourceController.List)
 	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("view")).Get("/api/v1/admin/:resource/export", resourceController.Export)
 	facades.Route().Middleware(adminmiddleware.RequireAuthentication()).Post("/api/v1/admin/:resource/actions/:action", resourceController.Action)
+	facades.Route().Middleware(adminmiddleware.RequireAuthentication()).Get("/api/v1/admin/:resource/relations/:relation/options", resourceController.RelationOptions)
+	facades.Route().Middleware(adminmiddleware.RequireAuthentication()).Get("/api/v1/admin/:resource/:id/relations/:relation", resourceController.RelationRecords)
 	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("view")).Get("/api/v1/admin/:resource/:id", resourceController.Show)
 	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("create")).Post("/api/v1/admin/:resource", resourceController.Create)
 	facades.Route().Middleware(adminmiddleware.RequireResourcePermission("update")).Put("/api/v1/admin/:resource/:id", resourceController.Update)

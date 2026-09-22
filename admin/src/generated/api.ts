@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* Generated from http://127.0.0.1:3000/api/openapi.json. DO NOT EDIT. */
-/* Contract paths: /admin/audit-logs, /admin/overview, /admin/registry, /admin/search, /admin/settings, /admin/settings/{key}, /admin/{resource}, /admin/{resource}/actions/{action}, /admin/{resource}/export, /admin/{resource}/{id}, /auth/login, /auth/logout-all, /auth/me, /auth/refresh */
+/* Contract paths: /admin/audit-logs, /admin/overview, /admin/registry, /admin/search, /admin/settings, /admin/settings/{key}, /admin/{resource}, /admin/{resource}/actions/{action}, /admin/{resource}/export, /admin/{resource}/relations/{relation}/options, /admin/{resource}/{id}, /admin/{resource}/{id}/relations/{relation}, /auth/login, /auth/logout-all, /auth/me, /auth/refresh */
 
 import { ApiError, apiDownload, apiFetch, apiFetchEnvelope } from '@/lib/api'
 
@@ -11,7 +11,12 @@ export interface AuthUser { id: number; name: string; email: string; status: Use
 export interface LoginRequest { email: string; password: string }
 export interface LoginResponse { access_token: string; token_type: string; user: AuthUser }
 export interface RefreshResponse { access_token: string; token_type: string }
-export interface ResourceManifest { name: string; label: string; route: string; permissions: string[]; data_scope?: DataScope; owner_field?: string; fields: ResourceField[]; columns: Array<{ name: string; label: string; sortable: boolean }>; actions?: Array<{ name: string; label: string; kind: string; permission: string; batch: boolean; payload?: string }> }
+export interface ResourceManifest { name: string; label: string; route: string; permissions: string[]; data_scope?: DataScope; owner_field?: string; fields: ResourceField[]; columns: Array<{ name: string; label: string; sortable: boolean }>; actions?: Array<{ name: string; label: string; kind: string; permission: string; batch: boolean; payload?: string }>; relations?: ResourceRelation[]; form_groups?: ResourceFormGroup[]; details?: ResourceDetailSection[]; dependencies?: ResourceFieldDependency[] }
+export interface ResourceRelation { name: string; kind: 'belongsTo' | 'hasMany'; resource: string; field: string; foreign_field: string; label_field: string; selectable: boolean; multiple: boolean; permission?: string; filter_fields?: string[] }
+export interface ResourceFormGroup { name: string; label: string; columns?: number; fields: string[] }
+export interface ResourceDetailSection { name: string; label: string; fields: string[] }
+export interface ResourceFieldDependency { field: string; on: string; value: string }
+export interface RelationOption { value: string; label: string }
 export interface ResourceListMeta { page: number; per_page: number; total: number; last_page: number }
 export interface ResourceList<T = Record<string, unknown>> { data: T[]; meta: ResourceListMeta }
 export interface ActionRequest { ids: number[]; payload?: Record<string, unknown> }
@@ -47,5 +52,7 @@ export const generatedApi = {
   resourceUpdate<T = Record<string, unknown>>(resource: string, id: string | number, payload: Record<string, unknown>, token: string) { return apiFetch<T>('/api/v1/admin/' + resource + '/' + id, { method: 'PUT', body: JSON.stringify(payload) }, token) },
   resourceDelete(resource: string, id: string | number, token: string) { return apiFetch<void>('/api/v1/admin/' + resource + '/' + id, { method: 'DELETE' }, token) },
   resourceAction(resource: string, action: string, request: ActionRequest, token: string) { return apiFetch<ActionResponse>('/api/v1/admin/' + resource + '/actions/' + action, { method: 'POST', body: JSON.stringify(request) }, token).then((payload) => (payload as { data?: ActionResponse }).data || payload as ActionResponse) },
+  resourceRelationOptions(resource: string, relation: string, token: string) { return apiFetchEnvelope<RelationOption[]>('/api/v1/admin/' + resource + '/relations/' + relation + '/options', {}, token) },
+  resourceRelationRecords(resource: string, id: string | number, relation: string, token: string) { return apiFetchEnvelope<RelationOption[]>('/api/v1/admin/' + resource + '/' + id + '/relations/' + relation, {}, token) },
   replaceRolePermissions(roleID: number, permissionIDs: number[], scopes: Record<string, DataScope>, fields: Record<string, Record<string, FieldPermissionOverride>>, token: string) { return apiFetch<void>('/api/v1/admin/roles/' + roleID + '/permissions', { method: 'PUT', body: JSON.stringify({ permission_ids: permissionIDs, scopes, fields }) }, token) },
 }

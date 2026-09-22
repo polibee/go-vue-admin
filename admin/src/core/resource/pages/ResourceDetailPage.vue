@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiError, errorMessageKey } from '@/lib/api'
-import { generatedApi } from '@/generated/api'
+import { generatedApi, type RelationOption, type ResourceDetailSection, type ResourceManifest } from '@/generated/api'
 import { canDeleteResource } from '@/lib/resource-actions'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
@@ -19,11 +19,10 @@ const props = defineProps<{ resource?: string }>()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
-interface ResourceField { name: string; label: string; type: string; visible?: boolean; readable?: boolean }
 interface ResourceAction { name: string; permission: string }
-interface ResourceManifest { name: string; fields: ResourceField[]; actions?: ResourceAction[] }
 const data = ref<Record<string, unknown>>({})
 const manifest = ref<ResourceManifest>()
+const relationRecords = ref<Record<string, RelationOption[]>>({})
 const loading = ref(true)
 const error = ref('')
 const deleteDialogOpen = ref(false)
@@ -36,6 +35,8 @@ const hasAction = (name: string) => {
 }
 const canEdit = computed(() => hasAction('update'))
 const canDelete = computed(() => hasAction('delete'))
+const detailSections = computed<ResourceDetailSection[]>(() => manifest.value?.details || [])
+const hasManyRelations = computed(() => (manifest.value?.relations || []).filter((relation) => relation.kind === 'hasMany'))
 
 function localizedError(value: unknown) {
   return value instanceof ApiError ? t(errorMessageKey(value.code)) : t('errors.unknown')
@@ -50,6 +51,10 @@ onMounted(async () => {
     ])
     manifest.value = manifests.find((item) => item.name === resourceName.value)
     data.value = record
+    for (const relation of hasManyRelations.value) {
+      const response = await generatedApi.resourceRelationRecords(resourceName.value, String(route.params.id), relation.name, auth.token)
+      relationRecords.value = { ...relationRecords.value, [relation.name]: response.data }
+    }
   } catch (value) {
     error.value = localizedError(value)
   } finally {
@@ -87,7 +92,9 @@ async function deleteRecord() {
     <Card v-if="loading"><CardHeader><Skeleton class="h-6 w-40" /><Skeleton class="h-4 w-64" /></CardHeader><CardContent class="flex flex-col gap-3"><Skeleton v-for="item in 4" :key="item" class="h-10" /></CardContent></Card>
     <Empty v-else-if="error"><EmptyHeader><EmptyTitle>{{ t('states.errorTitle') }}</EmptyTitle><EmptyDescription>{{ error }}</EmptyDescription></EmptyHeader></Empty>
     <Card v-else-if="Object.keys(displayData).length"><CardHeader><CardTitle>{{ String(data.display_name || data.name || data.email || route.params.id) }}</CardTitle><CardDescription>{{ t('resource.detailDescription') }}</CardDescription></CardHeader><CardContent><dl class="grid gap-4 sm:grid-cols-2"> <div v-for="(value, key) in displayData" :key="key" class="rounded-md border p-3"><dt class="text-xs text-muted-foreground">{{ fieldLabel(String(key)) }}</dt><dd class="mt-1 break-words text-sm font-medium">{{ value === null || value === undefined ? '—' : String(value) }}</dd></div></dl></CardContent></Card>
-    <Empty v-else><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
+    <Card v-for="section in detailSections" :key="section.name"><CardHeader><CardTitle>{{ section.label }}</CardTitle></CardHeader><CardContent><dl class="grid gap-4 sm:grid-cols-2"><div v-for="field in section.fields" v-show="displayData[field] !== undefined" :key="field" class="rounded-md border p-3"><dt class="text-xs text-muted-foreground">{{ fieldLabel(field) }}</dt><dd class="mt-1 break-words text-sm font-medium">{{ displayData[field] === null || displayData[field] === undefined ? '—' : String(displayData[field]) }}</dd></div></dl></CardContent></Card>
+    <Card v-for="relation in hasManyRelations" :key="relation.name"><CardHeader><CardTitle>{{ relation.name }}</CardTitle><CardDescription>{{ t('resource.relatedRecords') }}</CardDescription></CardHeader><CardContent><div v-if="relationRecords[relation.name]?.length" class="flex flex-wrap gap-2"><Button v-for="item in relationRecords[relation.name]" :key="item.value" variant="outline" size="sm">{{ item.label }}</Button></div><p v-else class="text-sm text-muted-foreground">{{ t('resource.noRelatedRecords') }}</p></CardContent></Card>
+    <Empty v-if="!loading && !error && !Object.keys(displayData).length && !detailSections.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
     <AlertDialog v-model:open="deleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.deleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.deleteDescription') }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="deleting" @click="deleteRecord">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>
 </template>
