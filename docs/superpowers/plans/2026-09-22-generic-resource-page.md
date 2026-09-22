@@ -347,7 +347,7 @@ git commit -m "feat: support explicit custom resource page overrides"
 
 **Files:**
 - Modify: README.zh-CN.md
-- Modify: README.en.md
+- Modify: README.md
 - Modify: docs/ai-quickstart.md
 - Modify: docs/generator.md
 - Modify: docs/resource-engine.md
@@ -380,7 +380,7 @@ Then manually verify departments at http://127.0.0.1:5180/departments after the 
 - [ ] **Step 3: Commit the stage milestone**
 
 ~~~powershell
-git add README.zh-CN.md README.en.md docs/ai-quickstart.md docs/generator.md docs/resource-engine.md docs/roadmap.md backend/app/generator/testdata/posts
+git add README.md README.zh-CN.md docs/ai-quickstart.md docs/generator.md docs/resource-engine.md docs/roadmap.md backend/app/generator/testdata/posts
 git commit -m "docs: document generic and custom resource modes"
 ~~~
 
