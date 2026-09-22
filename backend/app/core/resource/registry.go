@@ -31,6 +31,14 @@ type Field struct {
 	PolicyConfigured bool     `json:"-"`
 }
 
+type Filter struct {
+	Name     string   `json:"name"`
+	Label    string   `json:"label"`
+	Type     string   `json:"type"`
+	Options  []Option `json:"options,omitempty"`
+	Relation string   `json:"relation,omitempty"`
+}
+
 type Option struct {
 	Value string `json:"value"`
 	Label string `json:"label"`
@@ -98,12 +106,14 @@ type Manifest struct {
 	Fields       []Field           `json:"fields"`
 	Columns      []Column          `json:"columns"`
 	Actions      []Action          `json:"actions,omitempty"`
+	Filters      []Filter          `json:"filters,omitempty"`
 	Relations    []Relation        `json:"relations,omitempty"`
 	FormGroups   []FormGroup       `json:"form_groups,omitempty"`
 	Details      []DetailSection   `json:"details,omitempty"`
 	Dependencies []FieldDependency `json:"dependencies,omitempty"`
 	DataScope    DataScope         `json:"data_scope,omitempty"`
 	OwnerField   string            `json:"owner_field,omitempty"`
+	SoftDelete   bool              `json:"soft_delete,omitempty"`
 	Navigation   Navigation        `json:"navigation"`
 }
 
@@ -154,6 +164,22 @@ func ValidateManifestExtensions(manifest Manifest) error {
 	fields := make(map[string]struct{}, len(manifest.Fields))
 	for _, field := range manifest.Fields {
 		fields[field.Name] = struct{}{}
+	}
+	filterNames := make(map[string]struct{}, len(manifest.Filters))
+	for _, filter := range manifest.Filters {
+		if filter.Name == "" || filter.Label == "" {
+			return ErrInvalidManifest
+		}
+		if filter.Type != "select" && filter.Type != "multi-select" && filter.Type != "boolean" && filter.Type != "text" && filter.Type != "date-range" && filter.Type != "relation" {
+			return ErrInvalidManifest
+		}
+		if _, exists := fields[filter.Name]; !exists && filter.Type != "relation" {
+			return ErrInvalidManifest
+		}
+		if _, exists := filterNames[filter.Name]; exists {
+			return ErrInvalidManifest
+		}
+		filterNames[filter.Name] = struct{}{}
 	}
 	relations := make(map[string]struct{}, len(manifest.Relations))
 	for _, relation := range manifest.Relations {

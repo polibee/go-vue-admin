@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
@@ -15,10 +16,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ApiError, errorMessageKey } from '@/lib/api'
-import { generatedApi, type ActionResponse, type ResourceManifest as GeneratedResourceManifest, type ResourceListMeta } from '@/generated/api'
+import { generatedApi, type ActionResponse, type ActionRequest, type ResourceFilter, type ResourceManifest as GeneratedResourceManifest, type ResourceListMeta } from '@/generated/api'
 import { canDeleteResource, executableBatchActions } from '@/lib/resource-actions'
 import { useAuthStore } from '@/stores/auth'
-import { USER_STATUSES, userStatusLabelKey, type UserStatus } from '@/lib/user-status'
+import { userStatusLabelKey, type UserStatus } from '@/lib/user-status'
+import { deleteResourceView, loadResourceViews, saveResourceView, type ResourceViewState } from '@/core/resource/lib/views'
 import { useI18n } from 'vue-i18n'
 
 interface ResourceColumn { name: string; label: string; sortable: boolean }
@@ -35,7 +37,6 @@ const manifests = ref<ResourceManifest[]>([])
 const rows = ref<Record<string, unknown>[]>([])
 const meta = ref<ResourceMeta>({ page: 1, per_page: 10, total: 0, last_page: 1 })
 const search = ref('')
-const statusFilter = ref('all')
 const sort = ref('id')
 const direction = ref<'asc' | 'desc'>('desc')
 const pageSize = ref('10')
@@ -49,19 +50,43 @@ const selectedIds = ref<string[]>([])
 const bulkStatus = ref<UserStatus>('disabled')
 const bulkStatusDialogOpen = ref(false)
 const bulkUpdating = ref(false)
+const bulkDeleteDialogOpen = ref(false)
+const bulkDeleting = ref(false)
+const bulkDeleteAction = ref('bulk-delete')
+const bulkUpdateDialogOpen = ref(false)
+const bulkUpdateField = ref('')
+const bulkUpdateValue = ref('')
+const bulkUpdateSaving = ref(false)
+const viewDialogOpen = ref(false)
+const viewName = ref('')
+const savedViews = ref<ResourceViewState[]>([])
+const hiddenColumns = ref<string[]>([])
 const lastActionResult = ref<ActionResponse>()
 const filterValues = ref<Record<string, string>>({})
+const trashed = ref('default')
+const allFilteredSelected = ref(false)
+const excludedIds = ref<string[]>([])
 
 const resourceName = computed(() => props.resource || String(route.params.resource || 'users'))
 const currentManifest = computed(() => manifests.value.find((item) => item.name === resourceName.value))
 const visibleColumns = computed(() => (currentManifest.value?.columns || []).filter((column) => {
   const field = currentManifest.value?.fields.find((item) => item.name === column.name)
-  return !field || (field.visible !== false && field.readable !== false)
+  return !hiddenColumns.value.includes(column.name) && (!field || (field.visible !== false && field.readable !== false))
 }))
-const filterFields = computed(() => (currentManifest.value?.fields || []).filter((field) => field.visible !== false && field.readable !== false && !field.sensitive && (field.type === 'select' || field.type === 'boolean')))
+const filters = computed(() => currentManifest.value?.filters || [])
 const canCreate = computed(() => hasAction('create'))
-const batchActions = computed(() => executableBatchActions(currentManifest.value?.actions, (permission) => auth.can(permission)))
+const batchActions = computed(() => {
+  const actions = executableBatchActions(currentManifest.value?.actions, (permission) => auth.can(permission)).slice()
+  const deleteAction = currentManifest.value?.actions?.find((action) => action.name === 'delete')
+  if (currentManifest.value?.soft_delete && deleteAction && trashed.value === 'only' && auth.can(deleteAction.permission)) {
+    actions.push({ ...deleteAction, name: 'restore', label: t('resource.restore'), kind: 'builtin-restore', batch: true, payload: 'trash' })
+    actions.push({ ...deleteAction, name: 'force-delete', label: t('resource.forceDelete'), kind: 'builtin-force-delete', batch: true, payload: 'trash' })
+  }
+  return actions
+})
 const allVisibleSelected = computed(() => rows.value.length > 0 && rows.value.every((row) => selectedIds.value.includes(String(row.id))))
+const selectedCount = computed(() => allFilteredSelected.value ? Math.max(0, meta.value.total - excludedIds.value.length) : selectedIds.value.length)
+const writableFields = computed(() => (currentManifest.value?.fields || []).filter((field) => field.writable !== false && field.visible !== false && !field.sensitive && field.name !== 'password'))
 
 function localizedError(value: unknown) {
   return value instanceof ApiError ? t(errorMessageKey(value.code)) : t('errors.unknown')
@@ -83,7 +108,6 @@ async function loadRows(page = 1) {
     const response = await generatedApi.resourceList<Record<string, unknown>>(resourceName.value, params, auth.token)
     rows.value = response.data
     meta.value = response.meta as unknown as ResourceMeta
-    selectedIds.value = []
   } catch (value) {
     rows.value = []
     error.value = localizedError(value)
@@ -95,11 +119,11 @@ async function loadRows(page = 1) {
 function buildResourceQuery() {
   const params = new URLSearchParams({ sort: sort.value, dir: direction.value })
   if (search.value.trim()) params.set('search', search.value.trim())
-  if (resourceName.value === 'users' && statusFilter.value !== 'all') params.set('status', statusFilter.value)
-  for (const field of filterFields.value) {
+  for (const field of filters.value) {
     const value = filterValues.value[field.name]
     if (value && value !== 'all') params.set(field.name, value)
   }
+  if (currentManifest.value?.soft_delete && trashed.value !== 'default') params.set('trashed', trashed.value)
   return params
 }
 
@@ -117,8 +141,7 @@ function sortBy(column: ResourceColumn) {
 }
 function displayValue(value: unknown) { return value === null || value === undefined ? '—' : String(value) }
 function statusLabel(value: unknown) { return typeof value === 'string' ? t(userStatusLabelKey(value as UserStatus)) : '—' }
-function changeStatusFilter(value: unknown) { statusFilter.value = String(value); void loadRows(1) }
-function filterOptions(field: ResourceManifest['fields'][number]) {
+function filterOptions(field: ResourceFilter) {
   return field.type === 'boolean' ? [{ value: 'all', label: t('resource.filterAll') }, { value: 'true', label: t('resource.trueValue') }, { value: 'false', label: t('resource.falseValue') }] : [{ value: 'all', label: t('resource.filterAll') }, ...(field.options || [])]
 }
 function changeResourceFilter(name: string, value: unknown) {
@@ -127,12 +150,45 @@ function changeResourceFilter(name: string, value: unknown) {
 }
 function toggleRow(id: unknown, checked: boolean | 'indeterminate') {
   const value = String(id)
+  if (allFilteredSelected.value) {
+    excludedIds.value = checked === true ? excludedIds.value.filter((item) => item !== value) : [...new Set([...excludedIds.value, value])]
+    return
+  }
   selectedIds.value = checked === true ? [...new Set([...selectedIds.value, value])] : selectedIds.value.filter((item) => item !== value)
 }
 function toggleAll(checked: boolean | 'indeterminate') {
-  selectedIds.value = checked === true ? rows.value.map((row) => String(row.id)) : []
+  if (allFilteredSelected.value) {
+    if (checked === true) excludedIds.value = excludedIds.value.filter((id) => !rows.value.some((row) => String(row.id) === id))
+    else excludedIds.value = [...new Set([...excludedIds.value, ...rows.value.map((row) => String(row.id))])]
+    return
+  }
+  if (checked === true) selectedIds.value = [...new Set([...selectedIds.value, ...rows.value.map((row) => String(row.id))])]
+  else selectedIds.value = selectedIds.value.filter((id) => !rows.value.some((row) => String(row.id) === id))
 }
-function clearSelection() { selectedIds.value = [] }
+function selectAllFiltered() { allFilteredSelected.value = true; selectedIds.value = []; excludedIds.value = [] }
+function clearSelection() { selectedIds.value = []; allFilteredSelected.value = false; excludedIds.value = [] }
+function openViews() { savedViews.value = loadResourceViews(resourceName.value); viewDialogOpen.value = true }
+function saveCurrentView() {
+  const name = viewName.value.trim()
+  if (!name) return
+  saveResourceView(resourceName.value, { name, search: search.value, filters: { ...filterValues.value }, sort: sort.value, direction: direction.value, pageSize: pageSize.value, hiddenColumns: [...hiddenColumns.value] })
+  savedViews.value = loadResourceViews(resourceName.value)
+  viewName.value = ''
+}
+function applyView(view: ResourceViewState) {
+  search.value = view.search || ''
+  filterValues.value = { ...(view.filters || {}) }
+  sort.value = view.sort || 'id'
+  direction.value = view.direction || 'desc'
+  pageSize.value = view.pageSize || '10'
+  hiddenColumns.value = [...(view.hiddenColumns || [])]
+  viewDialogOpen.value = false
+  void loadRows(1)
+}
+function removeView(name: string) {
+  deleteResourceView(resourceName.value, name)
+  savedViews.value = loadResourceViews(resourceName.value)
+}
 function hasAction(name: string) {
   const action = currentManifest.value?.actions?.find((action) => action.name === name)
   return Boolean(action && auth.can(action.permission))
@@ -148,14 +204,31 @@ function openRowStatusAction(row: Record<string, unknown>) {
 function openBulkAction(action: ResourceAction) {
   if (action.kind === 'user-status') {
     bulkStatusDialogOpen.value = true
+  } else if (action.kind === 'builtin-delete' || action.kind === 'builtin-restore' || action.kind === 'builtin-force-delete') {
+    bulkDeleteAction.value = action.name
+    bulkDeleteDialogOpen.value = true
+  } else if (action.kind === 'builtin-update') {
+    bulkUpdateField.value = writableFields.value[0]?.name || ''
+    bulkUpdateValue.value = ''
+    bulkUpdateDialogOpen.value = true
   }
+}
+function selectionRequest(payload?: Record<string, unknown>): ActionRequest {
+  if (allFilteredSelected.value) {
+    const query: Record<string, string> = {}
+    for (const [key, value] of buildResourceQuery().entries()) {
+      if (!['page', 'per_page', 'sort', 'dir'].includes(key)) query[key] = value
+    }
+    return { selection: { mode: 'query', query, exclude_ids: excludedIds.value.map(Number) }, payload }
+  }
+  return { selection: { mode: 'ids', ids: selectedIds.value.map(Number) }, payload }
 }
 async function applyBulkStatus() {
   if (!auth.token || !selectedIds.value.length) return
   bulkUpdating.value = true
   error.value = ''
   try {
-    lastActionResult.value = await generatedApi.resourceAction(resourceName.value, 'set-status', { ids: selectedIds.value.map(Number), payload: { status: bulkStatus.value } }, auth.token)
+    lastActionResult.value = await generatedApi.resourceAction(resourceName.value, 'set-status', selectionRequest({ status: bulkStatus.value }), auth.token)
     bulkStatusDialogOpen.value = false
     clearSelection()
     await loadRows(meta.value.page)
@@ -163,6 +236,36 @@ async function applyBulkStatus() {
     error.value = localizedError(value)
   } finally {
     bulkUpdating.value = false
+  }
+}
+async function applyBulkDelete() {
+  if (!auth.token || !selectedCount.value) return
+  bulkDeleting.value = true
+  error.value = ''
+  try {
+    lastActionResult.value = await generatedApi.resourceAction(resourceName.value, bulkDeleteAction.value, selectionRequest(), auth.token)
+    bulkDeleteDialogOpen.value = false
+    clearSelection()
+    await loadRows(1)
+  } catch (value) {
+    error.value = localizedError(value)
+  } finally {
+    bulkDeleting.value = false
+  }
+}
+async function applyBulkUpdate() {
+  if (!auth.token || !selectedCount.value || !bulkUpdateField.value) return
+  bulkUpdateSaving.value = true
+  error.value = ''
+  try {
+    lastActionResult.value = await generatedApi.resourceAction(resourceName.value, 'bulk-update', selectionRequest({ [bulkUpdateField.value]: bulkUpdateValue.value }), auth.token)
+    bulkUpdateDialogOpen.value = false
+    clearSelection()
+    await loadRows(meta.value.page)
+  } catch (value) {
+    error.value = localizedError(value)
+  } finally {
+    bulkUpdateSaving.value = false
   }
 }
 function editPath(row: Record<string, unknown>) { return `/${resourceName.value}/${row.id}/edit` }
@@ -204,13 +307,14 @@ async function exportRows() {
 onMounted(async () => {
   try {
     await loadManifests()
+    savedViews.value = loadResourceViews(resourceName.value)
     await loadRows()
   } catch (value) {
     error.value = localizedError(value)
     loading.value = false
   }
 })
-watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {}; void loadRows(1) })
+watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; hiddenColumns.value = []; savedViews.value = loadResourceViews(resourceName.value); clearSelection(); void loadRows(1) })
 </script>
 
 <template>
@@ -220,13 +324,14 @@ watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {};
         <h1 class="text-2xl font-semibold tracking-tight">{{ currentManifest?.label || t('resource.title') }}</h1>
         <p class="text-sm text-muted-foreground">{{ t('resource.description') }}</p>
       </div>
-      <div class="flex gap-2"><Button v-if="canCreate" variant="default" @click="router.push(`/${resourceName}/new`)">{{ resourceName === 'users' ? t('resource.createUser') : resourceName === 'roles' ? t('rbac.createRole') : t('resource.create') }}</Button><Button variant="outline" :disabled="loading || exporting" @click="exportRows"><Download data-icon="inline-start" />{{ t('resource.export') }}</Button><Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
+      <div class="flex gap-2"><Button v-if="canCreate" variant="default" @click="router.push(`/${resourceName}/new`)">{{ resourceName === 'users' ? t('resource.createUser') : resourceName === 'roles' ? t('rbac.createRole') : t('resource.create') }}</Button><Button variant="outline" @click="openViews">{{ t('resource.views') }}</Button><Button variant="outline" :disabled="loading || exporting" @click="exportRows"><Download data-icon="inline-start" />{{ t('resource.export') }}</Button><Button variant="outline" :disabled="loading" @click="loadRows(meta.page)">
         <RefreshCw data-icon="inline-start" />{{ t('resource.refresh') }}
       </Button></div>
     </div>
 
-        <div v-if="selectedIds.length && batchActions.length" class="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3">
-          <span class="text-sm text-muted-foreground">{{ t('resource.selectedCount', { count: selectedIds.length }) }}</span>
+        <div v-if="selectedCount && batchActions.length" class="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3">
+          <span class="text-sm text-muted-foreground">{{ t('resource.selectedCount', { count: selectedCount }) }}</span>
+          <Button v-if="!allFilteredSelected && selectedCount === rows.length && meta.total > rows.length" variant="link" size="sm" @click="selectAllFiltered">{{ t('resource.selectAllFiltered', { count: meta.total }) }}</Button>
           <Button v-for="action in batchActions" :key="action.name" size="sm" @click="openBulkAction(action)">{{ action.label }}</Button>
           <Button variant="ghost" size="sm" @click="clearSelection">{{ t('resource.clearSelection') }}</Button>
     </div>
@@ -236,7 +341,7 @@ watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {};
     <Card>
       <CardHeader class="gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div><CardTitle>{{ currentManifest?.label || t('resource.resourceNotFound') }}</CardTitle><CardDescription>{{ t('resource.total', { count: meta.total }) }}</CardDescription></div>
-        <form class="flex w-full flex-wrap gap-2 sm:w-auto" @submit.prevent="submitSearch"><Select v-if="resourceName === 'users'" :model-value="statusFilter" @update:model-value="changeStatusFilter"><SelectTrigger class="w-32" :aria-label="t('resource.statusFilter')"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{{ t('resource.statusAll') }}</SelectItem><SelectItem v-for="status in USER_STATUSES" :key="status" :value="status">{{ t(userStatusLabelKey(status)) }}</SelectItem></SelectContent></Select><Select v-for="field in filterFields" :key="field.name" :model-value="filterValues[field.name] || 'all'" @update:model-value="changeResourceFilter(field.name, $event)"><SelectTrigger class="w-36" :aria-label="field.label"><SelectValue :placeholder="field.label" /></SelectTrigger><SelectContent><SelectItem v-for="option in filterOptions(field)" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select><Input v-model="search" class="sm:w-64" :placeholder="t('resource.searchPlaceholder')" :aria-label="t('resource.search')" /><Button type="submit" size="icon" :aria-label="t('resource.search')"><Search /></Button></form>
+        <form class="flex w-full flex-wrap gap-2 sm:w-auto" @submit.prevent="submitSearch"><Select v-if="currentManifest?.soft_delete" :model-value="trashed" @update:model-value="(value) => { trashed = String(value); clearSelection(); void loadRows(1) }"><SelectTrigger class="w-32" :aria-label="t('resource.trashFilter')"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">{{ t('resource.activeRecords') }}</SelectItem><SelectItem value="only">{{ t('resource.trashedRecords') }}</SelectItem><SelectItem value="with">{{ t('resource.allRecords') }}</SelectItem></SelectContent></Select><template v-for="field in filters" :key="field.name"><Select v-if="field.type === 'select' || field.type === 'multi-select' || field.type === 'boolean'" :model-value="filterValues[field.name] || 'all'" @update:model-value="changeResourceFilter(field.name, $event)"><SelectTrigger class="w-36" :aria-label="field.label"><SelectValue :placeholder="field.label" /></SelectTrigger><SelectContent><SelectItem v-for="option in filterOptions(field)" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select><Input v-else v-model="filterValues[field.name]" class="w-44" :type="field.type === 'date-range' ? 'text' : 'search'" :placeholder="field.type === 'date-range' ? `${field.label} (YYYY-MM-DD..YYYY-MM-DD)` : field.label" /></template><Input v-model="search" class="sm:w-64" :placeholder="t('resource.searchPlaceholder')" :aria-label="t('resource.search')" /><Button type="submit" size="icon" :aria-label="t('resource.search')"><Search /></Button></form>
       </CardHeader>
       <CardContent>
         <div v-if="loading" class="flex flex-col gap-3"><Skeleton v-for="item in 5" :key="item" class="h-10" /></div>
@@ -246,6 +351,9 @@ watch(resourceName, () => { statusFilter.value = 'all'; filterValues.value = {};
       </CardContent>
     </Card>
     <AlertDialog v-model:open="deleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.deleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.deleteDescription') }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="deleting" @click="deleteRow">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
-    <AlertDialog v-model:open="bulkStatusDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkStatusTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkStatusDescription', { count: selectedIds.length, status: t(userStatusLabelKey(bulkStatus)) }) }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkUpdating" @click="applyBulkStatus">{{ t('resource.applyStatus') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    <AlertDialog v-model:open="bulkStatusDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkStatusTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkStatusDescription', { count: selectedCount, status: t(userStatusLabelKey(bulkStatus)) }) }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkUpdating" @click="applyBulkStatus">{{ t('resource.applyStatus') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    <AlertDialog v-model:open="bulkDeleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkDeleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkDeleteDescription', { count: selectedCount }) }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkDeleting" @click="applyBulkDelete">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    <Dialog v-model:open="bulkUpdateDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ t('resource.bulkUpdateTitle') }}</DialogTitle><DialogDescription>{{ t('resource.bulkUpdateDescription', { count: selectedCount }) }}</DialogDescription></DialogHeader><div class="grid gap-3"><Select v-model="bulkUpdateField"><SelectTrigger><SelectValue :placeholder="t('resource.bulkUpdateField')" /></SelectTrigger><SelectContent><SelectItem v-for="field in writableFields" :key="field.name" :value="field.name">{{ field.label }}</SelectItem></SelectContent></Select><Input v-model="bulkUpdateValue" :placeholder="t('resource.bulkUpdateValue')" /></div><DialogFooter><Button variant="outline" @click="bulkUpdateDialogOpen = false">{{ t('resource.cancel') }}</Button><Button :disabled="bulkUpdateSaving || !bulkUpdateField" @click="applyBulkUpdate">{{ t('resource.applyStatus') }}</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog v-model:open="viewDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ t('resource.views') }}</DialogTitle><DialogDescription>{{ t('resource.viewsDescription') }}</DialogDescription></DialogHeader><div class="grid gap-3"><div class="flex gap-2"><Input v-model="viewName" :placeholder="t('resource.viewName')" /><Button @click="saveCurrentView">{{ t('resource.saveView') }}</Button></div><div class="grid gap-2"><label class="text-sm font-medium">{{ t('resource.visibleColumns') }}</label><label v-for="column in currentManifest?.columns || []" :key="column.name" class="flex items-center gap-2 text-sm"><Checkbox :checked="!hiddenColumns.includes(column.name)" @click="hiddenColumns = hiddenColumns.includes(column.name) ? hiddenColumns.filter((name) => name !== column.name) : hiddenColumns.filter((name) => name !== column.name).concat(column.name)" />{{ column.label }}</label></div><div v-if="savedViews.length" class="grid gap-2"><label class="text-sm font-medium">{{ t('resource.savedViews') }}</label><div v-for="view in savedViews" :key="view.name" class="flex items-center justify-between rounded border p-2 text-sm"><Button variant="ghost" size="sm" @click="applyView(view)">{{ view.name }}</Button><Button variant="ghost" size="sm" @click="removeView(view.name)">{{ t('resource.delete') }}</Button></div></div></div></DialogContent></Dialog>
   </div>
 </template>

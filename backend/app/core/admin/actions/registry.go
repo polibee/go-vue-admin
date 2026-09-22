@@ -8,13 +8,14 @@ import (
 )
 
 var (
-	ErrEmptyIDs         = errors.New("action IDs are required")
-	ErrInvalidID        = errors.New("action ID must be positive")
-	ErrTooManyIDs       = errors.New("too many action IDs")
-	ErrDuplicateHandler = errors.New("action handler kind already registered")
-	ErrHandlerNotFound  = errors.New("action handler not found")
-	ErrActionNotBatch   = errors.New("action does not support batch execution")
-	ErrPayloadContract  = errors.New("action payload contract is invalid")
+	ErrEmptyIDs          = errors.New("action IDs are required")
+	ErrInvalidID         = errors.New("action ID must be positive")
+	ErrTooManyIDs        = errors.New("too many action IDs")
+	ErrDuplicateHandler  = errors.New("action handler kind already registered")
+	ErrHandlerNotFound   = errors.New("action handler not found")
+	ErrActionNotBatch    = errors.New("action does not support batch execution")
+	ErrPayloadContract   = errors.New("action payload contract is invalid")
+	ErrSelectionContract = errors.New("selection contract is invalid")
 )
 
 const MaxIDs = 100
@@ -23,6 +24,32 @@ type Request struct {
 	Action  string
 	IDs     []int64
 	Payload map[string]any
+}
+
+// Selection describes the records targeted by a batch operation. IDs are
+// explicit and query mode is re-evaluated by the server under the caller's
+// current resource scope.
+type Selection struct {
+	Mode       string            `json:"mode"`
+	IDs        []int64           `json:"ids,omitempty"`
+	Query      map[string]string `json:"query,omitempty"`
+	ExcludeIDs []int64           `json:"exclude_ids,omitempty"`
+}
+
+func (s Selection) Validate() error {
+	switch s.Mode {
+	case "ids":
+		if len(s.IDs) == 0 || len(s.Query) != 0 {
+			return ErrSelectionContract
+		}
+	case "query":
+		if len(s.Query) == 0 && len(s.IDs) == 0 {
+			return ErrSelectionContract
+		}
+	default:
+		return ErrSelectionContract
+	}
+	return nil
 }
 
 type Failure struct {

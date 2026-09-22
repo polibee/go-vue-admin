@@ -22,7 +22,7 @@ func TestAdminRegistryExposesFormFields(t *testing.T) {
 			t.Fatalf("field %d = %+v, want %s/%s", index, field, want.name, want.fieldType)
 		}
 	}
-	if len(manifest.Actions) != 5 {
+	if len(manifest.Actions) != 7 {
 		t.Fatalf("expected standard CRUD and user status actions, got %+v", manifest.Actions)
 	}
 	for _, action := range manifest.Actions[:4] {
@@ -30,7 +30,7 @@ func TestAdminRegistryExposesFormFields(t *testing.T) {
 			t.Fatalf("action %q has permission %q, want admin.users.manage", action.Name, action.Permission)
 		}
 	}
-	if manifest.Actions[4].Name != "set-status" || manifest.Actions[4].Kind != "user-status" || !manifest.Actions[4].Batch || manifest.Actions[4].Payload != "user-status" {
+	if manifest.Actions[6].Name != "set-status" || manifest.Actions[6].Kind != "user-status" || !manifest.Actions[6].Batch || manifest.Actions[6].Payload != "user-status" {
 		t.Fatalf("expected declarative user status action, got %+v", manifest.Actions[4])
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/goravel/framework/contracts/http"
 
@@ -182,6 +183,12 @@ func (r *ResourceController) Delete(ctx http.Context) http.Response {
 			return roleServiceError(ctx, err)
 		}
 		recordManagementAudit(ctx, "role.delete", map[string]any{"target_role_id": id})
+		return ctx.Response().NoContent(204)
+	}
+	if manifest.SoftDelete {
+		if _, err := facades.Orm().Query().Table(manifest.Table).Where("id = ?", id).Update(map[string]any{"deleted_at": time.Now().UTC()}); err != nil {
+			return ctx.Response().Status(500).Json(http.Json{"code": "INTERNAL_ERROR"})
+		}
 		return ctx.Response().NoContent(204)
 	}
 	if _, err := facades.Orm().Query().Table(manifest.Table).Where("id = ?", id).Delete(); err != nil {

@@ -7,11 +7,12 @@ import { ApiError, apiDownload, apiFetch, apiFetchEnvelope } from '@/lib/api'
 export type UserStatus = "active" | "disabled" | "locked"
 export type DataScope = "all" | "own"
 export interface ResourceField { name: string; label: string; type: string; required?: boolean; visible: boolean; readable: boolean; writable: boolean; sensitive: boolean; options?: Array<{ value: string; label: string }> }
+export interface ResourceFilter { name: string; label: string; type: 'select' | 'multi-select' | 'boolean' | 'text' | 'date-range' | 'relation'; options?: Array<{ value: string; label: string }>; relation?: string }
 export interface AuthUser { id: number; name: string; email: string; status: UserStatus; locale: string; permissions: string[] }
 export interface LoginRequest { email: string; password: string }
 export interface LoginResponse { access_token: string; token_type: string; user: AuthUser }
 export interface RefreshResponse { access_token: string; token_type: string }
-export interface ResourceManifest { name: string; label: string; route: string; permissions: string[]; navigation?: { group: string; order: number; hidden?: boolean }; data_scope?: DataScope; owner_field?: string; fields: ResourceField[]; columns: Array<{ name: string; label: string; sortable: boolean }>; actions?: Array<{ name: string; label: string; kind: string; permission: string; batch: boolean; payload?: string }>; relations?: ResourceRelation[]; form_groups?: ResourceFormGroup[]; details?: ResourceDetailSection[]; dependencies?: ResourceFieldDependency[] }
+export interface ResourceManifest { name: string; label: string; route: string; permissions: string[]; navigation?: { group: string; order: number; hidden?: boolean }; data_scope?: DataScope; owner_field?: string; soft_delete?: boolean; fields: ResourceField[]; columns: Array<{ name: string; label: string; sortable: boolean }>; actions?: Array<{ name: string; label: string; kind: string; permission: string; batch: boolean; payload?: string }>; filters?: ResourceFilter[]; relations?: ResourceRelation[]; form_groups?: ResourceFormGroup[]; details?: ResourceDetailSection[]; dependencies?: ResourceFieldDependency[] }
 export interface ResourceRelation { name: string; kind: 'belongsTo' | 'hasMany'; resource: string; field: string; foreign_field: string; label_field: string; selectable: boolean; multiple: boolean; permission?: string; filter_fields?: string[] }
 export interface ResourceFormGroup { name: string; label: string; columns?: number; fields: string[] }
 export interface ResourceDetailSection { name: string; label: string; fields: string[] }
@@ -19,7 +20,8 @@ export interface ResourceFieldDependency { field: string; on: string; value: str
 export interface RelationOption { value: string; label: string }
 export interface ResourceListMeta { page: number; per_page: number; total: number; last_page: number }
 export interface ResourceList<T = Record<string, unknown>> { data: T[]; meta: ResourceListMeta }
-export interface ActionRequest { ids: number[]; payload?: Record<string, unknown> }
+export interface ActionSelection { mode: 'ids' | 'query'; ids?: number[]; query?: Record<string, string>; exclude_ids?: number[] }
+export interface ActionRequest { ids?: number[]; selection?: ActionSelection; payload?: Record<string, unknown> }
 export interface ActionFailure { id: number; code: string }
 export interface ActionResponse { action: string; requested: number; succeeded: number; failed: number; skipped: number; failures: ActionFailure[]; skips: ActionFailure[] }
 export interface AdminOverview { users: number; roles: number; permissions: number }

@@ -40,6 +40,7 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		Sort:    ctx.Request().Query("sort", "id"),
 		Dir:     strings.ToLower(ctx.Request().Query("dir", "desc")),
 	}
+	trashed := strings.ToLower(strings.TrimSpace(ctx.Request().Query("trashed")))
 	if query.PerPage > 100 {
 		query.PerPage = 100
 	}
@@ -58,6 +59,7 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		if manifestErr != nil {
 			return resourceScopeError(ctx, manifestErr)
 		}
+		q = applySoftDeleteFilter(q, manifest, trashed)
 		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
 		if query.Status != "" {
 			q = q.Where("status = ?", query.Status)
@@ -70,6 +72,7 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		if manifestErr != nil {
 			return resourceScopeError(ctx, manifestErr)
 		}
+		q = applySoftDeleteFilter(q, manifest, trashed)
 		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
 		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "display_name": true}, "id")
 	case "permissions":
@@ -79,6 +82,7 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		if manifestErr != nil {
 			return resourceScopeError(ctx, manifestErr)
 		}
+		q = applySoftDeleteFilter(q, manifest, trashed)
 		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
 		query.Sort = allowedSort(query.Sort, map[string]bool{"id": true, "name": true, "display_name": true}, "id")
 	default:
@@ -88,6 +92,7 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		if manifestErr != nil {
 			return resourceScopeError(ctx, manifestErr)
 		}
+		q = applySoftDeleteFilter(q, manifest, trashed)
 		searchColumns := make([]string, 0, len(manifest.Columns))
 		allowedColumns := make(map[string]bool, len(manifest.Columns)+1)
 		allowedColumns["id"] = true
@@ -100,8 +105,12 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		q = applyResourceSearch(q, query.Search, fieldNames(resourceSearchFieldsWithPolicies(manifest, fieldPolicies))...)
 		for _, field := range resourceFilterFieldsWithPolicies(manifest, fieldPolicies) {
 			value := strings.TrimSpace(ctx.Request().Query(field.Name))
-			if value != "" && value != "all" && resourceFilterValueAllowed(field, value) {
-				q = q.Where(field.Name+" = ?", value)
+			if value != "" && value != "all" {
+				var valid bool
+				q, valid = applyResourceFilter(q, field, value)
+				if !valid {
+					return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR"})
+				}
 			}
 		}
 		query.Sort = allowedSort(query.Sort, allowedColumns, "id")
@@ -139,6 +148,20 @@ func (r *ResourceController) List(ctx http.Context) http.Response {
 		return resourceListResponse(ctx, items, query, total)
 	}
 	return resourceListResponse(ctx, rows, query, total)
+}
+
+func applySoftDeleteFilter(query orm.Query, manifest resource.Manifest, trashed string) orm.Query {
+	if !manifest.SoftDelete {
+		return query
+	}
+	switch trashed {
+	case "only":
+		return query.WhereNotNull("deleted_at")
+	case "with":
+		return query
+	default:
+		return query.WhereNull("deleted_at")
+	}
 }
 
 func normalizeUserStatusFilter(status string) string {
@@ -182,6 +205,17 @@ func resourceFilterFields(manifest resource.Manifest) []resource.Field {
 }
 
 func resourceFilterFieldsWithPolicies(manifest resource.Manifest, policies map[string]rbacservices.FieldPolicy) []resource.Field {
+	if len(manifest.Filters) > 0 {
+		fields := make([]resource.Field, 0, len(manifest.Filters))
+		for _, filter := range manifest.Filters {
+			policy := policies[filter.Name]
+			if filter.Type == "relation" || !policy.Visible || !policy.Readable {
+				continue
+			}
+			fields = append(fields, resource.Field{Name: filter.Name, Label: filter.Label, Type: filter.Type, Options: filter.Options, Visible: true, Readable: true})
+		}
+		return fields
+	}
 	fields := make([]resource.Field, 0)
 	for _, field := range manifest.Fields {
 		policy := policies[field.Name]
@@ -213,6 +247,37 @@ func resourceFilterValueAllowed(field resource.Field, value string) bool {
 		}
 	}
 	return false
+}
+
+func applyResourceFilter(query orm.Query, field resource.Field, value string) (orm.Query, bool) {
+	switch field.Type {
+	case "multi-select":
+		values := strings.Split(value, ",")
+		args := make([]any, 0, len(values))
+		for _, item := range values {
+			item = strings.TrimSpace(item)
+			if item == "" || !resourceFilterValueAllowed(resource.Field{Type: "select", Options: field.Options}, item) {
+				return query, false
+			}
+			args = append(args, item)
+		}
+		return query.WhereIn(field.Name, args), true
+	case "text":
+		return query.Where(field.Name+" LIKE ?", "%"+value+"%"), true
+	case "date-range":
+		parts := strings.Split(value, "..")
+		if len(parts) != 2 || strings.TrimSpace(parts[0]) == "" || strings.TrimSpace(parts[1]) == "" {
+			return query, false
+		}
+		return query.WhereBetween(field.Name, strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])), true
+	case "boolean", "select":
+		if !resourceFilterValueAllowed(field, value) {
+			return query, false
+		}
+		return query.Where(field.Name+" = ?", value), true
+	default:
+		return query, false
+	}
 }
 
 func allowedSort(value string, allowed map[string]bool, fallback string) string {

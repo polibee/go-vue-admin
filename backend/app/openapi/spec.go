@@ -15,6 +15,7 @@ func Spec() map[string]any {
 				"Error":                   map[string]any{"type": "object", "required": []string{"code"}, "properties": map[string]any{"code": map[string]any{"type": "string"}}},
 				"ResourceOption":          resourceOptionSchema(),
 				"ResourceField":           resourceFieldSchema(),
+				"ResourceFilter":          resourceFilterSchema(),
 				"ResourceColumn":          resourceColumnSchema(),
 				"ResourceAction":          resourceActionSchema(),
 				"ResourceRelation":        resourceRelationSchema(),
@@ -42,7 +43,7 @@ func Spec() map[string]any {
 			"/admin/registry":  map[string]any{"get": operation("listResources")},
 			"/admin/search":    map[string]any{"get": globalSearchOperation()},
 			"/admin/{resource}": map[string]any{
-				"get":  listOperation("listResourceRows", []map[string]any{pathParameter("resource"), queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("search", "string"), queryParameter("sort", "string"), queryParameter("dir", "string")}),
+				"get":  listOperation("listResourceRows", []map[string]any{pathParameter("resource"), queryParameter("page", "integer"), queryParameter("per_page", "integer"), queryParameter("search", "string"), queryParameter("sort", "string"), queryParameter("dir", "string"), queryParameter("trashed", "string")}),
 				"post": resourceWriteOperation("createResource", "201"),
 			},
 			"/admin/{resource}/export":                       exportOperation(),
@@ -85,12 +86,16 @@ func resourceColumnSchema() map[string]any {
 	return map[string]any{"type": "object", "required": []string{"name", "label", "sortable"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "sortable": map[string]any{"type": "boolean"}}}
 }
 
+func resourceFilterSchema() map[string]any {
+	return map[string]any{"type": "object", "required": []string{"name", "label", "type"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "type": map[string]any{"type": "string", "enum": []string{"select", "multi-select", "boolean", "text", "date-range", "relation"}}, "options": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceOption"}}, "relation": map[string]any{"type": "string"}}}
+}
+
 func resourceActionSchema() map[string]any {
 	return map[string]any{"type": "object", "required": []string{"name", "label", "permission", "batch"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "kind": map[string]any{"type": "string"}, "permission": map[string]any{"type": "string"}, "batch": map[string]any{"type": "boolean"}, "payload": map[string]any{"type": "string"}}}
 }
 
 func resourceManifestSchema() map[string]any {
-	return map[string]any{"type": "object", "required": []string{"name", "label", "route", "permissions", "navigation", "fields", "columns"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "route": map[string]any{"type": "string"}, "permissions": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}, "navigation": map[string]any{"type": "object", "required": []string{"group", "order"}, "properties": map[string]any{"group": map[string]any{"type": "string"}, "order": map[string]any{"type": "integer"}, "hidden": map[string]any{"type": "boolean"}}}, "data_scope": map[string]any{"$ref": "#/components/schemas/DataScope"}, "owner_field": map[string]any{"type": "string"}, "fields": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceField"}}, "columns": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceColumn"}}, "actions": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceAction"}}, "relations": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceRelation"}}, "form_groups": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceFormGroup"}}, "details": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceDetailSection"}}, "dependencies": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceFieldDependency"}}}}
+	return map[string]any{"type": "object", "required": []string{"name", "label", "route", "permissions", "navigation", "fields", "columns"}, "properties": map[string]any{"name": map[string]any{"type": "string"}, "label": map[string]any{"type": "string"}, "route": map[string]any{"type": "string"}, "permissions": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}, "navigation": map[string]any{"type": "object", "required": []string{"group", "order"}, "properties": map[string]any{"group": map[string]any{"type": "string"}, "order": map[string]any{"type": "integer"}, "hidden": map[string]any{"type": "boolean"}}}, "data_scope": map[string]any{"$ref": "#/components/schemas/DataScope"}, "owner_field": map[string]any{"type": "string"}, "soft_delete": map[string]any{"type": "boolean"}, "fields": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceField"}}, "columns": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceColumn"}}, "actions": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceAction"}}, "filters": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceFilter"}}, "relations": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceRelation"}}, "form_groups": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceFormGroup"}}, "details": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceDetailSection"}}, "dependencies": map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ResourceFieldDependency"}}}}
 }
 
 func resourceRelationSchema() map[string]any {
@@ -114,8 +119,9 @@ func relationOptionSchema() map[string]any {
 }
 
 func actionRequestSchema() map[string]any {
-	return map[string]any{"type": "object", "required": []string{"ids"}, "properties": map[string]any{
-		"ids":     map[string]any{"type": "array", "minItems": 1, "maxItems": 100, "items": map[string]any{"type": "integer", "format": "int64"}},
+	return map[string]any{"type": "object", "properties": map[string]any{
+		"ids":     map[string]any{"type": "array", "minItems": 1, "maxItems": 1000, "items": map[string]any{"type": "integer", "format": "int64"}},
+		"selection": map[string]any{"type": "object", "required": []string{"mode"}, "properties": map[string]any{"mode": map[string]any{"type": "string", "enum": []string{"ids", "query"}}, "ids": map[string]any{"type": "array", "items": map[string]any{"type": "integer", "format": "int64"}}, "query": map[string]any{"type": "object", "additionalProperties": map[string]any{"type": "string"}}, "exclude_ids": map[string]any{"type": "array", "items": map[string]any{"type": "integer", "format": "int64"}}}},
 		"payload": map[string]any{"type": "object", "additionalProperties": true},
 	}}
 }

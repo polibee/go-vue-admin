@@ -16,6 +16,7 @@ func AdminRegistry() *resource.Registry {
 		},
 		Columns: []resource.Column{{Name: "name", Label: "Name", Sortable: true}, {Name: "email", Label: "Email", Sortable: true}, {Name: "status", Label: "Status", Sortable: true}},
 		Actions: append(standardActions("admin.users.manage"), resource.Action{Name: "set-status", Label: "Set status", Kind: "user-status", Permission: "admin.users.manage", Batch: true, Payload: "user-status"}),
+		Filters: []resource.Filter{{Name: "status", Label: "Status", Type: "select", Options: []resource.Option{{Value: "active", Label: "Active"}, {Value: "disabled", Label: "Disabled"}, {Value: "locked", Label: "Locked"}}}},
 	})
 	_ = registry.Register(resource.Manifest{
 		Name: "roles", Label: "Roles", Route: "/admin/roles", Table: "roles", Permissions: []string{"admin.roles.manage"}, DataScope: resource.DataScopeAll, Navigation: resource.Navigation{Group: "system", Order: 20},
@@ -37,5 +38,7 @@ func standardActions(permission string) []resource.Action {
 		{Name: "create", Label: "Create", Permission: permission},
 		{Name: "update", Label: "Update", Permission: permission},
 		{Name: "delete", Label: "Delete", Permission: permission},
+		{Name: "bulk-delete", Label: "Delete selected", Kind: "builtin-delete", Permission: permission, Batch: true, Payload: "delete"},
+		{Name: "bulk-update", Label: "Update selected", Kind: "builtin-update", Permission: permission, Batch: true, Payload: "fields"},
 	}
 }
