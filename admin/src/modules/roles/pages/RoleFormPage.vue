@@ -68,10 +68,10 @@ async function submit() {
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex items-center gap-3">
+    <div class="flex flex-wrap items-start gap-3">
       <Button variant="ghost" size="icon" :aria-label="t('resource.back')" @click="router.push(adminRoute('roles'))"><ArrowLeft /></Button>
       <div class="min-w-0 flex-1"><h1 class="text-2xl font-semibold tracking-tight">{{ editing ? t('rbac.editRole') : t('rbac.createRole') }}</h1><p class="text-sm text-muted-foreground">{{ t('rbac.roleFormDescription') }}</p></div>
-      <Button v-if="editing" type="button" variant="outline" class="shrink-0" @click="openRoleDetail"><Eye data-icon="inline-start" />{{ t('resource.viewDetails') }}</Button>
+      <Button v-if="editing" type="button" variant="outline" class="w-full sm:w-auto" @click="openRoleDetail"><Eye data-icon="inline-start" />{{ t('resource.viewDetails') }}</Button>
     </div>
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Card v-if="loading"><CardContent class="py-8">{{ t('resource.loading') }}</CardContent></Card>
