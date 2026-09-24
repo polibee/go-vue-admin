@@ -40,9 +40,9 @@ const breadcrumbResource = computed(() => {
   return generatedResource || ''
 })
 const breadcrumbLabel = computed(() => {
-  if (route.name === 'home') return t('auth.dashboard')
-  if (route.name === 'rbac') return t('rbac.title')
-  if (route.name === 'audit-logs') return t('auth.auditLogs')
+  if (route.name === 'admin-home') return t('auth.dashboard')
+  if (route.name === 'admin-rbac') return t('rbac.title')
+  if (route.name === 'admin-audit-logs') return t('auth.auditLogs')
   const resource = resourceManifests.value.find((item) => item.name === breadcrumbResource.value)
   return resource ? localizedResourceLabel(t, te, resource.name, resource.label) : breadcrumbResource.value || t('auth.dashboard')
 })
@@ -58,12 +58,12 @@ function toggleLocale() {
 
 async function logout() {
   await auth.logout()
-  await router.replace({ name: 'login' })
+  await router.replace({ name: 'admin-login' })
 }
 
 async function logoutAll() {
   await auth.logoutAll()
-  await router.replace({ name: 'login' })
+  await router.replace({ name: 'admin-login' })
 }
 
 function openResource(resource: { name: string; route: string }) {
@@ -146,20 +146,20 @@ onBeforeUnmount(() => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton as-child :is-active="true" :tooltip="t('auth.dashboard')">
-                  <RouterLink to="/">
+                  <RouterLink to="/admin">
                     <LayoutDashboard />
                     <span>{{ t('auth.dashboard') }}</span>
                   </RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem v-if="auth.canAny(['admin.users.view', 'admin.roles.manage', 'admin.permissions.manage'])">
-                <SidebarMenuButton as-child :is-active="$route.name === 'rbac'" :tooltip="t('rbac.title')">
-                  <RouterLink to="/rbac"><ShieldCheck /><span>{{ t('rbac.title') }}</span></RouterLink>
+                <SidebarMenuButton as-child :is-active="$route.name === 'admin-rbac'" :tooltip="t('rbac.title')">
+                  <RouterLink to="/admin/rbac"><ShieldCheck /><span>{{ t('rbac.title') }}</span></RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem v-if="auth.can('admin.users.view')">
-                <SidebarMenuButton as-child :is-active="$route.name === 'audit-logs'" :tooltip="t('auth.auditLogs')">
-                  <RouterLink to="/audit-logs"><ClipboardList /><span>{{ t('auth.auditLogs') }}</span></RouterLink>
+                <SidebarMenuButton as-child :is-active="$route.name === 'admin-audit-logs'" :tooltip="t('auth.auditLogs')">
+                  <RouterLink to="/admin/audit-logs"><ClipboardList /><span>{{ t('auth.auditLogs') }}</span></RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

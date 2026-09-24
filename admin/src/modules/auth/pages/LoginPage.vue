@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { ApiError, errorMessageKey } from '@/lib/api'
 import { DEMO_CREDENTIALS, type DemoCredentialKey } from '@/lib/login-demo'
 import { useAuthStore } from '@/stores/auth'
+import { safeAdminRedirect } from '@/router/admin-routing'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -50,7 +51,7 @@ async function submit() {
   isSubmitting.value = true
   try {
     await auth.login(email.value, password.value)
-    await router.replace(typeof route.query.redirect === 'string' ? route.query.redirect : '/')
+    await router.replace(safeAdminRedirect(typeof route.query.redirect === 'string' ? route.query.redirect : undefined))
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? t(errorMessageKey(error.code)) : t('errors.unknown')
   } finally {

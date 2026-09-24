@@ -14,7 +14,7 @@ const router = useRouter()
       <AlertTitle>{{ t('states.forbiddenTitle') }}</AlertTitle>
       <AlertDescription class="flex flex-col gap-4">
         {{ t('states.forbiddenDescription') }}
-        <Button variant="outline" class="w-fit" @click="router.replace('/')">{{ t('states.backHome') }}</Button>
+        <Button variant="outline" class="w-fit" @click="router.replace('/admin')">{{ t('states.backHome') }}</Button>
       </AlertDescription>
     </Alert>
   </main>
