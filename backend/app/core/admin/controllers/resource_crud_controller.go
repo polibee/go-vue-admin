@@ -56,7 +56,7 @@ func (r *ResourceController) Create(ctx http.Context) http.Response {
 	}
 	values, err := bindGeneratedValues(ctx, manifest, "create")
 	if err != nil {
-		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR", "message": err.Error()})
+		return validationErrorResponse(ctx, err)
 	}
 	if err := enforceResourceCreateOwner(ctx, manifest, values); err != nil {
 		return resourceScopeError(ctx, err)
@@ -143,7 +143,7 @@ func (r *ResourceController) Update(ctx http.Context) http.Response {
 	}
 	values, err := bindGeneratedValues(ctx, manifest, "update")
 	if err != nil {
-		return ctx.Response().Status(422).Json(http.Json{"code": "VALIDATION_ERROR", "message": err.Error()})
+		return validationErrorResponse(ctx, err)
 	}
 	if err := validateResourceRelations(ctx, manifest, values); err != nil {
 		return relationWriteError(ctx, err)
@@ -249,6 +249,28 @@ func fieldWriteError(ctx http.Context, err error) http.Response {
 	return resourceScopeError(ctx, err)
 }
 
+// validationFieldError carries the offending field name so the API can return it
+// as a structured key and clients do not have to parse the message text.
+type validationFieldError struct {
+	Field   string
+	Message string
+}
+
+func (e validationFieldError) Error() string { return e.Message }
+
+func newValidationFieldError(field, message string) error {
+	return validationFieldError{Field: field, Message: message}
+}
+
+func validationErrorResponse(ctx http.Context, err error) http.Response {
+	payload := http.Json{"code": "VALIDATION_ERROR", "message": err.Error()}
+	var fieldError validationFieldError
+	if errors.As(err, &fieldError) && fieldError.Field != "" {
+		payload["field"] = fieldError.Field
+	}
+	return ctx.Response().Status(422).Json(payload)
+}
+
 func validateGeneratedValues(payload map[string]any, manifest resource.Manifest) (map[string]any, error) {
 	values := make(map[string]any)
 	fields := make(map[string]resource.Field, len(manifest.Fields))
@@ -269,7 +291,7 @@ func validateGeneratedValues(payload map[string]any, manifest resource.Manifest)
 		if field.Required {
 			value, exists := values[field.Name]
 			if !exists || value == nil || (field.Type != "boolean" && strings.TrimSpace(fmt.Sprint(value)) == "") {
-				return nil, fmt.Errorf("required field %q is missing", field.Name)
+				return nil, newValidationFieldError(field.Name, fmt.Sprintf("required field %q is missing", field.Name))
 			}
 		}
 	}
@@ -283,18 +305,18 @@ func validateGeneratedField(field resource.Field, value any) error {
 	switch field.Type {
 	case "boolean":
 		if _, ok := value.(bool); !ok {
-			return fmt.Errorf("field %q must be boolean", field.Name)
+			return newValidationFieldError(field.Name, fmt.Sprintf("field %q must be boolean", field.Name))
 		}
 	case "integer":
 		switch value.(type) {
 		case float64, float32, int, int32, int64:
 		default:
-			return fmt.Errorf("field %q must be integer", field.Name)
+			return newValidationFieldError(field.Name, fmt.Sprintf("field %q must be integer", field.Name))
 		}
 	case "select":
 		text, ok := value.(string)
 		if !ok {
-			return fmt.Errorf("field %q must be a select value", field.Name)
+			return newValidationFieldError(field.Name, fmt.Sprintf("field %q must be a select value", field.Name))
 		}
 		if len(field.Options) > 0 {
 			for _, option := range field.Options {
@@ -302,7 +324,7 @@ func validateGeneratedField(field resource.Field, value any) error {
 					return nil
 				}
 			}
-			return fmt.Errorf("field %q has an invalid option", field.Name)
+			return newValidationFieldError(field.Name, fmt.Sprintf("field %q has an invalid option", field.Name))
 		}
 	}
 	return nil

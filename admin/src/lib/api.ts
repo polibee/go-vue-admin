@@ -33,15 +33,18 @@ export function errorMessageKey(code?: string) {
 export class ApiError extends Error {
   readonly status: number
   readonly code?: string
+  readonly field?: string
 
   constructor(
     message: string,
     status: number,
     code?: string,
+    field?: string,
   ) {
     super(message)
     this.status = status
     this.code = code
+    this.field = field
   }
 }
 
@@ -53,9 +56,9 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, token?: 
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers, credentials: 'include' })
-  const payload = await response.json().catch(() => null) as { data?: T; code?: string; message?: string } | null
+  const payload = await response.json().catch(() => null) as { data?: T; code?: string; message?: string; field?: string } | null
   if (!response.ok) {
-    throw new ApiError(payload?.message ?? 'Request failed', response.status, payload?.code)
+    throw new ApiError(payload?.message ?? 'Request failed', response.status, payload?.code, payload?.field)
   }
 
   return (payload?.data ?? payload) as T
@@ -69,9 +72,9 @@ export async function apiFetchEnvelope<T>(path: string, init: RequestInit = {}, 
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers, credentials: 'include' })
-  const payload = await response.json().catch(() => null) as { data?: T; meta?: Record<string, unknown>; code?: string; message?: string } | null
+  const payload = await response.json().catch(() => null) as { data?: T; meta?: Record<string, unknown>; code?: string; message?: string; field?: string } | null
   if (!response.ok) {
-    throw new ApiError(payload?.message ?? 'Request failed', response.status, payload?.code)
+    throw new ApiError(payload?.message ?? 'Request failed', response.status, payload?.code, payload?.field)
   }
 
   return { data: (payload?.data ?? payload) as T, meta: payload?.meta }
