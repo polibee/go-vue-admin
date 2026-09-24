@@ -39,3 +39,19 @@ test('defaults a new user resource to active status', () => {
 
   assert.equal(form.status, 'active')
 })
+
+test('defaults a generated status select to its own declared option', () => {
+  const form = createResourceForm([
+    {
+      name: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'draft', label: 'Draft' },
+        { value: 'published', label: 'Published' },
+      ],
+    },
+  ])
+
+  assert.equal(form.status, 'draft')
+})

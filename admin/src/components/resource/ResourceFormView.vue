@@ -68,7 +68,9 @@ function inputType(field: ResourceFormField) { return field.type === 'email' || 
 function isBoolean(field: ResourceFormField) { return field.type === 'boolean' }
 function isSelect(field: ResourceFormField) { return field.type === 'select' }
 function isNumber(field: ResourceFormField) { return field.type === 'number' }
-function fieldRequired(field: ResourceFormField) { return !editing.value && field.required === true }
+// Required is enforced by the API on update as well, so the field hint must not
+// depend on create mode.
+function fieldRequired(field: ResourceFormField) { return field.required === true }
 function relationForField(field: ResourceFormField) { return selectableRelations.value.find((relation) => relation.field === field.name) }
 function fieldVisible(field: ResourceFormField) {
   const dependency = props.resource.dependencies?.find((item) => item.field === field.name)
@@ -105,10 +107,11 @@ function localizedError(value: unknown) { return value instanceof ApiError ? t(e
 const debouncedRelationSearch = useDebounceFn((relation?: { name: string; field: string }) => { if (relation) void loadRelationOptions(relation, false) }, 300)
 function captureFieldError(value: unknown) {
   if (!(value instanceof ApiError)) return
-  const match = value.message.match(/field "([a-zA-Z0-9_]+)"/)
-  if (!match) return
-  fieldErrors.value = { [match[1]]: localizedError(value) }
-  requestAnimationFrame(() => document.getElementById(fieldId({ name: match[1] } as ResourceFormField))?.focus())
+  // Prefer the structured field key; fall back to the legacy message format.
+  const field = value.field ?? value.message.match(/field "([a-zA-Z0-9_]+)"/)?.[1]
+  if (!field) return
+  fieldErrors.value = { [field]: localizedError(value) }
+  requestAnimationFrame(() => document.getElementById(fieldId({ name: field } as ResourceFormField))?.focus())
 }
 
 onMounted(async () => {

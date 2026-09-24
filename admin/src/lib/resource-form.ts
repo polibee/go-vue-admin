@@ -10,10 +10,19 @@ export interface ResourceFormField {
   sensitive?: boolean
 }
 
+// Resolves the default of an empty status field from the options the resource
+// actually declares, so generated resources never submit a value outside their
+// own manifest (for example draft/published announcements).
+function defaultStatusValue(field: ResourceFormField) {
+	const options = field.options || []
+	if (options.some((option) => option.value === 'active')) return 'active'
+	return options[0]?.value ?? 'active'
+}
+
 function valueForField(field: ResourceFormField, value: unknown) {
 	if (field.type === 'boolean') return Boolean(value)
 	if (field.type === 'number' || field.type === 'integer') return value === null || value === undefined || value === '' ? '' : Number(value)
-	if (field.name === 'status' && (value === null || value === undefined || value === '')) return 'active'
+	if (field.name === 'status' && (value === null || value === undefined || value === '')) return defaultStatusValue(field)
 	return value === null || value === undefined ? '' : String(value)
 }
 
