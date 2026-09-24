@@ -45,6 +45,13 @@ Port contract:
 - Go API: http://127.0.0.1:3000
 - Go/Vue admin panel: http://127.0.0.1:5180
 
+URL contract:
+
+- Admin pages: `/admin/...`
+- C-end pages: root paths such as `/` and `/orders`
+- Admin API: `/api/v1/admin/...`
+- Auth API: `/api/v1/auth/...`
+
 Review generated migrations before applying them. The generator does not silently execute migrations.
 
 ## Resource generation

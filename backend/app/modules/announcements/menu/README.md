@@ -3,7 +3,7 @@
 This menu entry was generated as part of `admin:make-resource`.
 
 - Label: `Announcements`
-- Route: `/announcements`
+- Route: `/admin/announcements`
 - Permission: `admin.announcements.view`
 - Icon: `box`
 

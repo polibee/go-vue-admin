@@ -248,7 +248,7 @@ func (s *RoleService) ReplacePermissions(roleID int64, permissionIDs []int64, sc
 			Type:  notificationservices.TypeRolePermissionsChanged,
 			Title: "角色权限已变更",
 			Body:  fmt.Sprintf("你所属的角色“%s”的权限已更新。", role.DisplayName),
-			URL:   fmt.Sprintf("/roles/%d/edit", role.ID),
+			URL:   fmt.Sprintf("/admin/roles/%d/edit", role.ID),
 		})
 	}
 	return nil

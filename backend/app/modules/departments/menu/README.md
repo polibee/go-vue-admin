@@ -3,7 +3,7 @@
 This menu entry was generated as part of `admin:make-resource`.
 
 - Label: `Departments`
-- Route: `/departments`
+- Route: `/admin/departments`
 - Permission: `admin.departments.view`
 - Icon: `box`
 

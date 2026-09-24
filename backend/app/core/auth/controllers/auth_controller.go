@@ -154,7 +154,7 @@ func (r *AuthController) LogoutAll(ctx http.Context) http.Response {
 		Type:  notificationservices.TypeSecuritySessionsRevoked,
 		Title: "其他登录会话已撤销",
 		Body:  "除当前会话外的其他登录会话已被撤销。",
-		URL:   "/",
+		URL:   "/admin",
 	})
 	return response.NoContent(204)
 }

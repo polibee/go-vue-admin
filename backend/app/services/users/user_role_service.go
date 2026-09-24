@@ -104,7 +104,7 @@ func (s *UserRoleService) ReplaceRoles(operatorID, userID int64, roleIDs []int64
 			Type:  notificationservices.TypeUserRolesChanged,
 			Title: "角色分配已变更",
 			Body:  fmt.Sprintf("你的角色已更新为：%s。", strings.Join(roleNames, "、")),
-			URL:   fmt.Sprintf("/users/%d/edit", user.ID),
+			URL:   fmt.Sprintf("/admin/users/%d/edit", user.ID),
 		})
 	}
 	return nil

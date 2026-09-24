@@ -13,6 +13,8 @@ This document is the operating contract for an AI agent working on Go Vue Admin.
 
 Do not replace PostgreSQL or Redis with an in-memory fallback, and do not change backend/.env or Laragon service configuration without explicit approval.
 
+URL namespaces are fixed: Vue admin pages use `/admin/...`, C-end pages use root paths, and Go admin APIs use `/api/v1/admin/...`. Never use an admin page path as an API path or an API path as a Vue route.
+
 ## 2. First checks
 
 Run these checks before making a change:

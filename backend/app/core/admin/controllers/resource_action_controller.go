@@ -155,7 +155,7 @@ func notifyResourceAction(ctx http.Context, resourceName, actionName string, res
 		Type:  notificationservices.TypeResourceAction,
 		Title: "批量操作已完成",
 		Body:  fmt.Sprintf("%s / %s：请求 %d 条，成功 %d 条，失败 %d 条。", resourceName, actionName, result.Requested, result.Succeeded, result.Failed),
-		URL:   "/" + resourceName,
+		URL:   "/admin/" + resourceName,
 	})
 }
 

@@ -42,7 +42,7 @@ Custom Resource    Manifest + 显式声明的专用列表、表单或详情页�
 
 资源 Manifest 通过 `actions` 声明可执行 Action；每个 Action 同时声明 `batch`，批量 Action 还必须声明服务端白名单中的 `kind` 与 `payload` 契约。列表页根据清单和当前权限渲染行级、批量操作。统一入口为 `POST /api/v1/admin/{resource}/actions/{action}`，请求使用 `ids` 与 `payload`，响应区分 `succeeded`、`failures` 和 `skips`。Manifest 只描述动作元数据，不包含可执行代码；未知 kind 不得被前端执行。
 
-Admin 前端提供 `/users/new`、`/users/:id/edit`、用户详情删除确认和批量状态设置流程。系统概览作为独立 Custom Page，通过 Overview Controller/Service 提供统计卡片和资源快捷入口；roles、permissions 的通用写表单仍沿用 RBAC 专用页面。
+Admin 前端提供 `/admin/users/new`、`/admin/users/:id/edit`、用户详情删除确认和批量状态设置流程。系统概览作为独立 Custom Page，通过 Overview Controller/Service 提供统计卡片和资源快捷入口；roles、permissions 的通用写表单仍沿用 RBAC 专用页面。
 
 ## Resource Definition
 

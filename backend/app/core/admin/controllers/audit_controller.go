@@ -122,7 +122,7 @@ func (a *AuditController) Cleanup(ctx http.Context) http.Response {
 				Type:  notificationservices.TypeAuditCleanup,
 				Title: "审计日志清理完成",
 				Body:  fmt.Sprintf("本次清理已删除 %d 条审计日志。", deleted),
-				URL:   "/audit-logs",
+				URL:   "/admin/audit-logs",
 			})
 		}
 	}

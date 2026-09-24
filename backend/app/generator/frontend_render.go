@@ -49,7 +49,8 @@ func frontendResourceSource(spec Spec) string {
 export const resourceDefinition = {
   name: %q,
   label: %q,
-  route: %q,
+  admin_route: %q,
+  api_base: %q,
   permission: %q,
   icon: %q,
   pageMode: %q,
@@ -61,7 +62,7 @@ export const resourceDefinition = {
   details: %s,
   fields: %s,
 } as const;
-`, spec.Name, spec.Label, spec.FrontendRoute, spec.Permission, spec.Icon, spec.PageMode, scopeMetadata, frontendActionList(spec), frontendRelations(spec), frontendFormGroups(spec), frontendDetails(spec), frontendFields(spec))
+`, spec.Name, spec.Label, spec.FrontendRoute, "/api/v1/admin/"+spec.Name, spec.Permission, spec.Icon, spec.PageMode, scopeMetadata, frontendActionList(spec), frontendRelations(spec), frontendFormGroups(spec), frontendDetails(spec), frontendFields(spec))
 }
 
 func frontendMenuSource(spec Spec) string {
@@ -70,7 +71,7 @@ import { resourceDefinition } from './resource';
 
 export const menuEntry = {
   label: resourceDefinition.label,
-  route: resourceDefinition.route,
+  route: resourceDefinition.admin_route,
   permission: resourceDefinition.permission,
   icon: resourceDefinition.icon,
   navigation: resourceDefinition.navigation,
@@ -171,7 +172,7 @@ func frontendTestSource(spec Spec) string {
 // This contract check uses the existing Node type/runtime surface; the generator
 // does not add a frontend test-runner dependency.
 if (resourceDefinition.name !== %q) throw new Error('generated resource name mismatch');
-if (resourceDefinition.route !== %q) throw new Error('generated resource route mismatch');
+if (resourceDefinition.admin_route !== %q) throw new Error('generated resource admin route mismatch');
 if (JSON.stringify(resourceDefinition.actions) !== JSON.stringify(%s)) throw new Error('generated resource actions mismatch');
 `, spec.Name, spec.FrontendRoute, frontendActionList(spec))
 }

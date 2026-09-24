@@ -9,4 +9,4 @@ type Entry struct {
 	Icon       string
 }
 
-var Announcements = Entry{Name: "announcements", Label: "Announcements", Route: "/announcements", Permission: "admin.announcements.view", Icon: "box"}
+var Announcements = Entry{Name: "announcements", Label: "Announcements", Route: "/admin/announcements", Permission: "admin.announcements.view", Icon: "box"}
