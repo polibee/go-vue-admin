@@ -48,7 +48,7 @@ const deleteDialogOpen = ref(false)
 const deleting = ref(false)
 const deleteTarget = ref<Record<string, unknown>>()
 const selectedIds = ref<string[]>([])
-const bulkStatus = ref<'active' | 'disabled' | 'locked'>('disabled')
+const bulkStatus = ref('')
 const bulkStatusDialogOpen = ref(false)
 const bulkUpdating = ref(false)
 const bulkDeleteDialogOpen = ref(false)
@@ -66,6 +66,11 @@ const filterValues = ref<Record<string, string>>({})
 const trashed = ref('default')
 const allFilteredSelected = ref(false)
 const excludedIds = ref<string[]>([])
+// The user status action and its selectable values come from the manifest so the
+// dialog never hardcodes a resource-specific action name or status set.
+const userStatusAction = computed(() => currentManifest.value?.actions?.find((action) => action.kind === 'user-status'))
+const userStatusField = computed(() => userStatusAction.value?.payload_fields?.find((field) => field.name === 'status'))
+const userStatusOptions = computed(() => userStatusField.value?.options || [])
 const bulkStatusLabel = computed(() => statusLabel('status', bulkStatus.value))
 const currentResourceLabel = computed(() => localizedResourceLabel(t, te, resourceName.value, currentManifest.value?.label || resourceName.value))
 
@@ -195,14 +200,21 @@ function hasAction(name: string) {
 function hasActionKind(kind: string) {
   return batchActions.value.some((action) => action.kind === kind)
 }
+function defaultUserStatus() {
+  const options = userStatusOptions.value
+  if (options.some((option) => option.value === 'disabled')) return 'disabled'
+  return options[0]?.value || ''
+}
 function openRowStatusAction(row: Record<string, unknown>) {
   selectedIds.value = row.id ? [String(row.id)] : []
-  const status = typeof row.status === 'string' ? row.status : 'disabled'
-  bulkStatus.value = status === 'active' || status === 'locked' ? status : 'disabled'
+  const options = userStatusOptions.value
+  const current = typeof row.status === 'string' ? row.status : ''
+  bulkStatus.value = options.some((option) => option.value === current) ? current : defaultUserStatus()
   bulkStatusDialogOpen.value = true
 }
 function openBulkAction(action: ResourceAction) {
   if (action.kind === 'user-status') {
+    bulkStatus.value = defaultUserStatus()
     bulkStatusDialogOpen.value = true
   } else if (action.kind === 'builtin-delete' || action.kind === 'builtin-restore' || action.kind === 'builtin-force-delete') {
     bulkDeleteAction.value = action.name
@@ -226,11 +238,12 @@ function selectionRequest(payload?: Record<string, unknown>): ActionRequest {
   return { selection, payload }
 }
 async function applyBulkStatus() {
-  if (!auth.token || !selectedIds.value.length) return
+  const action = userStatusAction.value
+  if (!auth.token || !selectedCount.value || !action || !bulkStatus.value) return
   bulkUpdating.value = true
   error.value = ''
   try {
-    lastActionResult.value = await generatedApi.resourceAction(resourceName.value, 'set-status', selectionRequest({ status: bulkStatus.value }), auth.token)
+    lastActionResult.value = await generatedApi.resourceAction(resourceName.value, action.name, selectionRequest({ status: bulkStatus.value }), auth.token)
     bulkStatusDialogOpen.value = false
     clearSelection()
     await loadRows(meta.value.page)
@@ -370,7 +383,7 @@ watch(resourceName, () => { filterValues.value = {}; trashed.value = 'default'; 
       </CardContent>
     </Card>
     <AlertDialog v-model:open="deleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.deleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.deleteDescription') }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="deleting" @click="deleteRow">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
-    <AlertDialog v-model:open="bulkStatusDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkStatusTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkStatusDescription', { count: selectedCount, status: bulkStatusLabel }) }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkUpdating" @click="applyBulkStatus">{{ t('resource.applyStatus') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    <AlertDialog v-model:open="bulkStatusDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkStatusTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkStatusDescription', { count: selectedCount, status: bulkStatusLabel }) }}</AlertDialogDescription></AlertDialogHeader><div class="grid gap-2 py-2"><Select v-model="bulkStatus"><SelectTrigger :aria-label="t('resource.bulkStatus')"><SelectValue :placeholder="t('resource.bulkStatus')" /></SelectTrigger><SelectContent><SelectItem v-for="option in userStatusOptions" :key="option.value" :value="option.value">{{ localizedOptionLabel(t, te, 'status', option.value, option.label) }}</SelectItem></SelectContent></Select></div><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkUpdating || !bulkStatus" @click="applyBulkStatus">{{ t('resource.applyStatus') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     <AlertDialog v-model:open="bulkDeleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.bulkDeleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.bulkDeleteDescription', { count: selectedCount }) }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="bulkDeleting" @click="applyBulkDelete">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
     <Dialog v-model:open="bulkUpdateDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ t('resource.bulkUpdateTitle') }}</DialogTitle><DialogDescription>{{ t('resource.bulkUpdateDescription', { count: selectedCount }) }}</DialogDescription></DialogHeader><div class="grid gap-3"><Select v-model="bulkUpdateField"><SelectTrigger><SelectValue :placeholder="t('resource.bulkUpdateField')" /></SelectTrigger><SelectContent><SelectItem v-for="field in writableFields" :key="field.name" :value="field.name">{{ field.label }}</SelectItem></SelectContent></Select><Input v-model="bulkUpdateValue" :placeholder="t('resource.bulkUpdateValue')" /></div><DialogFooter><Button variant="outline" @click="bulkUpdateDialogOpen = false">{{ t('resource.cancel') }}</Button><Button :disabled="bulkUpdateSaving || !bulkUpdateField" @click="applyBulkUpdate">{{ t('resource.applyStatus') }}</Button></DialogFooter></DialogContent></Dialog>
     <Dialog v-model:open="bulkCustomDialogOpen"><DialogContent><DialogHeader><DialogTitle>{{ bulkCustomAction?.label }}</DialogTitle><DialogDescription>{{ t('resource.bulkActionDescription', { count: selectedCount }) }}</DialogDescription></DialogHeader><div v-if="bulkCustomAction?.payload_fields?.length" class="grid gap-3"><template v-for="field in bulkCustomAction.payload_fields" :key="field.name"><Select v-if="field.type === 'select'" v-model="bulkCustomPayload[field.name] as string"><SelectTrigger><SelectValue :placeholder="field.label" /></SelectTrigger><SelectContent><SelectItem v-for="option in field.options || []" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select><Input v-else v-model="bulkCustomPayload[field.name] as string" :type="field.type === 'number' ? 'number' : 'text'" :placeholder="field.label" /></template></div><DialogFooter><Button variant="outline" @click="bulkCustomDialogOpen = false">{{ t('resource.cancel') }}</Button><Button @click="applyCustomAction">{{ bulkCustomAction?.label }}</Button></DialogFooter></DialogContent></Dialog>
