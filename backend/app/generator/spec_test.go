@@ -72,7 +72,7 @@ func TestNormalizeBuildsSharedMenuAndPageMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatalf("normalize: %v", err)
 	}
-	if spec.Icon != "shopping-cart" || spec.FrontendRoute != "/orders" {
+	if spec.Icon != "shopping-cart" || spec.FrontendRoute != "/admin/orders" {
 		t.Fatalf("shared navigation metadata = %+v", spec)
 	}
 	wantActions := []string{"view", "create", "update", "delete"}

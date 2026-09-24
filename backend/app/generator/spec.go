@@ -198,13 +198,7 @@ func Normalize(input Input) (Spec, error) {
 	if spec.Route == "" {
 		spec.Route = "/admin/" + input.Name
 	}
-	spec.FrontendRoute = strings.TrimPrefix(spec.Route, "/admin")
-	if spec.FrontendRoute == "" {
-		spec.FrontendRoute = "/"
-	}
-	if !strings.HasPrefix(spec.FrontendRoute, "/") {
-		spec.FrontendRoute = "/" + strings.TrimPrefix(spec.FrontendRoute, "/")
-	}
+	spec.FrontendRoute = spec.Route
 	if spec.Permission == "" {
 		spec.Permission = "admin." + input.Name + ".view"
 	}
