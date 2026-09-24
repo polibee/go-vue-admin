@@ -21,6 +21,8 @@
   "assignPermissions": "Assign permissions",
   "rolePermissionsDescription": "Choose which permissions this role can use.",
   "savePermissions": "Save permissions",
+  "saved": "Saved",
+  "systemRoleReadOnly": "System role, read-only",
   "scopeAll": "All data",
   "scopeOwn": "Own data only",
   "fieldName": "Field",

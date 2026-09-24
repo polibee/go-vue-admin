@@ -21,6 +21,8 @@
   "assignPermissions": "分配权限",
   "rolePermissionsDescription": "选择此角色可以使用的权限。",
   "savePermissions": "保存权限",
+  "saved": "已保存",
+  "systemRoleReadOnly": "系统角色，只读",
   "scopeAll": "全部数据",
   "scopeOwn": "仅本人数据",
   "fieldName": "字段",

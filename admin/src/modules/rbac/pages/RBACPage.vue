@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +19,7 @@ import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
 import { generatedApi, type DataScope, type FieldPermissionOverride, type ResourceManifest, type RolePermissionAssignment } from '@/generated/api'
 import { useAuthStore } from '@/stores/auth'
 import { userStatusLabelKey, type UserStatus } from '@/lib/user-status'
+import { adminRoute } from '@/core/routing/url-namespaces'
 
 interface RBACUser { id: number; name: string; email: string; status: UserStatus }
 interface RBACRole { id: number; name: string; display_name: string }
@@ -25,6 +27,7 @@ interface RBACPermission { id: number; name: string; display_name: string }
 interface RBACRoleDetail extends RBACRole { permissions: RolePermissionAssignment[] }
 
 const { t } = useI18n()
+const router = useRouter()
 const auth = useAuthStore()
 const users = ref<RBACUser[]>([])
 const roles = ref<RBACRole[]>([])
@@ -249,7 +252,7 @@ onMounted(loadRBAC)
         <CardHeader><CardTitle>{{ t('rbac.roles') }}</CardTitle><CardDescription>{{ roles.length }}</CardDescription></CardHeader>
         <CardContent>
           <Empty v-if="!roles.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('rbac.noRoles') }}</EmptyDescription></EmptyHeader></Empty>
-          <Table v-else><TableHeader><TableRow><TableHead>{{ t('rbac.name') }}</TableHead><TableHead>{{ t('rbac.displayName') }}</TableHead><TableHead /></TableRow></TableHeader><TableBody><TableRow v-for="role in roles" :key="role.id"><TableCell><div class="font-medium">{{ role.name }}</div></TableCell><TableCell>{{ role.display_name }}</TableCell><TableCell class="flex justify-end gap-1"><Button variant="ghost" size="sm" @click="openRolePermissions(role)">{{ t('rbac.assignPermissions') }}</Button><Button variant="ghost" size="sm" @click="openEditRole(role)">{{ t('rbac.editRole') }}</Button><Button variant="ghost" size="sm" :disabled="role.name === 'super-admin'" @click="openDeleteRole(role)">{{ t('rbac.deleteRole') }}</Button></TableCell></TableRow></TableBody></Table>
+          <Table v-else><TableHeader><TableRow><TableHead>{{ t('rbac.name') }}</TableHead><TableHead>{{ t('rbac.displayName') }}</TableHead><TableHead /></TableRow></TableHeader><TableBody><TableRow v-for="role in roles" :key="role.id"><TableCell><div class="font-medium">{{ role.name }}</div></TableCell><TableCell>{{ role.display_name }}</TableCell><TableCell class="flex justify-end gap-1"><Button variant="ghost" size="sm" @click="router.push(`${adminRoute('roles')}/${role.id}`)">{{ t('resource.view') }}</Button><Button variant="ghost" size="sm" @click="openEditRole(role)">{{ t('rbac.editRole') }}</Button><Button variant="ghost" size="sm" :disabled="role.name === 'super-admin'" @click="openDeleteRole(role)">{{ t('rbac.deleteRole') }}</Button></TableCell></TableRow></TableBody></Table>
         </CardContent>
       </Card>
       <Card v-if="auth.canAny(['admin.roles.manage', 'admin.permissions.manage'])" class="lg:col-span-3">

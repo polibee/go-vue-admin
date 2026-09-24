@@ -9,11 +9,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiError, errorMessageKey } from '@/lib/api'
-import { generatedApi, type RelationOption, type ResourceDetailSection, type ResourceManifest } from '@/generated/api'
+import { generatedApi, type RelationOption, type ResourceDetailSection, type ResourceManifest, type RolePermissionAssignment } from '@/generated/api'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { localizedFieldLabel, localizedResourceLabel } from '@/core/resource/resource-i18n'
 import { adminRoute } from '@/core/routing/url-namespaces'
+import RolePermissionsPanel from '@/modules/roles/components/RolePermissionsPanel.vue'
 
 const { t, te } = useI18n()
 const props = defineProps<{ resource?: string }>()
@@ -39,6 +40,8 @@ const canDelete = computed(() => hasAction('delete'))
 const detailSections = computed<ResourceDetailSection[]>(() => manifest.value?.details || [])
 const hasManyRelations = computed(() => (manifest.value?.relations || []).filter((relation) => relation.kind === 'hasMany'))
 const resourceLabel = computed(() => localizedResourceLabel(t, te, resourceName.value, manifest.value?.label || resourceName.value))
+const isRoleDetail = computed(() => resourceName.value === 'roles')
+const rolePermissions = computed(() => Array.isArray(data.value.permissions) ? data.value.permissions as RolePermissionAssignment[] : [])
 
 function localizedError(value: unknown) {
   return value instanceof ApiError ? t(errorMessageKey(value.code)) : t('errors.unknown')
@@ -97,6 +100,7 @@ async function deleteRecord() {
     <Card v-else-if="Object.keys(displayData).length"><CardHeader><CardTitle>{{ String(data.display_name || data.name || data.email || route.params.id) }}</CardTitle><CardDescription>{{ t('resource.detailDescription') }}</CardDescription></CardHeader><CardContent><dl class="grid gap-4 sm:grid-cols-2"> <div v-for="(value, key) in displayData" :key="key" class="rounded-md border p-3"><dt class="text-xs text-muted-foreground">{{ fieldLabel(String(key)) }}</dt><dd class="mt-1 break-words text-sm font-medium">{{ value === null || value === undefined ? '—' : String(value) }}</dd></div></dl></CardContent></Card>
     <Card v-for="section in detailSections" :key="section.name"><CardHeader><CardTitle>{{ section.label }}</CardTitle></CardHeader><CardContent><dl class="grid gap-4 sm:grid-cols-2"><div v-for="field in section.fields" v-show="displayData[field] !== undefined" :key="field" class="rounded-md border p-3"><dt class="text-xs text-muted-foreground">{{ fieldLabel(field) }}</dt><dd class="mt-1 break-words text-sm font-medium">{{ displayData[field] === null || displayData[field] === undefined ? '—' : String(displayData[field]) }}</dd></div></dl></CardContent></Card>
     <Card v-for="relation in hasManyRelations" :key="relation.name"><CardHeader><CardTitle>{{ relation.name }}</CardTitle><CardDescription>{{ t('resource.relatedRecords') }}</CardDescription></CardHeader><CardContent><div v-if="relationRecords[relation.name]?.length" class="flex flex-wrap gap-2"><Button v-for="item in relationRecords[relation.name]" :key="item.value" variant="outline" size="sm">{{ item.label }}</Button></div><p v-else class="text-sm text-muted-foreground">{{ t('resource.noRelatedRecords') }}</p></CardContent></Card>
+    <RolePermissionsPanel v-if="isRoleDetail" :role-id="Number(route.params.id)" :role-name="String(data.name || '')" :assignments="rolePermissions" />
     <Empty v-if="!loading && !error && !Object.keys(displayData).length && !detailSections.length"><EmptyHeader><EmptyTitle>{{ t('states.emptyTitle') }}</EmptyTitle><EmptyDescription>{{ t('resource.noData') }}</EmptyDescription></EmptyHeader></Empty>
     <AlertDialog v-model:open="deleteDialogOpen"><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{{ t('resource.deleteTitle') }}</AlertDialogTitle><AlertDialogDescription>{{ t('resource.deleteDescription') }}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{{ t('resource.cancel') }}</AlertDialogCancel><AlertDialogAction :disabled="deleting" @click="deleteRecord">{{ t('resource.delete') }}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>
