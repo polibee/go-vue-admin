@@ -66,7 +66,7 @@ async function logoutAll() {
   await router.replace({ name: 'admin-login' })
 }
 
-function openResource(resource: { name: string; route: string }) {
+function openResource(resource: { name: string; admin_route: string }) {
   searchOpen.value = false
   void router.push(dashboardResourceRoute(resource))
 }

@@ -1,6 +1,6 @@
 import type { ResourceManifest } from '@/generated/api'
 
-export type ResourceNavigationItem = Pick<ResourceManifest, 'name' | 'label' | 'route' | 'permissions'> & {
+export type ResourceNavigationItem = Pick<ResourceManifest, 'name' | 'label' | 'admin_route' | 'permissions'> & {
   navigation?: {
     group?: string
     order?: number

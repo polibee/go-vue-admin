@@ -9,7 +9,6 @@ import (
 	"goravel/app/facades"
 	adminmiddleware "goravel/app/http/middleware"
 	"goravel/app/modules/admin/registry"
-	usercontrollers "goravel/app/modules/users/controllers"
 	"goravel/app/openapi"
 )
 
@@ -29,9 +28,6 @@ func Web() {
 			return ctx.Response().Header("Content-Type", "text/html; charset=utf-8").String(200, openapi.DocsHTML())
 		})
 	}
-
-	userController := usercontrollers.NewUserController()
-	facades.Route().Get("/users", userController.Index)
 
 	authController := authcontrollers.NewAuthController()
 	facades.Route().Post("/api/v1/auth/login", authController.Login)

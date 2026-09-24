@@ -2,7 +2,8 @@
 export const resourceDefinition = {
   name: "departments",
   label: "Departments",
-  route: "/admin/departments",
+  admin_route: "/admin/departments",
+  api_base: "/api/v1/admin/departments",
   permission: "admin.departments.view",
   icon: "box",
   pageMode: "generic",

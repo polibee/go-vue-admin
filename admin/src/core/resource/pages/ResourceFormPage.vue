@@ -33,7 +33,7 @@ onMounted(async () => {
   try {
     const manifests = await generatedApi.resourceRegistry(auth.token)
     const found = findResourceManifest(manifests, resourceName.value)
-    manifest.value = found ? { ...found, route: frontendResourceRoute(found, resourceName.value) } : undefined
+    manifest.value = found ? { ...found, admin_route: frontendResourceRoute(found, resourceName.value) } : undefined
     if (!manifest.value) error.value = t('resource.resourceNotFound')
   } catch {
     error.value = t('errors.unknown')

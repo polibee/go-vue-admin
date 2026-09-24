@@ -3,6 +3,7 @@ package resource
 import (
 	"errors"
 	"sort"
+	"strings"
 )
 
 var (
@@ -116,7 +117,9 @@ type Navigation struct {
 type Manifest struct {
 	Name         string            `json:"name"`
 	Label        string            `json:"label"`
-	Route        string            `json:"route"`
+	Route        string            `json:"-"`
+	AdminRoute   string            `json:"admin_route"`
+	APIBase      string            `json:"api_base"`
 	PageMode     PageMode          `json:"page_mode,omitempty"`
 	Table        string            `json:"table,omitempty"`
 	Permissions  []string          `json:"permissions"`
@@ -139,9 +142,21 @@ type Registry struct{ manifests map[string]Manifest }
 func NewRegistry() *Registry { return &Registry{manifests: make(map[string]Manifest)} }
 
 func (r *Registry) Register(manifest Manifest) error {
-	if manifest.Name == "" || manifest.Label == "" || manifest.Route == "" {
+	if manifest.Name == "" || manifest.Label == "" || (manifest.Route == "" && manifest.AdminRoute == "") {
 		return ErrInvalidManifest
 	}
+	if manifest.AdminRoute == "" {
+		manifest.AdminRoute = manifest.Route
+	}
+	manifest.AdminRoute = strings.TrimSuffix(strings.TrimSpace(manifest.AdminRoute), "/")
+	if manifest.AdminRoute == "" {
+		return ErrInvalidManifest
+	}
+	if !strings.HasPrefix(manifest.AdminRoute, "/admin/") {
+		manifest.AdminRoute = "/admin/" + strings.TrimPrefix(manifest.AdminRoute, "/")
+	}
+	manifest.Route = manifest.AdminRoute
+	manifest.APIBase = "/api/v1/admin/" + manifest.Name
 	if manifest.DataScope == "" {
 		manifest.DataScope = DataScopeAll
 	}

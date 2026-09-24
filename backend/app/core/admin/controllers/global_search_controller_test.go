@@ -33,7 +33,7 @@ func TestGlobalSearchFieldsExcludeSensitiveValues(t *testing.T) {
 }
 
 func TestFrontendSearchRoute(t *testing.T) {
-	if got := frontendSearchRoute("/admin/orders", int64(42)); got != "/orders/42" {
+	if got := frontendSearchRoute("/admin/orders", int64(42)); got != "/admin/orders/42" {
 		t.Fatalf("unexpected frontend route: %s", got)
 	}
 }

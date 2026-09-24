@@ -2,7 +2,8 @@
 export const resourceDefinition = {
   name: "announcements",
   label: "Announcements",
-  route: "/admin/announcements",
+  admin_route: "/admin/announcements",
+  api_base: "/api/v1/admin/announcements",
   permission: "admin.announcements.view",
   icon: "box",
   pageMode: "generic",

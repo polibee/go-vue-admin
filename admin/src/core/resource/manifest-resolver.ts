@@ -5,7 +5,7 @@ export function findResourceManifest(manifests: readonly ResourceManifest[], nam
   return manifests.find((manifest) => manifest.name === name)
 }
 
-export function frontendResourceRoute(_manifest: Pick<ResourceManifest, 'route'>, name: string) {
+export function frontendResourceRoute(_manifest: Pick<ResourceManifest, 'admin_route'>, name: string) {
   return adminRoute(name)
 }
 

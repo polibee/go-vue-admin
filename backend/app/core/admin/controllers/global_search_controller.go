@@ -194,9 +194,11 @@ func makeGlobalSearchResult(manifest resource.Manifest, id any, title, subtitle 
 
 func frontendSearchRoute(route string, id any) string {
 	route = strings.TrimSuffix(strings.TrimSpace(route), "/")
-	route = strings.TrimPrefix(route, "/admin")
 	if route == "" {
-		route = "/"
+		route = "/admin"
+	}
+	if !strings.HasPrefix(route, "/admin/") && route != "/admin" {
+		route = "/admin" + route
 	}
 	return strings.TrimSuffix(route, "/") + "/" + urlPathPart(id)
 }

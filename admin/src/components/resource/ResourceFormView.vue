@@ -22,7 +22,7 @@ import { adminRoute } from '@/core/routing/url-namespaces'
 interface ResourceDefinition {
   name: string
   label: string
-  route: string
+  admin_route: string
   fields: readonly ResourceFormField[]
   relations?: readonly { name: string; kind: 'belongsTo' | 'hasMany'; field: string; selectable: boolean }[]
   form_groups?: readonly { name: string; label: string; columns?: number; fields: readonly string[] }[]
@@ -57,9 +57,10 @@ const formGroups = computed(() => {
   if (props.resource.form_groups?.length) return props.resource.form_groups.map((group) => ({ ...group, fields: formFields.value.filter((field) => group.fields.includes(field.name)) }))
   return [{ name: 'default', label: resourceLabel.value, columns: 1, fields: formFields.value }]
 })
-const resourceLabel = computed(() => localizedResourceLabel(t, te, props.resource.route.split('/').filter(Boolean).pop() || '', props.resource.label))
+const resourceKey = computed(() => props.resource.admin_route.split('/').filter(Boolean).pop() || '')
+const resourceLabel = computed(() => localizedResourceLabel(t, te, resourceKey.value, props.resource.label))
 const formTitle = computed(() => t(editing.value ? 'resource.editResource' : 'resource.createResource', { resource: resourceLabel.value }))
-function fieldLabel(field: ResourceFormField) { return localizedFieldLabel(t, te, props.resource.route.split('/').filter(Boolean).pop() || '', field.name, field.label) }
+function fieldLabel(field: ResourceFormField) { return localizedFieldLabel(t, te, resourceKey.value, field.name, field.label) }
 function optionLabel(field: ResourceFormField, value: string, fallback: string) { return localizedOptionLabel(t, te, field.name, value, fallback) }
 
 function fieldId(field: ResourceFormField) { return `resource-field-${field.name}` }
@@ -83,7 +84,7 @@ async function loadRelationOptions(relationFilter?: { name: string; field: strin
       const currentPage = append ? (relationMeta.value[relation.name]?.page || 1) + 1 : 1
       const selected = form.value[relation.field]
       const query = new URLSearchParams({ search: relationSearch.value[relation.name] || '', selected: selected ? String(selected) : '', page: String(currentPage), per_page: '20' })
-      const loader = props.api.relationOptions || ((name: string, request: URLSearchParams, token: string) => generatedApi.resourceRelationOptions(props.resource.route.split('/').filter(Boolean).pop() || '', name, request, token))
+      const loader = props.api.relationOptions || ((name: string, request: URLSearchParams, token: string) => generatedApi.resourceRelationOptions(resourceKey.value, name, request, token))
       const response = await loader(relation.name, query, auth.token)
       const previous = append ? relationOptions.value[relation.name] || [] : []
       relationOptions.value = { ...relationOptions.value, [relation.name]: [...previous, ...response.data.filter((item) => !previous.some((existing) => existing.value === item.value))] }

@@ -18,14 +18,14 @@ OpenAPI 是前后端契约来源，前端不得另行维护重复的 TypeScript 
 
 ## API 规范
 
-统一使用 `/api/v1/`：
+认证接口统一使用 `/api/v1/auth/`，后台管理接口统一使用 `/api/v1/admin/`：
 
 ```text
-GET    /api/v1/users
-POST   /api/v1/users
-GET    /api/v1/users/{id}
-PATCH  /api/v1/users/{id}
-DELETE /api/v1/users/{id}
+GET    /api/v1/admin/users
+POST   /api/v1/admin/users
+GET    /api/v1/admin/users/{id}
+PUT    /api/v1/admin/users/{id}
+DELETE /api/v1/admin/users/{id}
 ```
 
 错误响应必须包含稳定机器码，例如 `VALIDATION_ERROR`、`AUTH_REQUIRED`、`PERMISSION_DENIED`、`RESOURCE_NOT_FOUND`、`RESOURCE_CONFLICT` 和 `INTERNAL_ERROR`。前端不得根据错误文案判断业务状态。
