@@ -6,6 +6,7 @@ import (
 
 	"goravel/app/facades"
 	"goravel/app/models"
+	rbacservices "goravel/app/services/rbac"
 )
 
 type MpostsCreatePostsTable struct{}
@@ -40,7 +41,12 @@ func (m *MpostsCreatePostsTable) Up() error {
 			}
 		}
 	}
-	return nil
+	return rbacservices.EnsureSystemRolePermissions([]string{
+		"admin.posts.view",
+		"admin.posts.create",
+		"admin.posts.update",
+		"admin.posts.delete",
+	})
 }
 
 func (m *MpostsCreatePostsTable) Down() error {

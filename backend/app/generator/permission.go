@@ -77,7 +77,7 @@ Generated permissions:
 
 %s
 
-The generator only creates code. Review the names, then add them to the database and role assignments manually through the approved RBAC workflow. It does not write permission rows or bind roles.
+The generated migration creates the permission rows and automatically binds them to the built-in super-admin role when that role exists. Review the migration before executing it. Other roles must be assigned through the approved RBAC workflow.
 `, spec.Name, permissionList(spec))
 	return []Artifact{
 		{Path: filepath.ToSlash(filepath.Join(base, "permissions.go")), Content: formatted},

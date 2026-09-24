@@ -3,6 +3,7 @@ package seeders
 import (
 	"goravel/app/facades"
 	"goravel/app/models"
+	rbacservices "goravel/app/services/rbac"
 )
 
 type AdminUser struct {
@@ -94,5 +95,5 @@ func (s *AdminUser) Run() error {
 			}
 		}
 	}
-	return nil
+	return rbacservices.EnsureSystemRoleHasAllPermissions()
 }

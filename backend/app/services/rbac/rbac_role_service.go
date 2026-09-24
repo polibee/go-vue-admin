@@ -37,6 +37,62 @@ func NewRoleService() *RoleService {
 	return &RoleService{}
 }
 
+// EnsureSystemRolePermissions grants the supplied permissions to the built-in
+// administrator when that role already exists. It is intentionally idempotent
+// so migrations and seeders can safely call it more than once.
+func EnsureSystemRolePermissions(permissionNames []string) error {
+	var roles []models.Role
+	if err := facades.Orm().Query().Where("name = ?", SystemRoleName).Get(&roles); err != nil {
+		return err
+	}
+	if len(roles) == 0 {
+		return nil
+	}
+
+	for _, permissionName := range permissionNames {
+		permissionName = strings.TrimSpace(permissionName)
+		if permissionName == "" {
+			continue
+		}
+		var permissions []models.Permission
+		if err := facades.Orm().Query().Where("name = ?", permissionName).Get(&permissions); err != nil {
+			return err
+		}
+		if len(permissions) == 0 {
+			continue
+		}
+		assigned, err := facades.Orm().Query().Table("permission_role").Where("permission_id = ? AND role_id = ?", permissions[0].ID, roles[0].ID).Exists()
+		if err != nil {
+			return err
+		}
+		if !assigned {
+			if err := facades.Orm().Query().Table("permission_role").Create(&map[string]any{
+				"permission_id": permissions[0].ID,
+				"role_id":       roles[0].ID,
+				"scope":         resource.DataScopeAll,
+			}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// EnsureSystemRoleHasAllPermissions backfills every known permission for the
+// built-in administrator. This keeps existing installations in sync after a
+// new resource migration adds permissions.
+func EnsureSystemRoleHasAllPermissions() error {
+	var permissions []models.Permission
+	if err := facades.Orm().Query().Select("name").OrderBy("id").Get(&permissions); err != nil {
+		return err
+	}
+	names := make([]string, 0, len(permissions))
+	for _, permission := range permissions {
+		names = append(names, permission.Name)
+	}
+	return EnsureSystemRolePermissions(names)
+}
+
 func validateRoleInput(name, displayName string) error {
 	return rbac.ValidateRoleInput(name, displayName)
 }
