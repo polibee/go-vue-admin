@@ -38,6 +38,9 @@
   "saved": "Saved successfully",
   "noAssignableRoles": "No roles available",
   "noAssignablePermissions": "No permissions available",
+  "permissionSearch": "Search permissions",
+  "noMatchingPermissions": "No matching permissions",
+  "selectPermissionGroup": "Select all permissions in {group}",
   "permissionCount": "{count} permissions",
   "roleCount": "{count} roles"
 }

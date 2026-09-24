@@ -5,12 +5,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ApiError, apiFetch, errorMessageKey } from '@/lib/api'
 import { generatedApi, type DataScope, type RolePermissionAssignment } from '@/generated/api'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
-import { isProtectedRole, type RolePermissionOption } from '../role-permissions'
+import { filterPermissionGroups, isProtectedRole, togglePermissionGroup, type RolePermissionGroup, type RolePermissionOption } from '../role-permissions'
 
 const props = defineProps<{
   roleId: number
@@ -27,8 +28,9 @@ const loading = ref(true)
 const saving = ref(false)
 const error = ref('')
 const saved = ref(false)
+const permissionSearch = ref('')
 const protectedRole = computed(() => isProtectedRole(props.roleName))
-const groupedOptions = computed(() => {
+const groupedOptions = computed<RolePermissionGroup[]>(() => {
   const groups = new Map<string, RolePermissionOption[]>()
   for (const permission of options.value) {
     const group = permission.name.split('.')[1] || 'general'
@@ -36,6 +38,7 @@ const groupedOptions = computed(() => {
   }
   return Array.from(groups, ([name, permissions]) => ({ name, permissions }))
 })
+const visibleGroups = computed(() => filterPermissionGroups(groupedOptions.value, permissionSearch.value))
 
 function syncAssignments(assignments: RolePermissionAssignment[]) {
   selectedIDs.value = assignments.map((assignment) => assignment.id)
@@ -73,6 +76,15 @@ function updateScope(id: number, value: string) {
   saved.value = false
 }
 
+function groupSelected(group: RolePermissionGroup) {
+  return group.permissions.length > 0 && group.permissions.every((permission) => selectedIDs.value.includes(permission.id))
+}
+
+function toggleGroup(group: RolePermissionGroup, checked: boolean) {
+  selectedIDs.value = togglePermissionGroup(selectedIDs.value, group.permissions.map((permission) => permission.id), checked)
+  saved.value = false
+}
+
 async function save() {
   if (!auth.token || protectedRole.value) return
   saving.value = true
@@ -101,9 +113,12 @@ async function save() {
     <CardContent>
       <Alert v-if="error" class="mb-4" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
       <div v-if="loading" class="py-4 text-sm text-muted-foreground">{{ t('resource.loading') }}</div>
-      <div v-else-if="groupedOptions.length" class="grid gap-5 lg:grid-cols-2">
-        <section v-for="group in groupedOptions" :key="group.name" class="rounded-lg border bg-muted/20 p-4">
-          <div class="mb-3 flex items-center justify-between gap-3"><h3 class="font-medium capitalize">{{ group.name }}</h3><span class="text-xs text-muted-foreground">{{ group.permissions.length }}</span></div>
+      <div v-else-if="groupedOptions.length" class="grid gap-4">
+        <Input v-model="permissionSearch" :placeholder="t('rbac.permissionSearch')" :aria-label="t('rbac.permissionSearch')" />
+        <p v-if="!visibleGroups.length" class="text-sm text-muted-foreground">{{ t('rbac.noMatchingPermissions') }}</p>
+        <div v-else class="grid gap-5 lg:grid-cols-2">
+        <section v-for="group in visibleGroups" :key="group.name" class="rounded-lg border bg-muted/20 p-4">
+          <div class="mb-3 flex items-center justify-between gap-3"><div class="flex items-center gap-2"><Checkbox :disabled="protectedRole" :model-value="groupSelected(group)" :aria-label="t('rbac.selectPermissionGroup', { group: group.name })" @update:model-value="toggleGroup(group, Boolean($event))" /><h3 class="font-medium capitalize">{{ group.name }}</h3></div><span class="text-xs text-muted-foreground">{{ group.permissions.length }}</span></div>
           <div class="grid gap-2">
             <div v-for="permission in group.permissions" :key="permission.id" class="flex items-center gap-3 rounded-md bg-background p-3">
               <Checkbox :disabled="protectedRole" :model-value="selectedIDs.includes(permission.id)" @update:model-value="togglePermission(permission.id, Boolean($event))" />
@@ -112,9 +127,10 @@ async function save() {
             </div>
           </div>
         </section>
+        </div>
       </div>
       <p v-else class="text-sm text-muted-foreground">{{ t('rbac.noAssignablePermissions') }}</p>
-      <div v-if="!protectedRole && !loading && groupedOptions.length" class="mt-5 flex items-center justify-end gap-3"><span v-if="saved" class="text-sm text-muted-foreground">{{ t('rbac.saved') }}</span><Button :disabled="saving" @click="save">{{ saving ? t('resource.saving') : t('rbac.savePermissions') }}</Button></div>
+      <div v-if="!protectedRole && !loading && visibleGroups.length" class="mt-5 flex items-center justify-end gap-3"><span v-if="saved" class="text-sm text-muted-foreground">{{ t('rbac.saved') }}</span><Button :disabled="saving" @click="save">{{ saving ? t('resource.saving') : t('rbac.savePermissions') }}</Button></div>
     </CardContent>
   </Card>
 </template>

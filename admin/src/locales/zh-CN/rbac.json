@@ -38,6 +38,9 @@
   "saved": "保存成功",
   "noAssignableRoles": "暂无可分配角色",
   "noAssignablePermissions": "暂无可分配权限",
+  "permissionSearch": "搜索权限",
+  "noMatchingPermissions": "没有匹配的权限",
+  "selectPermissionGroup": "选择 {group} 下的全部权限",
   "permissionCount": "{count} 项权限",
   "roleCount": "{count} 个角色"
 }
