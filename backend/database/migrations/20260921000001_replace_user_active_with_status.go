@@ -13,10 +13,15 @@ func (m *M20260921000001ReplaceUserActiveWithStatus) Signature() string {
 }
 
 func (m *M20260921000001ReplaceUserActiveWithStatus) Up() error {
-	if err := facades.Schema().Table("users", func(table schema.Blueprint) {
-		table.String("status").Default("active")
-	}); err != nil {
-		return err
+	if !facades.Schema().HasColumn("users", "status") {
+		if err := facades.Schema().Table("users", func(table schema.Blueprint) {
+			table.String("status").Default("active")
+		}); err != nil {
+			return err
+		}
+	}
+	if !facades.Schema().HasColumn("users", "is_active") {
+		return nil
 	}
 	if _, err := facades.Orm().Query().Table("users").Where("is_active = ?", false).Update("status", "disabled"); err != nil {
 		return err

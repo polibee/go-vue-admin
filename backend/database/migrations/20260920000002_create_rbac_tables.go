@@ -18,8 +18,6 @@ func (m *M20260920000002CreateRBACTables) Up() error {
 			table.ID()
 			table.String("name")
 			table.String("display_name")
-			table.DateTimeTz("created_at").Nullable()
-			table.DateTimeTz("updated_at").Nullable()
 			table.Unique("name")
 		}); err != nil {
 			return err
@@ -30,8 +28,6 @@ func (m *M20260920000002CreateRBACTables) Up() error {
 			table.ID()
 			table.String("name")
 			table.String("display_name")
-			table.DateTimeTz("created_at").Nullable()
-			table.DateTimeTz("updated_at").Nullable()
 			table.Unique("name")
 		}); err != nil {
 			return err
