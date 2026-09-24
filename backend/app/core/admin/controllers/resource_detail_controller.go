@@ -9,6 +9,8 @@ import (
 	rbacservices "goravel/app/services/rbac"
 )
 
+func resourceRecordLoaded(id uint) bool { return id > 0 }
+
 func (r *ResourceController) Show(ctx http.Context) http.Response {
 	id := resourceID(ctx)
 	if id < 1 {
@@ -31,7 +33,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if scopeErr != nil {
 			return resourceScopeError(ctx, scopeErr)
 		}
-		if err := q.Where("id = ?", id).First(&user); err != nil {
+		if err := q.Where("id = ?", id).First(&user); err != nil || !resourceRecordLoaded(user.ID) {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
 		return ctx.Response().Success().Json(http.Json{"data": projectResourceValueWithPolicies(user.Public(), manifest, fieldPolicies, false)})
@@ -41,7 +43,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if scopeErr != nil {
 			return resourceScopeError(ctx, scopeErr)
 		}
-		if err := q.Where("id = ?", id).First(&role); err != nil {
+		if err := q.Where("id = ?", id).First(&role); err != nil || !resourceRecordLoaded(role.ID) {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
 		value := projectResourceValueWithPolicies(role, manifest, fieldPolicies, false)
@@ -57,7 +59,7 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if scopeErr != nil {
 			return resourceScopeError(ctx, scopeErr)
 		}
-		if err := q.Where("id = ?", id).First(&permission); err != nil {
+		if err := q.Where("id = ?", id).First(&permission); err != nil || !resourceRecordLoaded(permission.ID) {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
 		return ctx.Response().Success().Json(http.Json{"data": projectResourceValueWithPolicies(permission, manifest, fieldPolicies, false)})
