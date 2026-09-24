@@ -2,7 +2,7 @@
 export const resourceDefinition = {
   name: "announcements",
   label: "Announcements",
-  route: "/announcements",
+  route: "/admin/announcements",
   permission: "admin.announcements.view",
   icon: "box",
   pageMode: "generic",

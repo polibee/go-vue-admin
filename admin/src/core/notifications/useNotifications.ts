@@ -1,9 +1,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { generatedApi, type Notification } from '@/generated/api'
 import { useAuthStore } from '@/stores/auth'
+import { isAdminRoute } from '@/core/routing/url-namespaces'
 
 export function isInternalNotificationURL(value?: string | null) {
-  return Boolean(value && value.startsWith('/') && !value.startsWith('//') && !/[\r\n]/.test(value))
+  return Boolean(value && isAdminRoute(value) && !value.startsWith('//') && !/[\r\n]/.test(value))
 }
 
 export function useNotifications() {

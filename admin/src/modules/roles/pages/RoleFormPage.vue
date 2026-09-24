@@ -12,6 +12,7 @@ import { generatedApi } from '@/generated/api'
 import { createResourceForm, serializeResourceForm, type ResourceFormField } from '@/lib/resource-form'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import { adminRoute } from '@/core/routing/url-namespaces'
 
 interface ResourceManifest { name: string; fields: ResourceFormField[] }
 
@@ -53,7 +54,7 @@ async function submit() {
     const payload = serializeResourceForm(fields.value, form.value)
     if (editing.value) await generatedApi.resourceUpdate('roles', String(route.params.id), payload, auth.token)
     else await generatedApi.resourceCreate('roles', payload, auth.token)
-    await router.push('/roles')
+    await router.push(adminRoute('roles'))
   } catch (value) {
     error.value = localizedError(value)
   } finally {
@@ -65,7 +66,7 @@ async function submit() {
 <template>
   <div class="flex flex-col gap-6">
     <div class="flex items-center gap-3">
-      <Button variant="ghost" size="icon" :aria-label="t('resource.back')" @click="router.push('/roles')"><ArrowLeft /></Button>
+      <Button variant="ghost" size="icon" :aria-label="t('resource.back')" @click="router.push(adminRoute('roles'))"><ArrowLeft /></Button>
       <div><h1 class="text-2xl font-semibold tracking-tight">{{ editing ? t('rbac.editRole') : t('rbac.createRole') }}</h1><p class="text-sm text-muted-foreground">{{ t('rbac.roleFormDescription') }}</p></div>
     </div>
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
@@ -79,7 +80,7 @@ async function submit() {
             <Input :id="fieldId(field)" v-model="form[field.name]" required />
           </Field>
         </FieldGroup>
-        <div class="flex gap-2"><Button type="submit" :disabled="saving"><Save data-icon="inline-start" />{{ saving ? t('resource.saving') : t('resource.save') }}</Button><Button type="button" variant="outline" @click="router.push('/roles')">{{ t('resource.cancel') }}</Button></div>
+        <div class="flex gap-2"><Button type="submit" :disabled="saving"><Save data-icon="inline-start" />{{ saving ? t('resource.saving') : t('resource.save') }}</Button><Button type="button" variant="outline" @click="router.push(adminRoute('roles'))">{{ t('resource.cancel') }}</Button></div>
       </form></CardContent>
     </Card>
   </div>

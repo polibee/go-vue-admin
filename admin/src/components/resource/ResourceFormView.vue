@@ -17,8 +17,10 @@ import { generatedApi, type RelationOption } from '@/generated/api'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { localizedFieldLabel, localizedOptionLabel, localizedResourceLabel } from '@/core/resource/resource-i18n'
+import { adminRoute } from '@/core/routing/url-namespaces'
 
 interface ResourceDefinition {
+  name: string
   label: string
   route: string
   fields: readonly ResourceFormField[]
@@ -130,7 +132,7 @@ async function submit() {
     const payload = serializeResourceForm(formFields.value, form.value, fieldVisible)
     if (editing.value) await props.api.update(String(route.params.id), payload, auth.token)
     else await props.api.create(payload, auth.token)
-    await router.push(props.resource.route)
+    await router.push(adminRoute(props.resource.name))
   } catch (value) {
     captureFieldError(value)
     error.value = localizedError(value)

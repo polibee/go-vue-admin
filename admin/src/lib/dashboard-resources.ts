@@ -11,5 +11,6 @@ export function visibleDashboardResources(resources: DashboardResource[], permis
 }
 
 export function dashboardResourceRoute(resource: Pick<DashboardResource, 'name' | 'route'>) {
-  return resource.route.replace(/^\/admin(?=\/|$)/, '') || '/' + resource.name
+  return resource.route.startsWith('/admin/') ? resource.route : adminRoute(resource.name)
 }
+import { adminRoute } from '../core/routing/url-namespaces.ts'
