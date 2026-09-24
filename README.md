@@ -11,6 +11,12 @@ A modular general-purpose admin platform built with Goravel, Vue 3, TypeScript, 
 - [AI Quickstart](./docs/ai-quickstart.md)
 - [Architecture and roadmap](./docs/README.md)
 
+## Project status
+
+The current repository is a usable pre-production baseline for building business modules on top of a general-purpose admin panel. The main authentication, RBAC, Resource Manifest, generic CRUD pages, search, relations, batch operations, notifications, audit redaction, and `/admin/...` URL namespace are implemented.
+
+A repository-wide production security audit was completed on 2026-09-24 with no reportable security findings. This is not a substitute for environment acceptance: production deployment still requires real-domain, HTTPS, secrets, ordinary-role, backup, monitoring, and rollback checks.
+
 ## Features
 
 - JWT login, refresh, logout, and PostgreSQL-authoritative refresh-token storage with Redis as an acceleration layer.
@@ -61,7 +67,7 @@ cd backend
 go run . admin:make-resource announcements --fields="title:text:required,status:select:required:draft=Draft|published=Published"
 ~~~
 
-Resource generation is the main business-development workflow: generated resources are discovered by the admin panel automatically. The generator avoids overwriting manual files. Complex business flows belong in `backend/app/modules/<module>` and `admin/src/modules/<module>` rather than being forced into a generic Resource.
+Resource generation is the main business-development workflow: generated resources are discovered by the admin panel automatically. The generator avoids overwriting manual files and does not execute migrations silently. Complex business flows belong in `backend/app/modules/<module>` and `admin/src/modules/<module>` rather than being forced into a generic Resource.
 
 ## Verification
 

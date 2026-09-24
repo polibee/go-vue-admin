@@ -30,4 +30,6 @@ Goravel 有的能力不重复实现
 权限必须由后端最终裁决
 ```
 
-第一阶段只要求：Goravel v1.18 基础工程、后台壳层、JWT 认证、RBAC、标准 Resource CRUD、OpenAPI、TypeScript Client、PostgreSQL、Redis 和基础审计。插件运行时、AI 生成、全局搜索、复杂 Dashboard、导入导出和数据库反向工程属于后续能力。
+当前实现已经覆盖：Goravel v1.18 基础工程、后台壳层、JWT 与可撤销 Refresh Token、RBAC、标准 Resource CRUD、OpenAPI、TypeScript Client、PostgreSQL、Redis、全局搜索、关系字段、字段和数据范围权限、批量 Action、通知以及请求/响应审计脱敏。
+
+资源生成默认采用 `Resource Manifest + 通用列表/表单/详情页`；只有复杂业务才通过模块边界覆盖专用页面。插件系统、文件上传和导入暂不作为当前范围。生产使用前仍需完成真实环境配置、普通角色端到端授权验收、备份、监控、回滚和发布流程验证。

@@ -17,6 +17,12 @@
 - 请求/响应审计、敏感字段脱敏、手动清理和定期清理。
 - admin:make-resource 生成后端 Resource、迁移、权限、菜单、前端 ResourceSpec、测试和 README；普通资源默认复用通用页面，复杂资源可显式覆盖。
 
+## 当前状态
+
+当前仓库已经具备继续开发业务模块的预生产基线：认证、RBAC、Resource Manifest、通用 CRUD 页面、搜索、关系字段、批量操作、通知、审计脱敏和 `/admin/...` 后台 URL 命名空间已经实现。
+
+2026-09-24 已完成全仓库生产安全审计，未发现可报告的安全问题。但这不等于已经完成目标生产环境验收；正式上线前仍需验证正式域名、HTTPS、密钥、普通角色权限流程、备份、监控和回滚。
+
 ## 本地运行
 
 项目依赖由 Laragon 管理，启动 PostgreSQL 和 Redis 后执行：
@@ -55,7 +61,7 @@ cd backend
 go run . admin:make-resource announcements --fields="title:text:required,status:select:required:draft=Draft|published=Published"
 ~~~
 
-资源生成是面向业务开发的主流程：生成后由后台面板自动发现并展示。生成器不会覆盖人工文件；复杂业务应放入对应的 backend/app/modules/<module> 和 admin/src/modules/<module>，不要强行套用通用 Resource。
+资源生成是面向业务开发的主流程：生成后由后台面板自动发现并展示。生成器不会覆盖人工文件，也不会静默执行迁移；复杂业务应放入对应的 `backend/app/modules/<module>` 和 `admin/src/modules/<module>`，不要强行套用通用 Resource。
 
 ## 验证
 
