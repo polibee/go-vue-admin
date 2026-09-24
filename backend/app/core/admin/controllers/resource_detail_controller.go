@@ -6,6 +6,7 @@ import (
 	"goravel/app/facades"
 	"goravel/app/models"
 	"goravel/app/modules/admin/registry"
+	rbacservices "goravel/app/services/rbac"
 )
 
 func (r *ResourceController) Show(ctx http.Context) http.Response {
@@ -43,7 +44,13 @@ func (r *ResourceController) Show(ctx http.Context) http.Response {
 		if err := q.Where("id = ?", id).First(&role); err != nil {
 			return ctx.Response().Status(404).Json(http.Json{"code": "RESOURCE_NOT_FOUND"})
 		}
-		return ctx.Response().Success().Json(http.Json{"data": projectResourceValueWithPolicies(role, manifest, fieldPolicies, false)})
+		value := projectResourceValueWithPolicies(role, manifest, fieldPolicies, false)
+		permissions, permissionErr := rbacservices.NewRoleService().PermissionAssignments(int64(role.ID))
+		if permissionErr != nil {
+			return ctx.Response().Status(500).Json(http.Json{"code": "RBAC_PERMISSIONS_ERROR"})
+		}
+		value["permissions"] = permissions
+		return ctx.Response().Success().Json(http.Json{"data": value})
 	case "permissions":
 		var permission models.Permission
 		q, scopeErr := applyResourceScope(ctx, facades.Orm().Query(), manifest, "view")

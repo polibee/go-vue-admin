@@ -19,6 +19,8 @@
   "deleteRoleTitle": "确认删除角色？",
   "deleteRoleDescription": "此操作不可撤销，角色及其分配关系将被删除。",
   "assignPermissions": "分配权限",
+  "rolePermissionsDescription": "选择此角色可以使用的权限。",
+  "savePermissions": "保存权限",
   "scopeAll": "全部数据",
   "scopeOwn": "仅本人数据",
   "fieldName": "字段",
