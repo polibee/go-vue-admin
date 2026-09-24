@@ -14,6 +14,7 @@
   "resourceNotFound": "资源不存在",
   "detail": "资源详情",
   "view": "查看",
+  "viewDetails": "查看详情与权限",
   "detailDescription": "查看资源记录的详细字段。",
   "back": "返回列表",
   "perPage": "每页 {count} 条",

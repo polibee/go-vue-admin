@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Save } from '@lucide/vue'
+import { ArrowLeft, Eye, Save } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +13,7 @@ import { createResourceForm, serializeResourceForm, type ResourceFormField } fro
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { adminRoute } from '@/core/routing/url-namespaces'
+import { roleDetailPath } from '../role-routes'
 
 interface ResourceManifest { name: string; fields: ResourceFormField[] }
 
@@ -29,6 +30,7 @@ const form = ref<Record<string, any>>({})
 
 function localizedError(value: unknown) { return value instanceof ApiError ? t(errorMessageKey(value.code)) : t('errors.unknown') }
 function fieldId(field: ResourceFormField) { return `role-field-${field.name}` }
+function openRoleDetail() { router.push(roleDetailPath(adminRoute('roles'), String(route.params.id))) }
 
 onMounted(async () => {
   if (!auth.token) return
@@ -68,7 +70,8 @@ async function submit() {
   <div class="flex flex-col gap-6">
     <div class="flex items-center gap-3">
       <Button variant="ghost" size="icon" :aria-label="t('resource.back')" @click="router.push(adminRoute('roles'))"><ArrowLeft /></Button>
-      <div><h1 class="text-2xl font-semibold tracking-tight">{{ editing ? t('rbac.editRole') : t('rbac.createRole') }}</h1><p class="text-sm text-muted-foreground">{{ t('rbac.roleFormDescription') }}</p></div>
+      <div class="min-w-0 flex-1"><h1 class="text-2xl font-semibold tracking-tight">{{ editing ? t('rbac.editRole') : t('rbac.createRole') }}</h1><p class="text-sm text-muted-foreground">{{ t('rbac.roleFormDescription') }}</p></div>
+      <Button v-if="editing" type="button" variant="outline" class="shrink-0" @click="openRoleDetail"><Eye data-icon="inline-start" />{{ t('resource.viewDetails') }}</Button>
     </div>
     <Alert v-if="error" variant="destructive"><AlertTitle>{{ t('states.errorTitle') }}</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
     <Card v-if="loading"><CardContent class="py-8">{{ t('resource.loading') }}</CardContent></Card>
