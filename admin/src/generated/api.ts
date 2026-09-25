@@ -1,5 +1,5 @@
 /* eslint-disable */
-/* Generated from http://127.0.0.1:3000/api/openapi.json. DO NOT EDIT. */
+/* Generated from http://127.0.0.1:3000/api/openapi/admin.json. DO NOT EDIT. */
 /* Contract paths: /admin/audit-logs, /admin/audit-logs/cleanup, /admin/overview, /admin/registry, /admin/search, /admin/settings, /admin/settings/{key}, /admin/{resource}, /admin/{resource}/actions/{action}, /admin/{resource}/export, /admin/{resource}/relations/{relation}/options, /admin/{resource}/{id}, /admin/{resource}/{id}/relations/{relation}, /auth/login, /auth/logout-all, /auth/me, /auth/refresh */
 
 import { ApiError, apiDownload, apiFetch, apiFetchEnvelope } from '@/lib/api'

@@ -8,7 +8,7 @@ const scalarHTML = `<!doctype html>
     <title>Go Vue Admin API</title>
   </head>
   <body>
-    <script id="api-reference" data-url="/api/openapi.json" src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+    <script id="api-reference" data-url="/api/openapi/admin.json" src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
   </body>
 </html>`
 

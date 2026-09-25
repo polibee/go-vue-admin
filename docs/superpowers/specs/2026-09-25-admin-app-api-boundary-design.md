@@ -28,7 +28,7 @@ The namespace validation and permission/menu renderers are reusable primitives. 
 
 ## OpenAPI contract
 
-The current `/api/openapi.json` documents the implemented Admin Core contract. It is not a complete contract for future App APIs or module-specific routes. When App APIs are introduced, publish separate Admin and App documents and add route-coverage tests rather than silently mixing both surfaces.
+The canonical Admin contract is `/api/openapi/admin.json`; `/api/openapi.json` remains a compatibility alias. It is not a complete contract for future App APIs or module-specific routes. When App APIs are introduced, publish separate Admin and App documents and add route-coverage tests rather than silently mixing both surfaces.
 
 ## Non-goals
 
@@ -36,4 +36,3 @@ The current `/api/openapi.json` documents the implemented Admin Core contract. I
 - No database migration.
 - No second user table.
 - No App business API implementation in this phase.
-

@@ -62,7 +62,7 @@ GET    /api/v1/admin/registry
 GET    /api/v1/admin/search
 ```
 
-认证 API 保持 `/api/v1/auth/`；OpenAPI 和 Scalar 保持 `/api/openapi.json`、`/api/docs`，不把 API 文档伪装成后台页面。
+认证 API 保持 `/api/v1/auth/`；Admin OpenAPI 规范入口为 `/api/openapi/admin.json`，旧 `/api/openapi.json` 保留兼容，Scalar 为 `/api/docs`，不把 API 文档伪装成后台页面。
 
 ## Resource 契约
 

@@ -7,6 +7,13 @@ func TestSpecCoversImplementedAdminContracts(t *testing.T) {
 	if spec["openapi"] != "3.0.3" {
 		t.Fatalf("unexpected OpenAPI version: %v", spec["openapi"])
 	}
+	info := spec["info"].(map[string]any)
+	if info["x-api-surface"] != "admin" {
+		t.Fatalf("api surface = %v, want admin", info["x-api-surface"])
+	}
+	if info["x-route-prefix"] != "/api/v1/admin" {
+		t.Fatalf("route prefix = %v, want /api/v1/admin", info["x-route-prefix"])
+	}
 	paths := spec["paths"].(map[string]any)
 	for _, path := range []string{"/auth/login", "/auth/refresh", "/auth/logout-all", "/admin/registry", "/admin/search", "/admin/{resource}", "/admin/{resource}/export", "/admin/{resource}/actions/{action}", "/admin/{resource}/relations/{relation}/options", "/admin/{resource}/{id}/relations/{relation}", "/admin/{resource}/{id}", "/admin/overview", "/admin/audit-logs", "/admin/audit-logs/cleanup", "/notifications", "/notifications/unread-count", "/notifications/{id}/read", "/notifications/read-all", "/admin/settings", "/admin/settings/{key}", "/admin/roles/{id}/permissions"} {
 		if _, ok := paths[path]; !ok {

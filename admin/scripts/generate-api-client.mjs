@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const baseUrl = process.env.OPENAPI_BASE_URL ?? 'http://127.0.0.1:3000'
-const response = await fetch(`${baseUrl}/api/openapi.json`)
+const response = await fetch(`${baseUrl}/api/openapi/admin.json`)
 if (!response.ok) throw new Error(`OpenAPI request failed: ${response.status}`)
 const spec = await response.json()
 const statuses = spec.components?.schemas?.UserStatus?.enum
@@ -14,7 +14,7 @@ const paths = Object.keys(spec.paths ?? {})
 const outputPath = resolve(dirname(fileURLToPath(import.meta.url)), '../src/generated/api.ts')
 
 const content = `/* eslint-disable */
-/* Generated from ${baseUrl}/api/openapi.json. DO NOT EDIT. */
+/* Generated from ${baseUrl}/api/openapi/admin.json. DO NOT EDIT. */
 /* Contract paths: ${paths.join(', ')} */
 
 import { ApiError, apiDownload, apiFetch, apiFetchEnvelope } from '@/lib/api'

@@ -7,7 +7,7 @@ import (
 
 func TestDocsHTMLPointsToLocalContract(t *testing.T) {
 	html := DocsHTML()
-	if !strings.Contains(html, `data-url="/api/openapi.json"`) {
+	if !strings.Contains(html, `data-url="/api/openapi/admin.json"`) {
 		t.Fatal("Scalar page must point to the local OpenAPI contract")
 	}
 }

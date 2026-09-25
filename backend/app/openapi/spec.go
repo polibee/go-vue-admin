@@ -2,8 +2,15 @@ package openapi
 
 func Spec() map[string]any {
 	return map[string]any{
-		"openapi":  "3.0.3",
-		"info":     map[string]any{"title": "Go Vue Admin API", "version": "0.1.0", "description": "The checked-in API contract for the admin backend."},
+		"openapi": "3.0.3",
+		"info": map[string]any{
+			"title":             "Go Vue Admin API",
+			"version":           "0.1.0",
+			"description":       "The checked-in API contract for the admin backend.",
+			"x-api-surface":     "admin",
+			"x-route-prefix":    "/api/v1/admin",
+			"x-frontend-prefix": "/admin",
+		},
 		"servers":  []map[string]any{{"url": "/api/v1"}},
 		"security": []map[string]any{{"bearerAuth": []any{}}},
 		"components": map[string]any{
@@ -86,6 +93,12 @@ func Spec() map[string]any {
 			}},
 		},
 	}
+}
+
+// AdminSpec is the canonical contract entry point for the Admin API surface.
+// AppSpec is intentionally not provided until the C-end API is implemented.
+func AdminSpec() map[string]any {
+	return Spec()
 }
 
 func resourceOptionSchema() map[string]any {
