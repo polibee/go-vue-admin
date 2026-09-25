@@ -67,3 +67,8 @@ admin/
 ```
 
 只有跨模块、稳定且没有明确业务归属的能力才能进入 `core`。
+# Admin/App API 边界
+
+当前仓库明确区分两个未来 API 面：后台管理使用 `/admin/...` 页面、`/api/v1/admin/...` API 和 `admin.<resource>.<action>` 权限；面向终端用户使用根路径页面、`/api/v1/app/...` API 和 `app.<resource>.<action>` 权限。
+
+当前只实现 Admin 面。领域 Service 可以复用，但 Controller、路由中间件、OpenAPI 契约和授权策略按 API 面分开。`admin:make-resource` 目前拒绝生成 App Resource，避免生成 App 权限却注册到 Admin Registry 的半套实现。

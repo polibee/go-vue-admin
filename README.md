@@ -67,7 +67,7 @@ cd backend
 go run . admin:make-resource announcements --fields="title:text:required,status:select:required:draft=Draft|published=Published"
 ~~~
 
-Resource generation is the main business-development workflow: generated resources are discovered by the admin panel automatically. The generator avoids overwriting manual files and does not execute migrations silently. Complex business flows belong in `backend/app/modules/<module>` and `admin/src/modules/<module>` rather than being forced into a generic Resource.
+Resource generation is the main business-development workflow: generated resources are discovered by the admin panel automatically. The generator currently targets the Admin surface only, uses `admin.*` permissions, avoids overwriting manual files, and does not execute migrations silently. Complex business flows belong in `backend/app/modules/<module>` and `admin/src/modules/<module>` rather than being forced into a generic Resource. App Resource generation remains blocked until its authentication, policy, registry, routes, and OpenAPI contract exist.
 
 ## Verification
 

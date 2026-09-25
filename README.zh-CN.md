@@ -61,7 +61,7 @@ cd backend
 go run . admin:make-resource announcements --fields="title:text:required,status:select:required:draft=Draft|published=Published"
 ~~~
 
-资源生成是面向业务开发的主流程：生成后由后台面板自动发现并展示。生成器不会覆盖人工文件，也不会静默执行迁移；复杂业务应放入对应的 `backend/app/modules/<module>` 和 `admin/src/modules/<module>`，不要强行套用通用 Resource。
+资源生成是面向业务开发的主流程：生成后由后台面板自动发现并展示。当前生成器只面向 Admin API，使用 `admin.*` 权限，不会覆盖人工文件，也不会静默执行迁移；复杂业务应放入对应的 `backend/app/modules/<module>` 和 `admin/src/modules/<module>`，不要强行套用通用 Resource。App Resource 需要等认证、策略、Registry、路由和 OpenAPI 契约建立后再开放。
 
 ## 验证
 

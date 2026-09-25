@@ -11,6 +11,12 @@ This document is the operating contract for an AI agent working on Go Vue Admin.
 - Go API port: 3000.
 - Go/Vue admin port: 5180.
 
+API surface contract:
+
+- Admin pages use `/admin/...`, Admin APIs use `/api/v1/admin/...`, and Admin permissions use `admin.<resource>.<action>`.
+- Future end-user pages use root paths, App APIs use `/api/v1/app/...`, and App permissions use `app.<resource>.<action>`.
+- The current generator is Admin-only. Do not pass an App namespace or expose an App endpoint through the Admin Resource Registry until App authentication, policies, registry, and OpenAPI contract exist.
+
 Do not replace PostgreSQL or Redis with an in-memory fallback, and do not change backend/.env or Laragon service configuration without explicit approval.
 
 URL namespaces are fixed: Vue admin pages use `/admin/...`, C-end pages use root paths, and Go admin APIs use `/api/v1/admin/...`. Never use an admin page path as an API path or an API path as a Vue route.

@@ -67,6 +67,12 @@ func TestNormalizeAppliesResourceDefaults(t *testing.T) {
 	}
 }
 
+func TestNormalizeRejectsAppResourceUntilAppSurfaceExists(t *testing.T) {
+	if _, err := Normalize(Input{Namespace: "app", Name: "orders", Fields: []string{"number:text"}}); err == nil {
+		t.Fatal("expected app resource generation to be rejected before the app surface exists")
+	}
+}
+
 func TestNormalizeBuildsSharedMenuAndPageMetadata(t *testing.T) {
 	spec, err := Normalize(Input{Name: "orders", Route: "/admin/orders", Icon: "shopping-cart", Fields: []string{"number:text"}})
 	if err != nil {

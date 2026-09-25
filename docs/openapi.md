@@ -14,7 +14,7 @@ Vue Admin
 
 OpenAPI 是前后端契约来源，前端不得另行维护重复的 TypeScript Model。
 
-项目采用 OpenAPI 3.x，后端使用 `swaggest/openapi-go` 组织和生成 Schema，前端使用 OpenAPI TypeScript Generator 生成 Client。`goravel-crud` 自带的 Swagger 方案不作为项目契约。
+项目采用 OpenAPI 3.x。当前契约由 `backend/app/openapi/spec.go` 明确维护，前端使用生成 Client。`goravel-crud` 自带的 Swagger 方案不作为项目契约。
 
 ## API 规范
 
@@ -43,3 +43,8 @@ Scalar 只作为开发和受控环境的 API 浏览器，不是 API Contract Sou
 Client 现在可通过 `pnpm generate:api` 从本地运行服务的 `/api/openapi.json` 重新生成；可用 `OPENAPI_BASE_URL` 指定契约服务地址。生成脚本为仓库内置无依赖脚本，不修改依赖锁文件。
 
 本地服务启动后可运行 `powershell -File backend/scripts/contract-smoke.ps1`，执行只读契约烟测：OpenAPI、Scalar、登录、资源清单和 users 列表。脚本不会创建、删除或修改业务数据。
+# OpenAPI 契约边界
+
+当前 `/api/openapi.json` 是已实现的 Admin Core 契约，覆盖认证、Resource、RBAC、通知和审计等后台 API；它不是未来 C 端 API 的全站契约。
+
+未来新增 App API 时，应单独发布 App 契约，并通过路由覆盖测试保证新增 Controller 不会遗漏文档。不要把面向用户的 API 直接追加到 Admin Resource 文档中。

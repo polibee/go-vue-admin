@@ -5,7 +5,7 @@ func RenderResourcePipeline(spec Spec, migrationTimestamp string) ([]Artifact, e
 	if err != nil {
 		return nil, err
 	}
-	permissionSpec, err := NormalizePermission(PermissionInput{Name: spec.Name, Actions: spec.Actions})
+	permissionSpec, err := NormalizePermission(PermissionInput{Name: spec.Name, Namespace: spec.Namespace, Actions: spec.Actions})
 	if err != nil {
 		return nil, err
 	}
@@ -15,6 +15,7 @@ func RenderResourcePipeline(spec Spec, migrationTimestamp string) ([]Artifact, e
 	}
 	menuSpec, err := NormalizeMenu(MenuInput{
 		Name:       spec.Name,
+		Namespace:  spec.Namespace,
 		Label:      spec.Label,
 		Route:      spec.FrontendRoute,
 		Permission: spec.Permission,

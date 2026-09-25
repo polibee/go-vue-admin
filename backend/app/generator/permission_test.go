@@ -3,6 +3,7 @@ package generator
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -42,5 +43,19 @@ func TestRenderPermissionGolden(t *testing.T) {
 		if string(artifact.Content) != string(want) {
 			t.Errorf("content mismatch for %s", artifact.Path)
 		}
+	}
+}
+
+func TestRenderPermissionUsesNamespace(t *testing.T) {
+	spec, err := NormalizePermission(PermissionInput{Name: "orders", Namespace: "app", Actions: []string{"view"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	artifacts, err := RenderPermission(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(artifacts[0].Content), `"app.orders.view"`) {
+		t.Fatalf("generated permission does not use app namespace: %s", artifacts[0].Content)
 	}
 }

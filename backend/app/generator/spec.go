@@ -19,6 +19,7 @@ var supportedFieldTypes = map[string]struct{}{
 
 type Input struct {
 	Name             string
+	Namespace        string
 	Label            string
 	Route            string
 	PageMode         string
@@ -37,6 +38,7 @@ type Input struct {
 
 type Spec struct {
 	Name          string
+	Namespace     string
 	GoName        string
 	Label         string
 	Route         string
@@ -180,12 +182,20 @@ func Normalize(input Input) (Spec, error) {
 	if !resourceNamePattern.MatchString(input.Name) {
 		return Spec{}, fmt.Errorf("invalid resource name %q", input.Name)
 	}
+	namespace, err := normalizeNamespace(input.Namespace)
+	if err != nil {
+		return Spec{}, err
+	}
+	if namespace != defaultNamespace {
+		return Spec{}, fmt.Errorf("resource generation for API namespace %q is not available; use the Admin Resource surface", namespace)
+	}
 	if len(input.Fields) == 0 {
 		return Spec{}, fmt.Errorf("resource %q requires at least one field", input.Name)
 	}
 
 	spec := Spec{
 		Name:       input.Name,
+		Namespace:  namespace,
 		GoName:     pascal(input.Name),
 		Label:      input.Label,
 		Route:      input.Route,
@@ -257,7 +267,7 @@ func Normalize(input Input) (Spec, error) {
 		action.PayloadFields = append(action.PayloadFields, ActionPayloadFieldSpec{Name: field.Name, Label: field.Label, Type: field.Type, Required: field.Required, Options: field.Options})
 		customActions[field.Action] = action
 	}
-	permissionSpec, err := NormalizePermission(PermissionInput{Name: input.Name, Actions: actions})
+	permissionSpec, err := NormalizePermission(PermissionInput{Name: input.Name, Namespace: namespace, Actions: actions})
 	if err != nil {
 		return Spec{}, err
 	}
@@ -275,7 +285,7 @@ func Normalize(input Input) (Spec, error) {
 			spec.ActionSpecs = append(spec.ActionSpecs, custom)
 			continue
 		}
-		spec.ActionSpecs = append(spec.ActionSpecs, ActionSpec{Name: action, Label: humanize(action), Permission: "admin." + spec.Name + "." + action})
+		spec.ActionSpecs = append(spec.ActionSpecs, ActionSpec{Name: action, Label: humanize(action), Permission: permissionName(namespace, spec.Name, action)})
 	}
 
 	seen := make(map[string]struct{}, len(input.Fields))

@@ -320,7 +320,7 @@ func (m *M%sCreate%sTable) Down() error {
 func migrationPermissions(spec Spec) string {
 	var result strings.Builder
 	for _, permission := range migrationPermissionNames(spec) {
-		fmt.Fprintf(&result, "\t\t{Name: %q, DisplayName: %q},\n", permission, humanize(strings.TrimPrefix(permission, "admin.")))
+		fmt.Fprintf(&result, "\t\t{Name: %q, DisplayName: %q},\n", permission, humanize(strings.TrimPrefix(permission, spec.Namespace+".")))
 	}
 	return result.String()
 }
@@ -337,7 +337,7 @@ func migrationPermissionNames(spec Spec) []string {
 	}
 	appendPermission(spec.Permission)
 	for _, action := range spec.Actions {
-		appendPermission("admin." + spec.Name + "." + action)
+		appendPermission(permissionName(spec.Namespace, spec.Name, action))
 	}
 	return permissions
 }

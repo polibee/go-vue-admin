@@ -9,6 +9,7 @@ import (
 
 type MenuInput struct {
 	Name       string
+	Namespace  string
 	Label      string
 	Route      string
 	Permission string
@@ -34,7 +35,11 @@ func NormalizeMenu(input MenuInput) (MenuSpec, error) {
 	if input.Route == "" || !strings.HasPrefix(input.Route, "/") || strings.Contains(input.Route, "..") {
 		return MenuSpec{}, fmt.Errorf("invalid menu route %q", input.Route)
 	}
-	if !strings.HasPrefix(input.Permission, "admin.") {
+	namespace, err := normalizeNamespace(input.Namespace)
+	if err != nil {
+		return MenuSpec{}, err
+	}
+	if !strings.HasPrefix(input.Permission, namespace+".") {
 		return MenuSpec{}, fmt.Errorf("invalid menu permission %q", input.Permission)
 	}
 	if strings.TrimSpace(input.Icon) == "" {

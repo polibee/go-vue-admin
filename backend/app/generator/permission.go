@@ -12,14 +12,16 @@ var supportedPermissionActions = map[string]struct{}{
 }
 
 type PermissionInput struct {
-	Name    string
-	Actions []string
+	Name      string
+	Namespace string
+	Actions   []string
 }
 
 type PermissionSpec struct {
-	Name    string
-	GoName  string
-	Actions []string
+	Name      string
+	Namespace string
+	GoName    string
+	Actions   []string
 }
 
 func NormalizePermission(input PermissionInput) (PermissionSpec, error) {
@@ -29,7 +31,11 @@ func NormalizePermission(input PermissionInput) (PermissionSpec, error) {
 	if len(input.Actions) == 0 {
 		return PermissionSpec{}, fmt.Errorf("permission resource %q requires at least one action", input.Name)
 	}
-	spec := PermissionSpec{Name: input.Name, GoName: pascal(input.Name)}
+	namespace, err := normalizeNamespace(input.Namespace)
+	if err != nil {
+		return PermissionSpec{}, err
+	}
+	spec := PermissionSpec{Name: input.Name, Namespace: namespace, GoName: pascal(input.Name)}
 	seen := make(map[string]struct{}, len(input.Actions))
 	for _, action := range input.Actions {
 		if _, ok := supportedPermissionActions[action]; !ok {
@@ -50,7 +56,7 @@ func RenderPermission(spec PermissionSpec) ([]Artifact, error) {
 	var all strings.Builder
 	for index, action := range spec.Actions {
 		constant := spec.GoName + pascal(action)
-		permission := "admin." + spec.Name + "." + action
+		permission := permissionName(spec.Namespace, spec.Name, action)
 		fmt.Fprintf(&constants, "\t%s = %q\n", constant, permission)
 		if index > 0 {
 			all.WriteString(", ")
@@ -88,7 +94,7 @@ The generated migration creates the permission rows and automatically binds them
 func permissionList(spec PermissionSpec) string {
 	var result strings.Builder
 	for _, action := range spec.Actions {
-		fmt.Fprintf(&result, "- `admin.%s.%s`\n", spec.Name, action)
+		fmt.Fprintf(&result, "- `%s`\n", permissionName(spec.Namespace, spec.Name, action))
 	}
 	return result.String()
 }

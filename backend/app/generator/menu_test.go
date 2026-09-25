@@ -44,3 +44,13 @@ func TestRenderMenuProducesStableArtifacts(t *testing.T) {
 		}
 	}
 }
+
+func TestNormalizeMenuUsesNamespace(t *testing.T) {
+	spec, err := NormalizeMenu(MenuInput{Name: "orders", Namespace: "app", Label: "Orders", Route: "/orders", Permission: "app.orders.view", Icon: "shopping-cart"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if spec.Permission != "app.orders.view" {
+		t.Fatalf("permission = %q; want app.orders.view", spec.Permission)
+	}
+}
