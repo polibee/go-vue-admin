@@ -27,6 +27,7 @@ func (ResourceGeneratorCommand) Extend() command.Extend {
 		ArgsUsage: "<name>",
 		Arguments: []command.Argument{&command.ArgumentString{Name: "name", Usage: "resource name", Required: true}},
 		Flags: []command.Flag{
+			&command.StringFlag{Name: "namespace", Usage: "API namespace: admin (app is reserved until the App surface exists)"},
 			&command.StringFlag{Name: "label", Usage: "resource label"},
 			&command.StringFlag{Name: "route", Usage: "admin route"},
 			&command.StringFlag{Name: "page-mode", Usage: "page mode: generic or custom"},
@@ -47,6 +48,7 @@ func (ResourceGeneratorCommand) Extend() command.Extend {
 func (ResourceGeneratorCommand) Handle(ctx console.Context) error {
 	input := generator.Input{
 		Name:             ctx.ArgumentString("name"),
+		Namespace:        ctx.Option("namespace"),
 		Label:            ctx.Option("label"),
 		Route:            ctx.Option("route"),
 		PageMode:         ctx.Option("page-mode"),

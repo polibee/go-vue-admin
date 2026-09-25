@@ -2,6 +2,8 @@
 
 Generator 的目标是减少重复代码，不是替代架构设计。生成命令在 `backend/` Goravel 项目根目录执行，前端文件写入 `admin/`。
 
+当前生成器面向 Admin API：默认 namespace 为 `admin`，生成 `/admin/...` 页面、`/api/v1/admin/...` API 和 `admin.*` 权限。`app` namespace 已保留为未来 C 端契约，但在 App 认证、策略、Registry、路由和 OpenAPI 契约完成前，生成器会在写文件前拒绝 App Resource。
+
 新增资源按模块目录生成，目录约定见 [`docs/module-layout.md`](./module-layout.md)。前端不再使用平铺 `views/` 目录；通用资源页面位于 `admin/src/core/resource/pages/`。
 
 ## 当前主流程方向
@@ -14,6 +16,7 @@ Generator 的目标是减少重复代码，不是替代架构设计。生成命�
 
 ```text
 go run . admin:make-resource posts \
+  --namespace=admin \
   --label="Posts" \
   --route="/admin/posts" \
   --permission="admin.posts.view" \

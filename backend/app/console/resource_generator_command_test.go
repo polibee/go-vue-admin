@@ -1,17 +1,25 @@
 package console
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/goravel/framework/contracts/console/command"
+)
 
 func TestResourceGeneratorCommandMetadata(t *testing.T) {
-	command := ResourceGeneratorCommand{}
-	if command.Signature() != "admin:make-resource" {
-		t.Fatalf("signature = %q", command.Signature())
+	generatorCommand := ResourceGeneratorCommand{}
+	if generatorCommand.Signature() != "admin:make-resource" {
+		t.Fatalf("signature = %q", generatorCommand.Signature())
 	}
-	if command.Description() == "" {
+	if generatorCommand.Description() == "" {
 		t.Fatal("description must not be empty")
 	}
-	if len(command.Extend().Flags) != 13 {
-		t.Fatalf("flag count = %d, want 13", len(command.Extend().Flags))
+	if len(generatorCommand.Extend().Flags) != 14 {
+		t.Fatalf("flag count = %d, want 14", len(generatorCommand.Extend().Flags))
+	}
+	flag, ok := generatorCommand.Extend().Flags[0].(*command.StringFlag)
+	if !ok || flag.Name != "namespace" {
+		t.Fatalf("first flag is not namespace")
 	}
 }
 
