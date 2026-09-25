@@ -34,7 +34,7 @@ Scalar 只作为开发和受控环境的 API 浏览器，不是 API Contract Sou
 
 生成 Client 存放在 `admin/src/generated/`，标记为 `DO NOT EDIT`。后端相关 OpenAPI 适配代码位于 `backend/app/core/openapi/`。
 
-当前已落地的 Admin 契约规范入口：`GET /api/openapi/admin.json`。旧入口 `GET /api/openapi.json` 作为兼容别名保留。契约源位于 `backend/app/openapi/spec.go`，并由 `spec_test.go` 校验已实现的认证、资源和用户状态接口。该入口暂不代表生产公开文档；生产暴露前仍需增加鉴权或网关限制。
+当前已落地的 Admin 契约规范入口：`GET /api/openapi/admin.json`。契约源位于 `backend/app/openapi/spec.go`，并由 `spec_test.go` 校验已实现的认证、资源和用户状态接口。该入口暂不代表生产公开文档；生产暴露前仍需增加鉴权或网关限制。
 
 本地环境另提供 `GET /api/docs` Scalar 浏览页；该路由仅在 `APP_ENV` 非 `production` 时注册，并始终从本地 `/api/openapi/admin.json` 读取 Admin 契约。
 
